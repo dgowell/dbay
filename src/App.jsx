@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 import minimaLogo from './minima_logo.png';
 import './App.css';
-//import Balance from './Balance';
-//import Nft from './Nft';
 import CreateTokenButton from "./CreateTokenButton";
+import TokenList from "./TokenList";
 
 function App() {
   useEffect(() => {
@@ -18,6 +17,7 @@ function App() {
           Edit <code>src/App.js</code>.
         </p>
         <CreateTokenButton />
+        <TokenList />
       </section>
     </div>
   );
