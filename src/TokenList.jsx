@@ -16,7 +16,7 @@ const TokenList = () => {
     return (
         <ul> {tokens
             ? tokens.map((token) =>
-                <Token name={token.name.name} id={token.tokenid} />
+                <Token key={token.tokenid.toString()} name={token.name.name} id={token.tokenid} />
             )
             : <button onClick={handleClick}>View Tokens</button>
         }
