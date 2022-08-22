@@ -3,6 +3,8 @@ import minimaLogo from './minima_logo.png';
 import './App.css';
 import CreateTokenButton from "./CreateTokenButton";
 import TokenList from "./TokenList";
+import SendTokenButton from "./SendTokenButton";
+import Transaction from "./Transaction";
 
 function App() {
   useEffect(() => {
@@ -16,8 +18,10 @@ function App() {
         <p>
           Edit <code>src/App.js</code>.
         </p>
+        <Transaction />
         <CreateTokenButton />
         <TokenList />
+        <SendTokenButton />
       </section>
     </div>
   );
