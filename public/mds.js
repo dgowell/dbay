@@ -24,14 +24,13 @@ var MDS = {
     logging: false,
 
     //When debuggin you can hard set the Host and port
-    //DEBUG_HOST : null,
-    DEBUG_HOST: '192.168.99.117',
-    //DEBUG_PORT : -1,
-    DEBUG_PORT: 9003,
+    DEBUG_HOST: null,
+
+    DEBUG_PORT: -1,
+
 
     //An allowed TEST Minidapp ID for SQL - can be overridden
-    //DEBUG_MINIDAPPID: "0x00",
-    DEBUG_MINIDAPPID: "0xFAC85F447730AD31DE9B98DECF0F91F0D7A29EE79B61E624D1D98018DCCCE519",
+    DEBUG_MINIDAPPID: "0x00",
 
     /**
      * Minima Startup - with the callback function used for all Minima messages
