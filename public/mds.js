@@ -15,30 +15,33 @@ var MDS_MAIN_CALLBACK = null;
 var MDS = {
 
     //RPC Host for Minima
-    mainhost : "",
+    mainhost: "",
 
     //The MiniDAPP UID
-    minidappuid : "",
+    minidappuid: "",
 
     //Is logging RPC enabled
-    logging : false,
+    logging: false,
 
     //When debuggin you can hard set the Host and port
-    DEBUG_HOST : null,
-    DEBUG_PORT : -1,
+    //DEBUG_HOST : null,
+    DEBUG_HOST: '192.168.99.117',
+    //DEBUG_PORT : -1,
+    DEBUG_PORT: 9003,
 
     //An allowed TEST Minidapp ID for SQL - can be overridden
-    DEBUG_MINIDAPPID : "0x00",
+    //DEBUG_MINIDAPPID: "0x00",
+    DEBUG_MINIDAPPID: "0xFAC85F447730AD31DE9B98DECF0F91F0D7A29EE79B61E624D1D98018DCCCE519",
 
     /**
      * Minima Startup - with the callback function used for all Minima messages
      */
-    init : function(callback){
+    init: function (callback) {
         //Log a little..
         MDS.log("Initialising MDS..");
 
         //Is logging enabled.. via the URL
-        if(MDS.form.getParams("MDS_LOGGING") != null){
+        if (MDS.form.getParams("MDS_LOGGING") != null) {
             MDS.logging = true;
         }
 
@@ -46,21 +49,21 @@ var MDS = {
         var host = window.location.hostname;
         var port = Math.floor(window.location.port);
 
-        if(MDS.logging){
-            MDS.log("Location : "+window.location);
-            MDS.log("Host     : "+host);
-            MDS.log("port     : "+port);
+        if (MDS.logging) {
+            MDS.log("Location : " + window.location);
+            MDS.log("Host     : " + host);
+            MDS.log("port     : " + port);
         }
 
         //Get ther MiniDAPP UID
         MDS.minidappuid = MDS.form.getParams("uid");
 
         //HARD SET if debug mode - running from a file
-        if(MDS.DEBUG_HOST != null){
+        if (MDS.DEBUG_HOST != null) {
             MDS.log("DEBUG Host Found..");
 
-            host=MDS.DEBUG_HOST;
-            port=MDS.DEBUG_PORT;
+            host = MDS.DEBUG_HOST;
+            port = MDS.DEBUG_PORT;
         }
 
         // env overrides
@@ -70,26 +73,26 @@ var MDS = {
             MDS.minidappuid = window.DEBUG_UID;
         }
 
-        if(MDS.minidappuid == null){
+        if (MDS.minidappuid == null) {
             MDS.minidappuid = MDS.DEBUG_MINIDAPPID;
         }
 
         //Is one specified..
-        if(MDS.minidappuid == "0x00"){
+        if (MDS.minidappuid == "0x00") {
             MDS.log("No MiniDAPP UID specified.. using test value");
         }
 
-        if(MDS.logging){
-            MDS.log("MDS UID  : "+MDS.minidappuid);
+        if (MDS.logging) {
+            MDS.log("MDS UID  : " + MDS.minidappuid);
         }
 
         //The ports..
-        var mainport 	= port+1;
+        var mainport = port + 1;
 
-        MDS.log("MDS FILEHOST  : https://"+host+":"+port+"/");
+        MDS.log("MDS FILEHOST  : https://" + host + ":" + port + "/");
 
-        MDS.mainhost 	= "https://"+host+":"+mainport+"/";
-        MDS.log("MDS MAINHOST : "+MDS.mainhost);
+        MDS.mainhost = "https://" + host + ":" + mainport + "/";
+        MDS.log("MDS MAINHOST : " + MDS.mainhost);
 
         //Store this for poll messages
         MDS_MAIN_CALLBACK = callback;
@@ -98,39 +101,41 @@ var MDS = {
         PollListener();
 
         //And Post a message
-        MDSPostMessage({ "event": "inited" });
+        MDSPostMessage({
+            "event": "inited"
+        });
     },
 
     /**
      * Log some data with a timestamp in a consistent manner to the console
      */
-    log : function(output){
-        console.log("Minima @ "+new Date().toLocaleString()+" : "+output);
+    log: function (output) {
+        console.log("Minima @ " + new Date().toLocaleString() + " : " + output);
     },
 
     /**
      * Runs a function on the Minima Command Line - same format as MInima
      */
-    cmd : function(command, callback){
+    cmd: function (command, callback) {
         //Send via POST
-        httpPostAsync(MDS.mainhost+"cmd?"+"uid="+MDS.minidappuid, command, callback);
+        httpPostAsync(MDS.mainhost + "cmd?" + "uid=" + MDS.minidappuid, command, callback);
     },
 
     /**
      * Runs a SQL command on this MiniDAPPs SQL Database
      */
-    sql : function(command, callback){
+    sql: function (command, callback) {
         //Send via POST
-        httpPostAsync(MDS.mainhost+"sql?"+"uid="+MDS.minidappuid, command, callback);
+        httpPostAsync(MDS.mainhost + "sql?" + "uid=" + MDS.minidappuid, command, callback);
     },
 
     /**
      * Form GET / POST parameters..
      */
-    form : {
+    form: {
 
         //Return the GET parameter by scraping the location..
-        getParams : function(parameterName){
+        getParams: function (parameterName) {
             var result = null,
                 tmp = [];
             var items = location.search.substr(1).split("&");
@@ -147,38 +152,39 @@ var MDS = {
 /**
  * Post a message to the Minima Event Listeners
  */
-function MDSPostMessage(json){
+function MDSPostMessage(json) {
     //And dispatch
-    if(MDS_MAIN_CALLBACK){
+    if (MDS_MAIN_CALLBACK) {
         MDS_MAIN_CALLBACK(json);
     }
 }
 
 
 var PollCounter = 0;
-var PollSeries  = 0;
-function PollListener(){
+var PollSeries = 0;
+
+function PollListener() {
 
     //The POLL host
-    pollhost = MDS.mainhost+"poll?"+"uid="+MDS.minidappuid;
-    polldata = "series="+PollSeries+"&counter="+PollCounter;
+    pollhost = MDS.mainhost + "poll?" + "uid=" + MDS.minidappuid;
+    polldata = "series=" + PollSeries + "&counter=" + PollCounter;
 
-    httpPostAsyncPoll(pollhost,polldata,function(msg){
+    httpPostAsyncPoll(pollhost, polldata, function (msg) {
 
         //Are we on the right Series..
-        if(PollSeries != msg.series){
+        if (PollSeries != msg.series) {
 
             //Reset to the right series..
-            PollSeries  = msg.series;
+            PollSeries = msg.series;
             PollCounter = msg.counter;
 
-        }else{
+        } else {
 
             //Is there a message ?
-            if(msg.status == true){
+            if (msg.status == true) {
 
                 //Get the current counter..
-                PollCounter = msg.response.counter+1;
+                PollCounter = msg.response.counter + 1;
 
                 //And Post the message..
                 MDSPostMessage(msg.response.message);
@@ -198,22 +204,22 @@ function PollListener(){
  * @param params
  * @returns
  */
-function httpPostAsync(theUrl, params, callback){
+function httpPostAsync(theUrl, params, callback) {
     //Do we log it..
-    if(MDS.logging){
-        MDS.log("POST_RPC:"+theUrl+" PARAMS:"+params);
+    if (MDS.logging) {
+        MDS.log("POST_RPC:" + theUrl + " PARAMS:" + params);
     }
 
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
+    xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
             //Do we log it..
-            if(MDS.logging){
-                MDS.log("RESPONSE:"+xmlHttp.responseText);
+            if (MDS.logging) {
+                MDS.log("RESPONSE:" + xmlHttp.responseText);
             }
 
             //Send it to the callback function..
-            if(callback){
+            if (callback) {
                 callback(JSON.parse(xmlHttp.responseText));
             }
         }
@@ -237,47 +243,49 @@ function httpPostAsync(theUrl, params, callback){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-        	if(MDS.logging){
-				console.log("RPC      : "+theUrl);
-				console.log("RESPONSE : "+xmlHttp.responseText);
-			}
-
-			//Always a JSON ..
-        	var rpcjson = JSON.parse(xmlHttp.responseText);
-
-        	//Send it to the callback function..
-        	if(callback){
-        		callback(rpcjson);
-        	}
-        }
-    }
-	xmlHttp.open("GET", theUrl, true); // true for asynchronous
-    xmlHttp.send(null);
-}*/
-
-function httpPostAsyncPoll(theUrl, params, callback){
-    //Do we log it..
-    if(MDS.logging){
-        MDS.log("POST_POLL_RPC:"+theUrl+" PARAMS:"+params);
-    }
-
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-            //Do we log it..
             if(MDS.logging){
-                MDS.log("RESPONSE:"+xmlHttp.responseText);
+                console.log("RPC      : "+theUrl);
+                console.log("RESPONSE : "+xmlHttp.responseText);
             }
+
+            //Always a JSON ..
+            var rpcjson = JSON.parse(xmlHttp.responseText);
 
             //Send it to the callback function..
             if(callback){
+                callback(rpcjson);
+            }
+        }
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+    xmlHttp.send(null);
+}*/
+
+function httpPostAsyncPoll(theUrl, params, callback) {
+    //Do we log it..
+    if (MDS.logging) {
+        MDS.log("POST_POLL_RPC:" + theUrl + " PARAMS:" + params);
+    }
+
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+            //Do we log it..
+            if (MDS.logging) {
+                MDS.log("RESPONSE:" + xmlHttp.responseText);
+            }
+
+            //Send it to the callback function..
+            if (callback) {
                 callback(JSON.parse(xmlHttp.responseText));
             }
         }
     }
-    xmlHttp.addEventListener('error', function(ev){
+    xmlHttp.addEventListener('error', function (ev) {
         MDS.log("Error Polling - reconnect in 10s");
-        setTimeout(function(){PollListener();},10000);
+        setTimeout(function () {
+            PollListener();
+        }, 10000);
     });
     xmlHttp.open("POST", theUrl, true); // true for asynchronous
     xmlHttp.overrideMimeType('text/plain; charset=UTF-8');
