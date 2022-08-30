@@ -31,7 +31,18 @@ Tokens action:export tokenid: theiidofthetokentoexport
 Copy the data
 */
 import React, { useState, useEffect } from 'react';
-
+import {
+    createNFT,
+    getToken,
+    getAddress,
+    addContact,
+    createTransaction,
+    addTxnOutput,
+    getCoin,
+    addTxnInput,
+    exportTxn,
+    sendTxn
+} from './mds-helpers';
 
 
 const Transaction = () => {
@@ -51,165 +62,51 @@ const Transaction = () => {
     const [hasOutput, setHasOutput] = useState(false);
     const [hasInput, setHasInput] = useState(false);
     const [coinId, setCoinId] = useState();
+    const [data, setData] = useState();
 
     useEffect(() => {
         if (!contact) {
-            addContact(MAX_CONTACT);
+            addContact(MAX_CONTACT, setContact);
         }
     }, []);
 
     useEffect(() => {
         if (tokenCreated) {
-            getToken(TOKEN_NAME);
+            getToken(TOKEN_NAME, setTokenId);
         }
     }, [tokenCreated]);
 
     useEffect(() => {
         controlTransaction();
-    }, [txnName, outAddress, tokenId]);
+    }, [txnName, outAddress, tokenId, coinId, hasInput, hasOutput, data, txnName]);
 
-    /* add contact to send to */
-    function addContact(hex) {
-        const command = `maxcontacts action:add contact:${hex}`;
-        window.MDS.cmd(command, function (res) {
-            if (res.status) {
-                setContact(hex);
-                console.log(`Add contact ${hex}`);
-            } else {
-                console.log(res.error);
-            }
-        })
-    }
-
-    /* create the NFT on chain */
-    function createNFT(name, link, description) {
-        const command = `tokencreate amount:1 decimal:0 name:{"name":"${name}","link":"${link}","description":"${description}"}`;
-        window.MDS.cmd(command, function (res) {
-            if (res.status) {
-                setTokenCreated(true);
-                console.log(`Create NFT ${name}`);
-            } else {
-                console.log(res.error);
-            }
-        })
-    }
-
-    /* Get the token with a given name */
-    function getToken(name) {
-        window.MDS.cmd(`tokens`, function (res) {
-            if (res.status) {
-                let t = res.response.find(token => token.name.name === name);
-                setTokenId(t['tokenid']);
-                console.log(`Get token: ${name}`);
-            } else {
-                console.log(res.error);
-            }
-        })
-    }
-
-    /* Create transaction with a given name */
-    function createTransaction(name) {
-        window.MDS.cmd(`txncreate id:${name}`, function (res) {
-            if (res.status) {
-                setTxnId(res.response.transaction.transactionid);
-                console.log(`Create transaction ${res.response.transaction.transactionid}`);
-            } else {
-                console.log(res.error);
-            }
-        })
-    }
-
-    /* Add output to transaction */
-    function addTxnOutput(txnName, address, amount, tokenId) {
-        window.MDS.cmd(`txnoutput id:${txnName} address:${address} amount:${amount} tokenid:${tokenId}`, function (res) {
-            if (res.status) {
-                console.log(`Add output to transaction: ${txnName}`);
-                setHasOutput(true);
-            } else {
-                console.log(res.error);
-                return false;
-            }
-        })
-    }
-
-    /* returns coin id of coin with a given name */
-    function getCoin(name) {
-        window.MDS.cmd(`coins`, function (res) {
-            if (res.status) {
-                let coin = res.response.find(c => c.token.name.name === name);
-                setCoinId(coin['coinid']);
-                console.log(`Get Coin: ${coin['coinid']}`);
-            } else {
-                console.log(res.error);
-            }
-        })
-    }
-
-    /* Add input to transaction */
-    function addTxnInput(txnName, coinid) {
-        window.MDS.cmd(`txninput id:${txnName} coinid:${coinid} scriptmmr:true`, function (res) {
-            if (res.status) {
-                console.log(`Add input to transaction: ${txnName}`);
-                setHasInput(true);
-            } else {
-                console.log(res.error);
-            }
-        })
-    }
-
-    /* export transaction */
-    function exportTxn(name) {
-        if (contact) {
-            window.MDS.cmd(`txnexport id:${name}`, function (res) {
-                if (res.status) {
-                    sendTxn(res.response.data);
-                    console.log(`Export transaction ${name}`);
-                } else {
-                    console.log(res.error);
-                }
-            });
-        }
-    }
-
-    /* Use maxima to send transaction data to another node on the network */
-    function sendTxn(data) {
-        window.MDS.cmd(`maxima action:send to:${contact} application:stampd data:${data}`, function (res) {
-            if (res.response.delivered) {
-                console.log(`You've sent a transaction at ${res.response.time} and it's been delivered`);
-            } else {
-                console.log(res.error);
-            }
-        });
-    }
-
-    function getAddress() {
-        window.MDS.cmd('getaddress', function (res) {
-            if (res.status) {
-                setOutAddress(res.response.miniaddress);
-                console.log(`Get address ${res.response.miniaddress}`);
-            } else {
-                console.log(res.error);
-            }
-        })
-    }
 
     const controlTransaction = () => {
         if (txnName && outAddress && tokenId) {
-            addTxnOutput(txnName, outAddress, amount, tokenId);
-            getCoin(TOKEN_NAME);
-            if (coinId) { addTxnInput(txnName, coinId); }
+            addTxnOutput(txnName, outAddress, amount, tokenId, setHasOutput);
+            getCoin(TOKEN_NAME, setCoinId);
+            if (coinId) { addTxnInput(txnName, coinId, setHasInput); }
             if (hasOutput && hasInput) {
-                exportTxn(txnName);
-                setCreated(true);
+                if (contact) {
+                    exportTxn(txnName, setData);
+                    sendTxn(data, contact);
+                    setCreated(true);
+                } else {
+                    console.log("There is no contact");
+                }
+            } else {
+                console.log(`no transaction output: ${hasOutput} or inpput: ${hasInput}`)
             }
-        };
+        } else {
+            console.log(`one of these is missing: txnName:${txnName} outAddress${outAddress} or tokenId:${tokenId}`);
+        }
     }
 
     async function handleClick() {
-        createNFT(TOKEN_NAME, TOKEN_LINK, TOKEN_DESC);
-        getAddress();
-        getToken(TOKEN_NAME);
-        createTransaction(txnName);
+        createNFT(TOKEN_NAME, TOKEN_LINK, TOKEN_DESC, setTokenCreated);
+        getAddress(setOutAddress);
+        getToken(TOKEN_NAME, setTokenId);
+        createTransaction(txnName, setTxnId);
         controlTransaction();
     }
 
