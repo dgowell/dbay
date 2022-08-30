@@ -40,7 +40,7 @@ const Transaction = () => {
     const TOKEN_DESC = 'This is a description of a token';
     const txnName = 'swap';
     const amount = 10;
-    const MAX_CONTACT = 'MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1HZ0Q31WFB78WBETEUNQJBVR3G65Y36PPKA2DUJYR65CM87Y7K0K7843BTVU4FQ967V06YD3EEJC2ATHJ9ZGPPYEAA8DWJACPS019G59Y8B771Q71H4BJKC0D2K3UY7HMENHD3CGYKR7PDGN5V7YQPPZEEVE2V8TTVAAWQY1V4B8W9W8V0CER54Z6S5R2BQ01RMSS87ZH9VZYS10608004TR7GZY@192.168.1.84:10001';
+    const MAX_CONTACT = 'MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G16RBR0SYH1WT8D6HPWVHCFCPD4VFSWJ8Q8HSWMTARUKAD22JZHJTC81DH50GAU40ZEBG5S51R4TD80D7H604GS40VMHVRCK89AD28ZRQZGY601WBWJ496GJF7R3HYUEEMJDVSVE935NK4NC7UU064NE8STGHCMA2VT9M5ZB37PTHAPKGM80NPKPV2D8Q067MPPD3UP87B9T5PC10608006FMHYMD@192.168.1.83:10001';
 
     const [tokenId, setTokenId] = useState();
     const [tokenCreated, setTokenCreated] = useState(false);
@@ -112,7 +112,7 @@ const Transaction = () => {
         window.MDS.cmd(`txncreate id:${name}`, function (res) {
             if (res.status) {
                 setTxnId(res.response.transaction.transactionid);
-                console.log(`Create transaction ${name}`);
+                console.log(`Create transaction ${res.response.transaction.transactionid}`);
             } else {
                 console.log(res.error);
             }
@@ -123,7 +123,7 @@ const Transaction = () => {
     function addTxnOutput(txnName, address, amount, tokenId) {
         window.MDS.cmd(`txnoutput id:${txnName} address:${address} amount:${amount} tokenid:${tokenId}`, function (res) {
             if (res.status) {
-                console.log(`Add ${amount} output to transaction ${txnName}`);
+                console.log(`Add output to transaction: ${txnName}`);
                 setHasOutput(true);
             } else {
                 console.log(res.error);
@@ -149,7 +149,7 @@ const Transaction = () => {
     function addTxnInput(txnName, coinid) {
         window.MDS.cmd(`txninput id:${txnName} coinid:${coinid} scriptmmr:true`, function (res) {
             if (res.status) {
-                console.log(`successfully added input to transaction`);
+                console.log(`Add input to transaction: ${txnName}`);
                 setHasInput(true);
             } else {
                 console.log(res.error);
@@ -174,8 +174,8 @@ const Transaction = () => {
     /* Use maxima to send transaction data to another node on the network */
     function sendTxn(data) {
         window.MDS.cmd(`maxima action:send to:${contact} application:stampd data:${data}`, function (res) {
-            if (res.status) {
-                console.log(res);
+            if (res.response.delivered) {
+                console.log(`You've sent a transaction at ${res.response.time} and it's been delivered`);
             } else {
                 console.log(res.error);
             }

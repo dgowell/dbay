@@ -1,14 +1,19 @@
 import { useEffect } from "react";
 import minimaLogo from './minima_logo.png';
 import './App.css';
-import CreateTokenButton from "./CreateTokenButton";
-import TokenList from "./TokenList";
-import SendTokenButton from "./SendTokenButton";
 import Transaction from "./Transaction";
+import receiveTransaction from "./receiveTransaction";
 
 function App() {
   useEffect(() => {
-    window.MDS.init();
+    window.MDS.init((msg) => {
+      if (msg.event === 'MAXIMA') {
+        console.log(msg);
+        if (msg.data.application === 'stampd') {
+          receiveTransaction(msg.data.data);
+        }
+      }
+    });
   }, []);
 
   return (
@@ -19,9 +24,6 @@ function App() {
           Edit <code>src/App.js</code>.
         </p>
         <Transaction />
-        <CreateTokenButton />
-        <TokenList />
-        <SendTokenButton />
       </section>
     </div>
   );
