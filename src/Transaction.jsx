@@ -25,7 +25,7 @@ Txninput id:swap coinid:mskdmsmdksdm scriptmmr: true
 Pass your transaction to the other node
 Txnexport id:swap file: filename.txn
 
-So that the pother node knows about your token you have to export it too
+So that the other node knows about your token you have to export it too
 Tokens action:export tokenid: theiidofthetokentoexport
 
 Copy the data
@@ -41,7 +41,8 @@ import {
     getCoin,
     addTxnInput,
     exportTxn,
-    sendTxn
+    sendTxn,
+    exportToken
 } from './mds-helpers';
 
 
@@ -51,18 +52,19 @@ const Transaction = () => {
     const TOKEN_DESC = 'This is a description of a token';
     const txnName = 'swap';
     const amount = 10;
-    const MAX_CONTACT = 'MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G16RBR0SYH1WT8D6HPWVHCFCPD4VFSWJ8Q8HSWMTARUKAD22JZHJTC81DH50GAU40ZEBG5S51R4TD80D7H604GS40VMHVRCK89AD28ZRQZGY601WBWJ496GJF7R3HYUEEMJDVSVE935NK4NC7UU064NE8STGHCMA2VT9M5ZB37PTHAPKGM80NPKPV2D8Q067MPPD3UP87B9T5PC10608006FMHYMD@192.168.1.83:10001';
+    const MAX_CONTACT = 'MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1GGHUVYU7SVFC423GVRA99Q10649D2Q06R3NA7UJ1JAJCYW78FHHZKV1BY3R2AWMZ0UGJ3YB4TZ3D002A8PAK5N2W313FPCW2AC7VD5TAUQ29309Q0QP7MMWU3S1C6G0GMA783UQFVU4AW9AK35308ZZ1DM8W9H3T3D09VSKUQEMCFQ6GZCD1GQ9E9JS87T4EG3YBJQFGJVHNK106080044PZWW6@192.168.1.83:10001';
 
     const [tokenId, setTokenId] = useState();
     const [tokenCreated, setTokenCreated] = useState(false);
     const [outAddress, setOutAddress] = useState();
     const [txnId, setTxnId] = useState();
-    const [created, setCreated] = useState(false);
+    const [sent, setSent] = useState(false);
     const [contact, setContact] = useState(false);
     const [hasOutput, setHasOutput] = useState(false);
     const [hasInput, setHasInput] = useState(false);
     const [coinId, setCoinId] = useState();
     const [data, setData] = useState();
+    const [tokenExportData, setTokenExportData] = useState();
 
     useEffect(() => {
         if (!contact) {
@@ -77,41 +79,49 @@ const Transaction = () => {
     }, [tokenCreated]);
 
     useEffect(() => {
-        controlTransaction();
-    }, [txnName, outAddress, tokenId, coinId, hasInput, hasOutput, data, txnName]);
-
-
-    const controlTransaction = () => {
         if (txnName && outAddress && tokenId) {
             addTxnOutput(txnName, outAddress, amount, tokenId, setHasOutput);
             getCoin(TOKEN_NAME, setCoinId);
-            if (coinId) { addTxnInput(txnName, coinId, setHasInput); }
-            if (hasOutput && hasInput) {
-                if (contact) {
-                    exportTxn(txnName, setData);
-                    sendTxn(data, contact);
-                    setCreated(true);
-                } else {
-                    console.log("There is no contact");
-                }
-            } else {
-                console.log(`no transaction output: ${hasOutput} or inpput: ${hasInput}`)
-            }
-        } else {
-            console.log(`one of these is missing: txnName:${txnName} outAddress${outAddress} or tokenId:${tokenId}`);
         }
-    }
+    }, [txnName, outAddress, tokenId]);
+
+    useEffect(() => {
+        if (coinId) { addTxnInput(txnName, coinId, setHasInput); }
+    }, [coinId]);
+
+    useEffect(() => {
+        if (hasOutput && hasInput) {
+            exportTxn(txnName, setData);
+        }
+    }, [hasOutput, hasInput]);
+
+    useEffect(() => {
+        if (!tokenExportData) {
+            exportToken(tokenId, setTokenExportData);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (contact && data) {
+            sendTxn(data, contact, 'txndata', setSent);
+        }
+    }, [data, contact]);
+
+    useEffect(() => {
+        if (contact && tokenExportData) {
+            sendTxn(tokenExportData, contact, 'tokendata', setSent);
+        }
+    }, [tokenExportData, contact]);
 
     async function handleClick() {
         createNFT(TOKEN_NAME, TOKEN_LINK, TOKEN_DESC, setTokenCreated);
         getAddress(setOutAddress);
         getToken(TOKEN_NAME, setTokenId);
         createTransaction(txnName, setTxnId);
-        controlTransaction();
     }
 
     return (
-        <ul> {created
+        <ul> {sent
             ? <p>TokenId: {tokenId}, Transaction Id: {txnId}, Output Address: {outAddress}</p>
             : <button onClick={handleClick}>Create Transaction</button>
         }

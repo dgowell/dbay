@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import minimaLogo from './minima_logo.png';
 import './App.css';
-import Transaction from "./Transaction";
 import ReceiveTransaction from "./ReceiveTransaction";
 import CreateTokenForm from "./CreateTokenForm";
+import BottomNavigation from '@mui/material/BottomNavigation';
+import BottomNavigationAction from '@mui/material/BottomNavigationAction';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import AppsIcon from '@mui/icons-material/Apps';
+import WebStoriesIcon from '@mui/icons-material/WebStories';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
 
 function App() {
   const [data, setData] = useState();
+  const [value, setValue] = useState();
   useEffect(() => {
     window.MDS.init((msg) => {
       if (msg.event === 'MAXIMA') {
@@ -26,10 +32,21 @@ function App() {
         <p>
           Edit <code>src/App.js</code>.
         </p>
-        <Transaction />
         <CreateTokenForm />
         {data ? <ReceiveTransaction data={data} /> : ''}
       </section>
+      <BottomNavigation
+        showLabels
+        value={value}
+        onChange={(event, newValue) => {
+          setValue(newValue);
+        }}
+      >
+        <BottomNavigationAction label="Favorites" icon={<FavoriteIcon />} />
+        <BottomNavigationAction label="Explore" icon={<AppsIcon />} />
+        <BottomNavigationAction label="My Items" icon={<WebStoriesIcon />} />
+        <BottomNavigationAction label="Inbox" icon={<MailOutlineIcon />} />
+      </BottomNavigation>
     </div>
   );
 }

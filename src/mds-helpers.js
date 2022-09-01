@@ -27,7 +27,7 @@ export function getToken(name, setTokenId) {
     })
 }
 
-/* Get the address */
+/* Gets the miniaddress Mx00.. and uses the callback to set it */
 export function getAddress(setAddress) {
     window.MDS.cmd('getaddress', function (res) {
         if (res.status) {
@@ -91,8 +91,8 @@ export function getCoin(name, setCoinId) {
 }
 
 /* Add input to transaction */
-export function addTxnInput(txnName, coinid, setHasInput) {
-    window.MDS.cmd(`txninput id:${txnName} coinid:${coinid} scriptmmr:true`, function (res) {
+export function addTxnInput(txnName, coinId, setHasInput) {
+    window.MDS.cmd(`txninput id:${txnName} coinid:${coinId} scriptmmr:true`, function (res) {
         if (res.status) {
             console.log(`Add input to transaction: ${txnName}`);
             setHasInput(true);
@@ -103,11 +103,11 @@ export function addTxnInput(txnName, coinid, setHasInput) {
 }
 
 /* export transaction */
-export function exportTxn(name, setData) {
-    window.MDS.cmd(`txnexport id:${name}`, function (res) {
+export function exportTxn(txnName, setData) {
+    window.MDS.cmd(`txnexport id:${txnName}`, function (res) {
         if (res.status) {
             setData(res.response.data);
-            console.log(`Export transaction ${name}`);
+            console.log(`Export transaction ${txnName}`);
         } else {
             console.log(res.error);
         }
@@ -115,10 +115,46 @@ export function exportTxn(name, setData) {
 }
 
 /* Use maxima to send transaction data to another node on the network */
-export function sendTxn(data, contact) {
-    window.MDS.cmd(`maxima action:send to:${contact} application:stampd data:${data}`, function (res) {
+export function sendTxn(data, contact, tag, setSent) {
+    window.MDS.cmd(`maxima action:send to:${contact} application:stampd-${tag} data:${data}`, function (res) {
         if (res.response.delivered) {
             console.log(`You've sent a transaction at ${res.response.time} and it's been delivered`);
+            setSent(true);
+        } else {
+            console.log(res.error);
+        }
+    });
+}
+
+export function txnImport(data, txnName) {
+    window.MDS.cmd(`txnimport data:${data} id:${txnName}`, function (res) {
+        if (res.status) {
+            console.log(`You've imported a transaction called ${txnName}`);
+        } else {
+            console.log(res.error);
+        }
+    });
+}
+
+/* Export token data to send to node 2 */
+export function exportToken(tokenId, setTokenExportData) {
+    window.MDS.cmd(`tokens action:export tokenid:${tokenId} `, function (res) {
+        if (res.status) {
+            console.log(`Export Token: ${tokenId}`);
+            setTokenExportData(res.response.data);
+        } else {
+            console.log(res.error);
+            return false;
+        }
+    })
+}
+
+/* Import the token */
+export function tokenImport(data, setTokenImported) {
+    window.MDS.cmd(`txnimport data:${data}`, function (res) {
+        if (res.status) {
+            console.log(`Token Imported`);
+            setTokenImported(true);
         } else {
             console.log(res.error);
         }
