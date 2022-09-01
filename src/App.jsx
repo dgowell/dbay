@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import minimaLogo from './minima_logo.png';
 import './App.css';
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from 'react';
@@ -16,12 +15,14 @@ import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import AppsIcon from '@mui/icons-material/Apps';
 import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
 import WebStoriesIcon from '@mui/icons-material/WebStories';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-
+import SendTokenButton from './SendTokenButton';
+import ResponsiveAppBar from "./ResponsiveAppBar";
 
 function Router(props) {
   const { children } = props;
@@ -69,43 +70,42 @@ function App() {
   return (
     <Router>
       <ThemeProvider theme={theme}>
+        <ResponsiveAppBar />
         <Container component="main" maxWidth="xs">
-          <div className="App">
-            <section className="container">
-              <CssBaseline />
-              <Box
-                sx={{
-                  marginTop: 8,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
+          <CssBaseline />
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            {data ? <ReceiveTransaction data={data} /> : ''}
+            <Routes>
+              <Route path="/favourites" element={<CreateTokenForm />} />
+              <Route path="/marketplace" element={<SendTokenButton />} />
+              <Route path="/my-items" element={<CreateTokenForm />} />
+              <Route path="/inbox" element={<CreateTokenForm />} />
+            </Routes>
+            <Routes>
+              <Route path="*" element={<Content />} />
+            </Routes>
+            <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
+              <BottomNavigation
+                showLabels
+                value={activePage}
+                onChange={(event, page) => {
+                  setActivePage(page);
                 }}
+
               >
-                <img src={minimaLogo} className="logo" alt="logo" />
-                {data ? <ReceiveTransaction data={data} /> : ''}
-                <Routes>
-                  <Route path="/my-items" element={<CreateTokenForm />} />
-                  <Route path="/inbox" element={<CreateTokenForm />} />
-                </Routes>
-                <Routes>
-                  <Route path="*" element={<Content />} />
-                </Routes>
-                <BottomNavigation
-                  showLabels
-                  value={activePage}
-                  onChange={(event, page) => {
-                    setActivePage(page);
-                  }}
-                  sx={{ width: 400 }}
-                >
-                  <BottomNavigationAction component={RouterLink} to="/favourites" label="Favorites" icon={<FavoriteIcon />} />
-                  <BottomNavigationAction component={RouterLink} to="/marketplace" label="Explore" icon={<AppsIcon />} />
-                  <BottomNavigationAction component={RouterLink} to="/my-items" label="My Items" icon={<WebStoriesIcon />} />
-                  <BottomNavigationAction component={RouterLink} to="/inbox" label="Inbox" icon={<MailOutlineIcon />} />
-                </BottomNavigation>
-              </Box>
-            </section>
-          </div>
+                <BottomNavigationAction component={RouterLink} to="/favourites" label="Favorites" icon={<FavoriteIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/marketplace" label="Explore" icon={<AppsIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/my-items" label="My Items" icon={<WebStoriesIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/inbox" label="Inbox" icon={<MailOutlineIcon />} />
+              </BottomNavigation>
+            </Paper>
+          </Box>
         </Container>
       </ThemeProvider>
     </Router>
