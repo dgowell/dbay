@@ -23,6 +23,7 @@ const SendTokenButton = () => {
     };
 
     const handleSubmit = (e) => {
+
         e.preventDefault();
         const command = `send address:${values.address} amount:1 tokenid:${values.tokenId}`;
         window.MDS.cmd(command, function (Token) {

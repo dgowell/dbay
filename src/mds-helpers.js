@@ -27,6 +27,18 @@ export function getToken(name, setTokenId) {
     })
 }
 
+/* Get all tokens */
+export function getTokens(tokens) {
+    window.MDS.cmd(`tokens`, function (res) {
+        if (res.status) {
+            tokens(res.response);
+            console.log(`Get tokens: ${tokens}`);
+        } else {
+            console.log(res.error);
+        }
+    })
+}
+
 /* Gets the miniaddress Mx00.. and uses the callback to set it */
 export function getAddress(setAddress) {
     window.MDS.cmd('getaddress', function (res) {

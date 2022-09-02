@@ -17,12 +17,14 @@ import AppsIcon from '@mui/icons-material/Apps';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import WebStoriesIcon from '@mui/icons-material/WebStories';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import Transaction from "./Transaction";
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import SendTokenButton from './SendTokenButton';
 import ResponsiveAppBar from "./ResponsiveAppBar";
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import InteractiveList from "./ItemLIst";
 
 function Router(props) {
   const { children } = props;
@@ -83,9 +85,9 @@ function App() {
             {data ? <ReceiveTransaction data={data} /> : ''}
             <Routes>
               <Route path="/favourites" element={<CreateTokenForm />} />
-              <Route path="/marketplace" element={<SendTokenButton />} />
+              <Route path="/marketplace" element={<InteractiveList />} />
               <Route path="/my-items" element={<CreateTokenForm />} />
-              <Route path="/inbox" element={<CreateTokenForm />} />
+              <Route path="/sell" element={<Transaction />} />
             </Routes>
             <Routes>
               <Route path="*" element={<Content />} />
@@ -101,8 +103,8 @@ function App() {
               >
                 <BottomNavigationAction component={RouterLink} to="/favourites" label="Favorites" icon={<FavoriteIcon />} />
                 <BottomNavigationAction component={RouterLink} to="/marketplace" label="Explore" icon={<AppsIcon />} />
-                <BottomNavigationAction component={RouterLink} to="/my-items" label="My Items" icon={<WebStoriesIcon />} />
-                <BottomNavigationAction component={RouterLink} to="/inbox" label="Inbox" icon={<MailOutlineIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/my-items" label="Add Item" icon={<WebStoriesIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/sell" label="Sell Item" icon={<MonetizationOnIcon />} />
               </BottomNavigation>
             </Paper>
           </Box>

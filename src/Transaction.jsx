@@ -1,38 +1,5 @@
-/*
-The function follows the below pattern
-
-Create token
-tokencreate name:mynft amount: 1 decimals: 0
-
-Send minima to other node so that is has minima
-Send amount: 10 address:
-
-To get address to receive minima
-    Getaddress
-
-Create transaction
-Txncreate id: swap
-
-Add output to transaction
-txnoutput address:MxG081P54HDF8223AJVDREUR9YEMJ3GZ94GU1RMGS1V5YNQ1MJCMNCKF940V09E id:swap amount: 10 tokenid: 0x00
-
-find which nft you want to send
-coins
-
-Add input to transaction
-Txninput id:swap coinid:mskdmsmdksdm scriptmmr: true
-
-Pass your transaction to the other node
-Txnexport id:swap file: filename.txn
-
-So that the other node knows about your token you have to export it too
-Tokens action:export tokenid: theiidofthetokentoexport
-
-Copy the data
-*/
 import React, { useState, useEffect } from 'react';
 import {
-    createNFT,
     getToken,
     getAddress,
     addContact,
@@ -44,18 +11,29 @@ import {
     sendTxn,
     exportToken
 } from './mds-helpers';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
+import Grid from '@mui/material/Grid';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import OutlinedInput from '@mui/material/OutlinedInput';
 
+const slugify = str =>
+    str
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 
 const Transaction = () => {
-    const TOKEN_NAME = 'Test';
-    const TOKEN_LINK = 'www.google.com';
-    const TOKEN_DESC = 'This is a description of a token';
-    const txnName = 'swap';
-    const amount = 10;
+    //const TOKEN_NAME = 'Test';
     const MAX_CONTACT = 'MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1GGHUVYU7SVFC423GVRA99Q10649D2Q06R3NA7UJ1JAJCYW78FHHZKV1BY3R2AWMZ0UGJ3YB4TZ3D002A8PAK5N2W313FPCW2AC7VD5TAUQ29309Q0QP7MMWU3S1C6G0GMA783UQFVU4AW9AK35308ZZ1DM8W9H3T3D09VSKUQEMCFQ6GZCD1GQ9E9JS87T4EG3YBJQFGJVHNK106080044PZWW6@192.168.1.83:10001';
 
     const [tokenId, setTokenId] = useState();
-    const [tokenCreated, setTokenCreated] = useState(false);
     const [outAddress, setOutAddress] = useState();
     const [txnId, setTxnId] = useState();
     const [sent, setSent] = useState(false);
@@ -65,23 +43,24 @@ const Transaction = () => {
     const [coinId, setCoinId] = useState();
     const [data, setData] = useState();
     const [tokenExportData, setTokenExportData] = useState();
+    const [txnName, setTxnName] = useState();
+    const [loading, setLoading] = React.useState(false);
+    const [values, setValues] = useState({
+        name: '',
+        price: '',
+        address: '',
+    })
 
     useEffect(() => {
-        if (!contact) {
-            addContact(MAX_CONTACT, setContact);
+        if (values.name && values.price) {
+            setTxnName(`${slugify(values.name)}-${values.price}`);
         }
-    }, []);
-
-    useEffect(() => {
-        if (tokenCreated) {
-            getToken(TOKEN_NAME, setTokenId);
-        }
-    }, [tokenCreated]);
+    }, [values.name, values.price]);
 
     useEffect(() => {
         if (txnName && outAddress && tokenId) {
-            addTxnOutput(txnName, outAddress, amount, tokenId, setHasOutput);
-            getCoin(TOKEN_NAME, setCoinId);
+            addTxnOutput(txnName, outAddress, values.price, tokenId, setHasOutput);
+            getCoin(values.name, setCoinId);
         }
     }, [txnName, outAddress, tokenId]);
 
@@ -113,20 +92,85 @@ const Transaction = () => {
         }
     }, [tokenExportData, contact]);
 
-    async function handleClick() {
-        createNFT(TOKEN_NAME, TOKEN_LINK, TOKEN_DESC, setTokenCreated);
+    const handleChange = (prop) => (event) => {
+        setValues({ ...values, [prop]: event.target.value });
+    };
+
+    async function handleSubmit(e) {
+        setLoading(true);
+        e.preventDefault();
         getAddress(setOutAddress);
-        getToken(TOKEN_NAME, setTokenId);
+        getToken(values.name, setTokenId);
+        addContact(values.address, setContact);
         createTransaction(txnName, setTxnId);
     }
 
     return (
-        <ul> {sent
-            ? <p>TokenId: {tokenId}, Transaction Id: {txnId}, Output Address: {outAddress}</p>
-            : <button onClick={handleClick}>Create Transaction</button>
-        }
-        </ul>
+        <Box
+            sx={{
+                marginTop: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+            }}
+        >
+            <Typography variant="h4" gutterBottom>
+                Sell Product
+            </Typography>
+            <Box
+                component="form"
+                sx={{ mt: 3 }}
+                noValidate
+                autoComplete="off"
+                onSubmit={handleSubmit}
+            >
+                <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Product Name"
+                            id="product-name"
+                            className="form-field"
+                            type="text"
+                            required
+                            fullWidth
+                            name="name"
+                            value={values.name}
+                            onChange={handleChange('name')}
+                            ariant="outlined"
+                        />
 
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            label="Customers Address"
+                            id="address"
+                            required
+                            fullWidth
+                            className="form-field"
+                            type="text"
+                            name="address"
+                            value={values.address}
+                            onChange={handleChange('address')}
+                            ariant="outlined"
+                        />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <FormControl fullWidth required>
+                            <InputLabel htmlFor="price">Price</InputLabel>
+                            <OutlinedInput
+                                id="price"
+                                value={values.price}
+                                onChange={handleChange('price')}
+                                startAdornment={<InputAdornment position="start">M</InputAdornment>}
+                                label="price"
+                            />
+                        </FormControl>
+                    </Grid>
+                </Grid>
+                <LoadingButton fullWidth variant="contained" type="submit" value="Create Token" loading={loading}
+                    loadingPosition="end" sx={{ mt: 3, mb: 2 }}>Submit</LoadingButton>
+            </Box>
+        </Box>
     )
 
 }
