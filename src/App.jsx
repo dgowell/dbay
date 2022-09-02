@@ -80,6 +80,7 @@ function App() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             {data ? <ReceiveTransaction data={data} /> : ''}
@@ -88,9 +89,6 @@ function App() {
               <Route path="/marketplace" element={<InteractiveList />} />
               <Route path="/my-items" element={<CreateTokenForm />} />
               <Route path="/sell" element={<Transaction />} />
-            </Routes>
-            <Routes>
-              <Route path="*" element={<Content />} />
             </Routes>
             <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
               <BottomNavigation
