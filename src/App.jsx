@@ -24,7 +24,7 @@ import Typography from '@mui/material/Typography';
 import SendTokenButton from './SendTokenButton';
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import InteractiveList from "./ItemLIst";
+import InteractiveList from "./ItemList";
 
 function Router(props) {
   const { children } = props;

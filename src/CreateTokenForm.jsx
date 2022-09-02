@@ -34,6 +34,7 @@ const CreateTokenForm = () => {
 
         const command = `
         tokencreate amount:1 decimal:0 name:{
+        "app":"stampd",
         "name":"${values.name}",
         "original_price":"${values.originalPrice}",
         "sale_price":"${values.salePrice}",

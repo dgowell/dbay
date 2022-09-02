@@ -29,6 +29,10 @@ export default function InteractiveList() {
         getTokens(setTokens);
     }, []);
 
+    function isMarketplaceItem(value) {
+        return value.name.app === 'stampd';
+    }
+
     if (tokens) {
         return (
             <Box sx={{ flexGrow: 1, maxWidth: 752 }}>
@@ -55,33 +59,31 @@ export default function InteractiveList() {
                 <Grid container spacing={2}>
                     <Grid item xs={12} >
                         <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-                            Items you own for sale
+                            Marketplace
                         </Typography>
-                        <Demo>
-                            <List dense={dense}>
-                                {tokens.map(token =>
-                                    <ListItem
-                                        secondaryAction={
-                                            <IconButton edge="end" aria-label="delete">
-                                                <ListItemText
-                                                    primary={token.name.sale_price ? `£${token.name.sale_price}` : null}
-                                                />
-                                            </IconButton>
-                                        }
-                                    >
-                                        <ListItemAvatar>
-                                            <Avatar>
-                                                <FolderIcon />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={token.name.name}
-                                            secondary={secondary ? token.name.description : null}
-                                        />
-                                    </ListItem>,
-                                )}
-                            </List>
-                        </Demo>
+                        <List dense={dense}>
+                            {tokens.filter(isMarketplaceItem).map(token =>
+                                <ListItem
+                                    secondaryAction={
+                                        <IconButton edge="end" aria-label="delete">
+                                            <ListItemText
+                                                primary={token.name.sale_price ? `£${token.name.sale_price}` : null}
+                                            />
+                                        </IconButton>
+                                    }
+                                >
+                                    <ListItemAvatar>
+                                        <Avatar>
+                                            <FolderIcon />
+                                        </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={token.name.name}
+                                        secondary={secondary ? token.name.description : null}
+                                    />
+                                </ListItem>,
+                            )}
+                        </List>
                     </Grid>
                 </Grid>
             </Box>
