@@ -55,7 +55,7 @@ const ResponsiveAppBar = () => {
                             textDecoration: 'none',
                         }}
                     >
-                        <img src={minimaLogo} className="logo" alt="logo" />
+                        stampd.
                     </Typography>
 
                     <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -111,14 +111,14 @@ const ResponsiveAppBar = () => {
                             textDecoration: 'none',
                         }}
                     >
-                        <img src={minimaLogo} className="logo" alt="logo" />
+                        stampd.
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                         {pages.map((page) => (
                             <Button
                                 key={page}
                                 onClick={handleCloseNavMenu}
-                                sx={{ my: 2, backgroundColor: 'white', color: 'white', display: 'block' }}
+                                sx={{ my: 2, backgroundColor: 'inherit', color: 'inherit', display: 'block' }}
                             >
                                 {page}
                             </Button>
