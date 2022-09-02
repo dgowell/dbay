@@ -20,6 +20,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import { getTokens } from './mds-helpers';
 
 const slugify = str =>
     str
@@ -44,12 +45,17 @@ const Transaction = () => {
     const [data, setData] = useState();
     const [tokenExportData, setTokenExportData] = useState();
     const [txnName, setTxnName] = useState();
+    const [tokens, setTokens] = useState();
     const [loading, setLoading] = React.useState(false);
     const [values, setValues] = useState({
         name: '',
         price: '',
         address: '',
     })
+
+    useEffect(() => {
+        getTokens(setTokens);
+    }, []);
 
     useEffect(() => {
         if (values.name && values.price) {
