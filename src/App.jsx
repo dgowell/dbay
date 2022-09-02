@@ -21,7 +21,7 @@ import Transaction from "./Transaction";
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import SendTokenButton from './SendTokenButton';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import InteractiveList from "./ItemList";
@@ -85,7 +85,7 @@ function App() {
           >
             {data ? <ReceiveTransaction data={data} /> : ''}
             <Routes>
-              <Route path="/favourites" element={<CreateTokenForm />} />
+              <Route path="/receive" element={<CreateTokenForm />} />
               <Route path="/marketplace" element={<InteractiveList />} />
               <Route path="/my-items" element={<CreateTokenForm />} />
               <Route path="/sell" element={<Transaction />} />
@@ -99,8 +99,8 @@ function App() {
                 }}
 
               >
-                <BottomNavigationAction component={RouterLink} to="/favourites" label="Favorites" icon={<FavoriteIcon />} />
-                <BottomNavigationAction component={RouterLink} to="/marketplace" label="Explore" icon={<AppsIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/receive" label="Buy" icon={<ShoppingCartIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/marketplace" label="Marketplace" icon={<AppsIcon />} />
                 <BottomNavigationAction component={RouterLink} to="/my-items" label="Add Item" icon={<WebStoriesIcon />} />
                 <BottomNavigationAction component={RouterLink} to="/sell" label="Sell Item" icon={<MonetizationOnIcon />} />
               </BottomNavigation>

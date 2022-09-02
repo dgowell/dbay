@@ -14,6 +14,7 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import FolderIcon from '@mui/icons-material/Folder';
 import { getTokens } from './mds-helpers';
+import MarketplaceListItem from './MarketplaceListItem';
 
 
 const Demo = styled('div')(({ theme }) => ({
@@ -61,29 +62,13 @@ export default function InteractiveList() {
                         <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
                             Marketplace
                         </Typography>
-                        <List dense={dense}>
-                            {tokens.filter(isMarketplaceItem).map(token =>
-                                <ListItem
-                                    secondaryAction={
-                                        <IconButton edge="end" aria-label="delete">
-                                            <ListItemText
-                                                primary={token.name.sale_price ? `£${token.name.sale_price}` : null}
-                                            />
-                                        </IconButton>
-                                    }
-                                >
-                                    <ListItemAvatar>
-                                        <Avatar>
-                                            <FolderIcon />
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={token.name.name}
-                                        secondary={secondary ? token.name.description : null}
-                                    />
-                                </ListItem>,
-                            )}
-                        </List>
+                        <Demo>
+                            <List dense={dense}>
+                                {tokens.filter(isMarketplaceItem).map(token =>
+                                    <MarketplaceListItem key={token.tokenid} token={token} secondary={secondary} />
+                                )}
+                            </List>
+                        </Demo>
                     </Grid>
                 </Grid>
             </Box>
