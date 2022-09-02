@@ -13,7 +13,6 @@ import Checkbox from '@mui/material/Checkbox';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import FolderIcon from '@mui/icons-material/Folder';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { getTokens } from './mds-helpers';
 
 
@@ -64,7 +63,9 @@ export default function InteractiveList() {
                                     <ListItem
                                         secondaryAction={
                                             <IconButton edge="end" aria-label="delete">
-                                                <DeleteIcon />
+                                                <ListItemText
+                                                    primary={token.name.sale_price ? `£${token.name.sale_price}` : null}
+                                                />
                                             </IconButton>
                                         }
                                     >
