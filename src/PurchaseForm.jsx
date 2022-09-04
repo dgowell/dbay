@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    getTokenId,
+    getToken,
     getAddress,
     addContact,
     createTransaction,
@@ -22,17 +22,10 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import { getTokens } from './mds-helpers';
 
-const slugify = str =>
-    str
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
 
-const Transaction = () => {
+const PurchaseForm = () => {
     //const TOKEN_NAME = 'Test';
-    const MAX_CONTACT = 'MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1GGHUVYU7SVFC423GVRA99Q10649D2Q06R3NA7UJ1JAJCYW78FHHZKV1BY3R2AWMZ0UGJ3YB4TZ3D002A8PAK5N2W313FPCW2AC7VD5TAUQ29309Q0QP7MMWU3S1C6G0GMA783UQFVU4AW9AK35308ZZ1DM8W9H3T3D09VSKUQEMCFQ6GZCD1GQ9E9JS87T4EG3YBJQFGJVHNK106080044PZWW6@192.168.1.83:10001';
+    //const MAX_CONTACT = 'MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1GGHUVYU7SVFC423GVRA99Q10649D2Q06R3NA7UJ1JAJCYW78FHHZKV1BY3R2AWMZ0UGJ3YB4TZ3D002A8PAK5N2W313FPCW2AC7VD5TAUQ29309Q0QP7MMWU3S1C6G0GMA783UQFVU4AW9AK35308ZZ1DM8W9H3T3D09VSKUQEMCFQ6GZCD1GQ9E9JS87T4EG3YBJQFGJVHNK106080044PZWW6@192.168.1.83:10001';
 
     const [tokenId, setTokenId] = useState();
     const [outAddress, setOutAddress] = useState();
@@ -106,7 +99,7 @@ const Transaction = () => {
         setLoading(true);
         e.preventDefault();
         getAddress(setOutAddress);
-        getTokenId(values.name, setTokenId);
+        getToken(values.name, setTokenId);
         addContact(values.address, setContact);
         createTransaction(txnName, setTxnId);
     }
@@ -132,7 +125,7 @@ const Transaction = () => {
             >
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <TextField
+                        <SelectField
                             label="Product Name"
                             id="product-name"
                             className="form-field"
@@ -181,4 +174,4 @@ const Transaction = () => {
 
 }
 
-export default Transaction;
+export default PurchaseForm;

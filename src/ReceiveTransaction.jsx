@@ -13,7 +13,7 @@ import React, {
     useEffect,
 } from 'react';
 import {
-    getToken,
+    getTokenId,
     getAddress,
     addTxnOutput,
     addContact,
@@ -62,7 +62,7 @@ const ReceiveTransaction = (data) => {
 
     useEffect(() => {
         if (tokenImported) {
-            getToken(TOKEN_NAME, setTokenId);
+            getTokenId(TOKEN_NAME, setTokenId);
         }
     }, [tokenImported]);
 

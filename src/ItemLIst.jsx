@@ -65,7 +65,14 @@ export default function InteractiveList() {
                         <Demo>
                             <List dense={dense}>
                                 {tokens.filter(isMarketplaceItem).map(token =>
-                                    <MarketplaceListItem key={token.tokenid} token={token} secondary={secondary} />
+                                    <MarketplaceListItem
+                                        image={token.name.image}
+                                        price={token.name.price}
+                                        key={token.tokenid}
+                                        primary={token.name.name}
+                                        secondary={secondary}
+                                        to={`/item/${token.tokenid}`}
+                                        description={token.name.desciption} />
                                 )}
                             </List>
                         </Demo>

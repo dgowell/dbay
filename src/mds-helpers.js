@@ -14,13 +14,26 @@ export function createNFT(name, link, description, setTokenCreated) {
     })
 }
 
-/* Get the token with a given name */
-export function getToken(name, setTokenId) {
+/* Return token Id with a given token name */
+export function getTokenId(name, setTokenId) {
     window.MDS.cmd(`tokens`, function (res) {
         if (res.status) {
             let t = res.response.find(token => token.name.name === name);
             setTokenId(t['tokenid']);
             console.log(`Get token: ${name}`);
+        } else {
+            console.log(res.error);
+        }
+    })
+}
+
+/* Return token data with a given token ID */
+export function getTokenData(id, setData) {
+    window.MDS.cmd(`tokens`, function (res) {
+        if (res.status) {
+            let data = res.response.find(token => token.tokenid === id);
+            setData(data);
+            console.log(`Get token: ${id}`);
         } else {
             console.log(res.error);
         }

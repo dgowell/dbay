@@ -25,6 +25,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import InteractiveList from "./ItemList";
+import ItemDetail from "./ItemDetail";
 
 function Router(props) {
   const { children } = props;
@@ -81,12 +82,14 @@ function App() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              mb: 10
             }}
           >
             {data ? <ReceiveTransaction data={data} /> : ''}
             <Routes>
               <Route path="/receive" element={<CreateTokenForm />} />
               <Route path="/marketplace" element={<InteractiveList />} />
+              <Route path="item/:tokenId" element={<ItemDetail />} />
               <Route path="/my-items" element={<CreateTokenForm />} />
               <Route path="/sell" element={<Transaction />} />
             </Routes>

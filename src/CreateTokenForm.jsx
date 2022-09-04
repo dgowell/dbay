@@ -38,7 +38,8 @@ const CreateTokenForm = () => {
         "name":"${values.name}",
         "original_price":"${values.originalPrice}",
         "sale_price":"${values.salePrice}",
-        "description":"${values.description}"
+        "description":"${values.description}",
+        "image":"${values.image}"
         }`;
 
         window.MDS.cmd(command, function (res) {
@@ -97,9 +98,23 @@ const CreateTokenForm = () => {
                                 fullWidth
                                 className="form-field"
                                 type="textarea"
-                                name="link"
+                                name="description"
                                 value={values.description}
                                 onChange={handleChange('description')}
+                                ariant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Image"
+                                id="product-image"
+                                required
+                                fullWidth
+                                className="form-field"
+                                type="text"
+                                name="image"
+                                value={values.image}
+                                onChange={handleChange('image')}
                                 ariant="outlined"
                             />
                         </Grid>

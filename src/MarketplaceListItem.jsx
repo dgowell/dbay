@@ -3,38 +3,41 @@ import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
-import IconButton from '@mui/material/IconButton';
-import BungalowIcon from '@mui/icons-material/Bungalow';
 
-const MarketplaceListItem = ({ token, secondary }) => {
-    if (token) {
-        return (
-            <ListItem
-                key={token.tokenid}
-                secondaryAction={
-                    <IconButton edge="end" aria-label="delete">
-                        <ListItemText
-                            primary={token.name.sale_price ? `£${token.name.sale_price}` : null}
-                        />
-                    </IconButton>
-                }
-            >
+import BungalowIcon from '@mui/icons-material/Bungalow';
+import { Link as RouterLink } from 'react-router-dom';
+
+
+const MarketplaceListItem = (props) => {
+    const { image, price, primary, secondary, to, description } = props;
+
+    const renderLink = React.useMemo(
+        () =>
+            React.forwardRef(function Link(itemProps, ref) {
+                return <RouterLink to={to} ref={ref} {...itemProps} role={undefined} />;
+            }),
+        [to],
+    );
+
+
+    return (
+        <li>
+            <ListItem button component={renderLink}
+                secondaryAction={<ListItemText primary={price ? `£${price}` : null} />} >
                 <ListItemAvatar>
-                    {token.name.image
-                        ? <Avatar alt={token.name.name} src={token.name.image} />
+                    {image
+                        ? <Avatar alt={primary} src={image} />
                         : <Avatar>
                             <BungalowIcon />
                         </Avatar>
                     }
                 </ListItemAvatar>
                 <ListItemText
-                    primary={token.name.name}
-                    secondary={token.secondary ? token.name.description : null}
+                    primary={primary}
+                    secondary={secondary ? description : null}
                 />
             </ListItem>
-        )
-    } else {
-        return '';
-    }
+        </li>
+    )
 }
 export default MarketplaceListItem;
