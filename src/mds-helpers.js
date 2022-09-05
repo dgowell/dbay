@@ -19,7 +19,7 @@ export function getTokenId(name) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`tokens`, function (res) {
             if (res.status) {
-                let t = res.response.find(token => token.name.name === name);
+                let t = res.response.find(token => slugify(token.name.name) === slugify(name));
                 if (t) {
                     resolve(t['tokenid']);
                     console.log(`Get token: ${name}`);
@@ -33,6 +33,27 @@ export function getTokenId(name) {
         })
     })
 }
+
+/* Return token amount when given token name */
+export function getTokenAmount(name) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`tokens`, function (res) {
+            if (res.status) {
+                let t = res.response.find(token => slugify(token.name.name) === slugify(name));
+                if (t) {
+                    resolve(t.name.sale_price);
+                    console.log(`Get token: ${name}`);
+                } else {
+                    reject("No Token with that name");
+                }
+            } else {
+                console.log(res.error);
+                reject(res.error);
+            }
+        })
+    })
+}
+
 
 /* Return token data with a given token ID */
 export function getTokenData(id, setData) {
@@ -102,13 +123,18 @@ export function addContact(hex, setContact) {
     })
 }
 
-const slugify = str =>
-    str
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+function slugify(str) {
+    if (str) {
+        return str
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    } else {
+        return null;
+    }
+}
 
 /* Create transaction with a given name and return a Promise */
 export function createTransaction(name) {
@@ -142,6 +168,21 @@ export function addTxnOutput(txnName, address, amount, tokenId) {
     });
 }
 
+/* returns coin Id when given a name */
+export function getCoinIdByAmount(amount) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`coins`, function (res) {
+            if (res.status) {
+                let coin = res.response.find(c => c.amount === amount);
+                resolve(coin.coinid);
+                console.log(`Get Coin: ${coin.coinid}`);
+            } else {
+                reject(res.error);
+                console.log(res.error);
+            }
+        })
+    })
+}
 
 /* returns coin Id when given a token id */
 export function getCoin(tokenId) {
@@ -204,13 +245,17 @@ export function sendTxn(data, contact, tag) {
     })
 }
 
-export function txnImport(data, txnName) {
-    window.MDS.cmd(`txnimport data:${data} id:${txnName}`, function (res) {
-        if (res.status) {
-            console.log(`You've imported a transaction called ${txnName}`);
-        } else {
-            console.log(res.error);
-        }
+export function txnImport(data) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`txnimport data:${data}`, function (res) {
+            if (res.status) {
+                console.log(`You've imported a transaction`);
+                resolve(true);
+            } else {
+                console.log(res.error);
+                reject(res.error);
+            }
+        });
     });
 }
 
@@ -227,6 +272,21 @@ export function exportToken(tokenId, setTokenExportData) {
     })
 }
 
+/* Export token data to send to node 2 */
+export function createPurchaseCoin(amount, address) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`send amount:${amount} address:${address} `, function (res) {
+            if (res.status) {
+                console.log(`Create coin for ${amount} minima`);
+                resolve(true);
+            } else {
+                console.log(res.error);
+                reject(res.error);
+            }
+        })
+    });
+}
+
 /* Import the token */
 export function tokenImport(data, setTokenImported) {
     window.MDS.cmd(`txnimport data:${data}`, function (res) {
@@ -239,23 +299,74 @@ export function tokenImport(data, setTokenImported) {
     });
 }
 
+/* Signing the transaction */
+export function signTxn(txnName) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`txnsign id:${txnName} publickey:auto`, function (res) {
+            if (res.status) {
+                console.log(`Transaction ${txnName} has been signed!`);
+                resolve(true);
+            } else {
+                console.log(res.error);
+                reject(res.error);
+            }
+        })
+    });
+}
+
+/* save data to a database */
+
 export function sendPurchaseRequest(tokenName, amount, sellersAddress) {
     const txnName = slugify(tokenName);
     let tokenId, address, coinId;
-    Promise.all([getTokenId(tokenName), getAddress(), createTransaction(slugify(txnName))]).then(function (result) {
-        tokenId = result[0];
-        address = result[1];
-        return getCoin(tokenId);
-    }).then(function (result) {
-        coinId = result;
-        return addTxnOutput(txnName, address, amount, tokenId);
-    }).then(function (result) {
-        return addTxnInput(txnName, coinId);
-    }).then(function (result) {
-        return exportTxn(txnName);
-    }).then(function (result) {
-        return sendTxn(result, sellersAddress, txnName);
-    }).catch(function (error) {
-        console.log(error);
-    });
+    Promise.all([getTokenId(tokenName), getAddress(), createTransaction(txnName)])
+        .then(function (result) {
+            tokenId = result[0];
+            address = result[1];
+            return createPurchaseCoin(amount, address);
+        }).then(function (result) {
+            return getCoinIdByAmount(amount);
+        }).then(function (result) {
+            coinId = result;
+            return addTxnOutput(txnName, address, amount, tokenId);
+        }).then(function (result) {
+            return addTxnInput(txnName, coinId);
+        }).then(function (result) {
+            return exportTxn(txnName);
+        }).then(function (result) {
+            return sendTxn(result, sellersAddress, txnName);
+        }).catch(function (error) {
+            console.log(error);
+        });
+}
+
+export function receivePurchaseRequest(msg) {
+    const data = msg.data;
+    let address, tokenId, coinId, amount;
+    const buyersAddress = msg.from;
+    //the application name contains the transaction name with stampd- infront of it so this is removed
+    const txnName = msg.application.slice(7);
+
+    Promise.all([txnImport(data), getAddress(), getTokenAmount(txnName)])
+        .then(function (result) {
+            address = result[1];
+            amount = result[2];
+            return getTokenId(txnName);
+        }).then(function (result) {
+            tokenId = result;
+            return getCoin(tokenId);
+        }).then(function (result) {
+            coinId = result;
+            return addTxnOutput(txnName, address, amount, tokenId);
+        }).then(function (result) {
+            return addTxnInput(txnName, coinId);
+        }).then(function (result) {
+            return signTxn(txnName);
+        }).then(function (result) {
+            return exportTxn(txnName);
+        }).then(function (result) {
+            return sendTxn(result, buyersAddress, txnName);
+        }).catch(function (error) {
+            console.log(error);
+        });
 }

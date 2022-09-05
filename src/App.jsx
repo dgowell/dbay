@@ -8,8 +8,7 @@ import {
 } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
 import CssBaseline from '@mui/material/CssBaseline';
-import ReceiveTransaction from "./ReceiveTransaction";
-import CreateTokenForm from "./CreateTokenForm";
+import CreateTokenForm from "./AddItem";
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import AppsIcon from '@mui/icons-material/Apps';
@@ -22,6 +21,7 @@ import Typography from '@mui/material/Typography';
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import InteractiveList from "./ItemList";
 import ItemDetail from "./ItemDetail";
+import { receivePurchaseRequest } from './mds-helpers';
 
 function Router(props) {
   const { children } = props;
@@ -40,7 +40,7 @@ const theme = createTheme();
 
 
 function App() {
-  const [data, setData] = useState();
+  //  const [data, setData] = useState();
   const [activePage, setActivePage] = useState();
 
   useEffect(() => {
@@ -49,7 +49,7 @@ function App() {
         console.log(msg);
         if (msg.data.data) {
           //TODO: you could check here for correct application
-          setData(msg.data.data);
+          receivePurchaseRequest(msg.data);
         }
       }
     });
@@ -81,7 +81,6 @@ function App() {
               mb: 10
             }}
           >
-            {data ? <ReceiveTransaction data={data} /> : ''}
             <Routes>
               <Route path="/marketplace" element={<InteractiveList />} />
               <Route path="item/:tokenId" element={<ItemDetail />} />

@@ -11,14 +11,13 @@ import Typography from '@mui/material/Typography';
 const ItemDetail = () => {
     const [data, setData] = React.useState();
     const params = useParams();
-    const amount = 10;
 
     useEffect(() => {
         getTokenData(params.tokenId, setData);
     }, []);
 
     function handleClick() {
-        sendPurchaseRequest(data.name.name, amount, data.name.sellers_address);
+        sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address);
     }
 
     if (data) {

@@ -11,7 +11,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import { getMaximaAddress } from './mds-helpers';
 
 
-const CreateTokenForm = () => {
+const AddItem = () => {
     const [token, setToken] = useState(null);
     const [loading, setLoading] = React.useState(false);
     const [address, setAddress] = React.useState();
@@ -199,4 +199,4 @@ const CreateTokenForm = () => {
     return token ? <p> NFT created for the {values.name} </p> : '';
 }
 
-export default CreateTokenForm;
+export default AddItem;
