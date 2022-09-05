@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getTokenData } from './mds-helpers';
+import { sendPurchaseRequest, getTokenData } from './mds-helpers';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
@@ -11,10 +11,15 @@ import Typography from '@mui/material/Typography';
 const ItemDetail = () => {
     const [data, setData] = React.useState();
     const params = useParams();
+    const amount = 10;
 
     useEffect(() => {
         getTokenData(params.tokenId, setData);
     }, []);
+
+    function handleClick() {
+        sendPurchaseRequest(data.name.name, amount, data.name.sellers_address);
+    }
 
     if (data) {
         return (
@@ -43,9 +48,9 @@ const ItemDetail = () => {
                     </Typography>
                 </CardContent>
                 <CardActions>
-                    <Button size="small">Buy Now</Button>
+                    <Button onClick={handleClick} size="small">Buy Now</Button>
                 </CardActions>
-            </Card>
+            </Card >
         )
     } else {
         return <p>Sorry we could not data for the item</p>

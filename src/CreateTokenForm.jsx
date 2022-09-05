@@ -8,17 +8,27 @@ import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import { getMaximaAddress } from './mds-helpers';
 
 
 const CreateTokenForm = () => {
     const [token, setToken] = useState(null);
     const [loading, setLoading] = React.useState(false);
+    const [address, setAddress] = React.useState();
     const [values, setValues] = useState({
         name: '',
         originalPrice: '',
         salePrice: '',
         description: ''
     })
+
+    React.useEffect(() => {
+        getMaximaAddress().then(function (result) {
+            setAddress(result);
+        }).catch(function (error) {
+            console.log(error);
+        });
+    }, []);
 
     function checkName(token, name) {
         return token.token.name.name === name;
@@ -35,6 +45,7 @@ const CreateTokenForm = () => {
         const command = `
         tokencreate amount:1 decimal:0 name:{
         "app":"stampd",
+        "sellers_address": "${address}",
         "name":"${values.name}",
         "original_price":"${values.originalPrice}",
         "sale_price":"${values.salePrice}",
@@ -180,7 +191,7 @@ const CreateTokenForm = () => {
                         </Grid>
                     </Grid>
                     <LoadingButton fullWidth variant="contained" type="submit" value="Create Token" loading={loading}
-                        loadingPosition="end" sx={{ mt: 3, mb: 2 }}>Submit</LoadingButton>
+                        disabled={address ? false : true} loadingPosition="end" sx={{ mt: 3, mb: 2 }}>Submit</LoadingButton>
                 </Box>
             </Box>
         )
