@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
 import CssBaseline from '@mui/material/CssBaseline';
-import CreateTokenForm from "./AddItem";
+import CreateTokenForm from "./components/AddItem";
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import AppsIcon from '@mui/icons-material/Apps';
@@ -21,7 +21,7 @@ import Typography from '@mui/material/Typography';
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import InteractiveList from "./ItemList";
 import ItemDetail from "./ItemDetail";
-import { receivePurchaseRequest } from './mds-helpers';
+import { receivePurchaseRequest, checkAndSignTransaction } from './mds-helpers';
 
 function Router(props) {
   const { children } = props;
@@ -48,11 +48,14 @@ function App() {
       if (msg.event === 'MAXIMA') {
         console.log(msg);
         if (msg.data.data) {
-          //TODO: you could check here for correct application
-          receivePurchaseRequest(msg.data);
+          if (msg.data.application.contains("stampd-seller_sign")) {
+            //TODO: you could check here for correct application
+            receivePurchaseRequest(msg.data);
+          } else if (msg.data.application.contains("stampd-buyer_sign-")) {
+            checkAndSignTransaction(msg.data);
+          }
         }
-      }
-    });
+      });
   }, []);
 
   function Content() {

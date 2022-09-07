@@ -174,7 +174,23 @@ export function getCoinIdByAmount(amount) {
         window.MDS.cmd(`coins`, function (res) {
             if (res.status) {
                 let coin = res.response.find(c => c.amount === amount);
-                resolve(coin.coinid);
+                coin ? resolve(coin.coinid) : reject('No coin with that amount');
+                console.log(`Get Coin: ${coin.coinid}`);
+            } else {
+                reject(res.error);
+                console.log(res.error);
+            }
+        })
+    })
+}
+
+/* returns coin Id when given a name */
+export function getCoinIdFromMiniAddress(miniaddress) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`coins`, function (res) {
+            if (res.status) {
+                let coin = res.response.find(c => c.miniaddress === miniaddress);
+                coin ? resolve(coin.coinid) : reject(`No coin with that miniaddress ${miniaddress}`);
                 console.log(`Get Coin: ${coin.coinid}`);
             } else {
                 reject(res.error);
@@ -190,7 +206,7 @@ export function getCoin(tokenId) {
         window.MDS.cmd(`coins`, function (res) {
             if (res.status) {
                 let coin = res.response.find(c => c.tokenid === tokenId);
-                resolve(coin['coinid']);
+                coin ? resolve(coin.coinid) : reject('No coin with that ID');
                 console.log(`Get Coin: ${coin['coinid']}`);
             } else {
                 reject(res.error);
@@ -201,7 +217,7 @@ export function getCoin(tokenId) {
 }
 
 /* Add input to transaction */
-export function addTxnInput(txnName, coinId) {
+export function addTxnInput(txnName, coinId, amount) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`txninput id:${txnName} coinid:${coinId} scriptmmr:true`, function (res) {
             if (res.status) {
@@ -275,10 +291,12 @@ export function exportToken(tokenId, setTokenExportData) {
 /* Export token data to send to node 2 */
 export function createPurchaseCoin(amount, address) {
     return new Promise(function (resolve, reject) {
-        window.MDS.cmd(`send amount:${amount} address:${address} `, function (res) {
+        window.MDS.cmd(`send amount:${amount} address:${address}`, function (res) {
             if (res.status) {
+                const coin = res.response.body.txn.outputs.find(coin => coin.amount === amount);
                 console.log(`Create coin for ${amount} minima`);
-                resolve(true);
+                //wait for coin to be processed properly before resolving otherwise it won't appear in the chain
+                setTimeout(resolve(coin.miniaddress), 3000);
             } else {
                 console.log(res.error);
                 reject(res.error);
@@ -315,6 +333,31 @@ export function signTxn(txnName) {
 }
 
 /* save data to a database */
+export async function saveTxnToDatabase(txnName, buyersAddress, data, amount, tokenId, coinId) {
+    return new Promise(function (resolve, reject) {
+        const transaction = {
+            txnName,
+            buyersAddress,
+            data,
+            amount,
+            tokenId,
+            coinId
+        }
+        fetch("http://localhost:5001/transaction/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(transaction),
+        }).then(function (result) {
+            resolve(result);
+        }).catch(error => {
+            window.alert(error);
+            reject(error);
+        });
+    });
+
+}
 
 export function sendPurchaseRequest(tokenName, amount, sellersAddress) {
     const txnName = slugify(tokenName);
@@ -359,13 +402,13 @@ export function receivePurchaseRequest(msg) {
             coinId = result;
             return addTxnOutput(txnName, address, amount, tokenId);
         }).then(function (result) {
-            return addTxnInput(txnName, coinId);
+            return addTxnInput(txnName, coinId, amount);
         }).then(function (result) {
             return signTxn(txnName);
         }).then(function (result) {
             return exportTxn(txnName);
         }).then(function (result) {
-            return sendTxn(result, buyersAddress, txnName);
+            return saveTxnToDatabase(txnName, buyersAddress, result, amount, tokenId, coinId);
         }).catch(function (error) {
             console.log(error);
         });
