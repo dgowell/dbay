@@ -362,7 +362,7 @@ export async function saveTxnToDatabase(txnName, buyersAddress, data, amount, to
 
 }
 
-export function sendPurchaseRequest(tokenName, amount, sellersAddress) {
+export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseId) {
     const txnName = slugify(tokenName);
     let tokenId, address, coinId;
     Promise.all([getTokenId(tokenName), getAddress(), createTransaction(txnName)])

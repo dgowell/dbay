@@ -17,8 +17,35 @@ const ItemDetail = () => {
     }, []);
 
     function handleClick() {
-        sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address);
+        sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address, data.name.database_id);
     }
+    function handleRefresh() {
+        getTokenData(params.tokenId, setData);
+    }
+    async function getItem(id) {
+        let response = await fetch(`http://localhost:5001/item/${id}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        }).catch(error => {
+            window.alert(error);
+            return;
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    }
+    useEffect(() => {
+        if (data) {
+            if (data.name.database_id) {
+                let item = getItem(data.name.database_id);
+                console.log(item);
+            }
+        }
+    }, [data]);
 
     if (data) {
         return (
@@ -41,13 +68,15 @@ const ItemDetail = () => {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                         <h4>Original Item Specs</h4>
-                        <p>Height: {data.name.height}</p>
-                        <p>Weight: {data.name.weight}</p>
-                        <p>Length: {data.name.length}</p>
+                        <p>Model: {data.name.model}</p>
+                        <p>Brand: {data.name.brand}</p>
+                        <p>Condition State: {data.name.condition_state}</p>
+                        <p>Condition Description: {data.name.condition_description}</p>
                     </Typography>
                 </CardContent>
                 <CardActions>
                     <Button onClick={handleClick} size="small">Buy Now</Button>
+                    <Button onClick={handleRefresh} size="small">Refresh</Button>
                 </CardActions>
             </Card >
         )
