@@ -1,4 +1,3 @@
-const hex = require('string-hex');
 /*
  * Function to create NFT and return the tokenID
  */
@@ -334,17 +333,32 @@ export function signTxn(txnName) {
 }
 
 /* save data to a database */
-export async function saveTxnToDatabase(txnName, buyersAddress, data, amount, tokenId, coinId) {
+export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, data, amount, tokenId, coinId, itemDatabaseId) {
     return new Promise(function (resolve, reject) {
         console.log("Saving to database...");
         const transaction = {
             txnName,
             buyersAddress,
+            sellersAddress,
             data,
             amount,
             tokenId,
             coinId
         }
+        fetch(`http://localhost:5001/update/${itemDatabaseId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(transaction),
+        }).then(function (result) {
+            console.log(`successfully updated ${itemDatabaseId}`);
+            resolve(result);
+        }).catch(error => {
+            window.alert(error);
+            reject(error);
+        });
+
         fetch("http://localhost:5001/transaction/add", {
             method: "POST",
             headers: {
@@ -380,7 +394,8 @@ export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseI
         }).then(function (result) {
             return exportTxn(txnName);
         }).then(function (result) {
-            return sendTxn(result, sellersAddress, 'seller-'.concat(txnName));
+            return saveTxnToDatabase(txnName, address, sellersAddress, result, amount, tokenId, coinId, databaseId);
+            //return sendTxn(result, sellersAddress, 'seller-'.concat(txnName));
         }).catch(function (error) {
             console.log(error);
         });
