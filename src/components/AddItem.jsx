@@ -48,28 +48,58 @@ const AddItem = () => {
         setValues({ ...values, [prop]: event.target.value });
     };
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-        setLoading(true);
+    async function saveToDatabase() {
+        try {
+            const newItem = { ...values };
 
-        const newItem = { ...values };
-
-        await fetch("http://localhost:5001/item/add", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newItem),
-        })
-            .catch(error => {
+            let response = await fetch("http://localhost:5001/item/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newItem),
+            }).catch(error => {
                 window.alert(error);
                 return;
             });
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+            setValues({
+                name: '',
+                brand: '',
+                model: '',
+                description: '',
+                original_price: '',
+                sale_price: '',
+                vendorLink: '',
+                condition_state: '',
+                condition_description: '',
+                image: '',
+                published_date: '',
+            })
+            const data = await response.json();
+            return data;
+        }
+        catch (error) {
+            console.error(`could not save item: ${error}`);
+        }
+    }
 
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        setLoading(true);
+        const promise = saveToDatabase();
+        promise.then((data) => data.acknowledged ? saveToMinima(data.insertedId) : null);
+    }
+
+    function saveToMinima(id) {
         const command = `
-            tokencreate amount:1 decimal:0 name:{
+            tokencreate amount:1 decidmal:0 name:{
                 "app":"stampd",
                 "sellers_address": "${address}",
+                "database_id":"${id}",
                 "name":"${values.name}",
                 "original_price":"${values.original_price}",
                 "sale_price":"${values.sale_price}",
@@ -91,21 +121,7 @@ const AddItem = () => {
                 console.log(res.error);
             }
         })
-        setValues({
-            name: '',
-            brand: '',
-            model: '',
-            description: '',
-            original_price: '',
-            sale_price: '',
-            vendorLink: '',
-            condition_state: '',
-            condition_description: '',
-            image: '',
-            published_date: '',
-        })
     }
-
     if (token === null) {
         return (
             <Box

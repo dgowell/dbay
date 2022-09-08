@@ -1,3 +1,4 @@
+const hex = require('string-hex');
 /*
  * Function to create NFT and return the tokenID
  */
@@ -44,7 +45,7 @@ export function getTokenAmount(name) {
                     resolve(t.name.sale_price);
                     console.log(`Get token: ${name}`);
                 } else {
-                    reject("No Token with that name");
+                    reject(`No Token with this name: ${name}`);
                 }
             } else {
                 console.log(res.error);
@@ -335,6 +336,7 @@ export function signTxn(txnName) {
 /* save data to a database */
 export async function saveTxnToDatabase(txnName, buyersAddress, data, amount, tokenId, coinId) {
     return new Promise(function (resolve, reject) {
+        console.log("Saving to database...");
         const transaction = {
             txnName,
             buyersAddress,
@@ -350,6 +352,7 @@ export async function saveTxnToDatabase(txnName, buyersAddress, data, amount, to
             },
             body: JSON.stringify(transaction),
         }).then(function (result) {
+            console.log("successfully dsaved to db");
             resolve(result);
         }).catch(error => {
             window.alert(error);
@@ -377,7 +380,7 @@ export function sendPurchaseRequest(tokenName, amount, sellersAddress) {
         }).then(function (result) {
             return exportTxn(txnName);
         }).then(function (result) {
-            return sendTxn(result, sellersAddress, txnName);
+            return sendTxn(result, sellersAddress, 'seller-'.concat(txnName));
         }).catch(function (error) {
             console.log(error);
         });
@@ -388,7 +391,7 @@ export function receivePurchaseRequest(msg) {
     let address, tokenId, coinId, amount;
     const buyersAddress = msg.from;
     //the application name contains the transaction name with stampd- infront of it so this is removed
-    const txnName = msg.application.slice(7);
+    const txnName = msg.application.slice(14)
 
     Promise.all([txnImport(data), getAddress(), getTokenAmount(txnName)])
         .then(function (result) {
@@ -412,4 +415,8 @@ export function receivePurchaseRequest(msg) {
         }).catch(function (error) {
             console.log(error);
         });
+}
+
+export function checkAndSignTransaction(msg) {
+    console.log(msg);
 }

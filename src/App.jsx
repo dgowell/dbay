@@ -48,26 +48,15 @@ function App() {
       if (msg.event === 'MAXIMA') {
         console.log(msg);
         if (msg.data.data) {
-          if (msg.data.application.contains("stampd-seller_sign")) {
-            //TODO: you could check here for correct application
+          if (msg.data.application.includes("stampd-seller-")) {
             receivePurchaseRequest(msg.data);
-          } else if (msg.data.application.contains("stampd-buyer_sign-")) {
+          } else if (msg.data.application.includes("stampd-buyer-")) {
             checkAndSignTransaction(msg.data);
           }
         }
-      });
+      }
+    });
   }, []);
-
-  function Content() {
-    const location = useLocation();
-    return (
-      <Typography variant="body2" sx={{ pb: 2 }} color="text.secondary">
-        Current route: {location.pathname}
-      </Typography>
-    );
-  }
-
-
 
   return (
     <Router>

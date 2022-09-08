@@ -47,7 +47,8 @@ txnRoutes.route("/transaction/add").post(function (req, response) {
         data: req.body.data,
         amount: req.body.amount,
         tokenId: req.body.tokenId,
-        coinId: req.body.coinId
+        coinId: req.body.coinId,
+        published_date: new Date(),
     }
     db_connect.collection("transactions").insertOne(myobj, function (err, res) {
         if (err) throw err;
@@ -64,7 +65,8 @@ txnRoutes.route("/transaction/upload").post(function (req, response) {
         data: req.body.data,
         amount: req.body.amount,
         tokenId: req.body.tokenId,
-        coinId: req.body.coinId
+        coinId: req.body.coinId,
+        published_date: new Date(),
     }
     db_connect.collection("transactions").insertOne(myobj, function (err, res) {
         if (err) throw err;
