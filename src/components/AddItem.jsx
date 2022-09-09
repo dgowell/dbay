@@ -10,7 +10,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
-import { getMaximaAddress } from '../mds-helpers';
+import { getPublicAddress } from '../mds-helpers';
 import { useNavigate } from "react-router";
 
 
@@ -33,7 +33,7 @@ const AddItem = () => {
     })
 
     React.useEffect(() => {
-        getMaximaAddress().then(function (result) {
+        getPublicAddress().then(function (result) {
             setAddress(result);
         }).catch(function (error) {
             console.log(error);

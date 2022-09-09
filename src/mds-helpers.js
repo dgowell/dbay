@@ -82,6 +82,36 @@ export function getAddress() {
     })
 }
 
+/* Gets the public address and uses the callback to set it */
+export function getPublicAddress() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('getaddress', function (res) {
+            if (res.status) {
+                resolve(res.response.publickey);
+                console.log(`getaddress: ${res.response.publickey}`);
+            } else {
+                reject(res.error);
+                console.log(res.error);
+            }
+        })
+    })
+}
+
+/* Get your keys */
+export function getKeys() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`keys`, function (res) {
+            if (res.status) {
+                console.log(`keys: `);
+                resolve(res.response);
+            } else {
+                console.log(res.error);
+                reject(res.error);
+            }
+        })
+    })
+}
+
 /* Gets the Maxima contact address */
 export function getMaximaAddress() {
     return new Promise(function (resolve, reject) {

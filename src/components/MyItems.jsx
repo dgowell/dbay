@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import { getAddress, getTokens } from '../mds-helpers';
+import { getKeys, getTokens } from '../mds-helpers';
 import MarketplaceListItem from '../MarketplaceListItem';
 
 
@@ -14,24 +14,25 @@ const Demo = styled('div')(({ theme }) => ({
 
 export default function MyItems() {
     const [tokens, setTokens] = React.useState();
-    const [address, setAddress] = React.useState();
+    const [keys, setKeys] = React.useState();
 
     React.useEffect(() => {
         getTokens(setTokens);
-        getAddress().then(function (result) {
-            setAddress(result);
-        });
+        getKeys().then(function (result) {
+            setKeys(result);
+        })
     }, []);
 
     function isMarketplaceItem(value) {
         if (value.name.app === 'stampd') {
-            if (value.name.sellers_address === address) {
-                return value;
-            }
+            return keys.map(getPublicKey).includes(value.name.sellers_address);
         }
     }
 
-    if (tokens && address) {
+    function getPublicKey(key) {
+        return key.publickey;
+    }
+    if (tokens && keys) {
         return (
             <Box sx={{ flexGrow: 1, maxWidth: 752 }}>
                 <Grid container spacing={2}>

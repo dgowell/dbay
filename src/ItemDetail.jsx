@@ -7,14 +7,44 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import { getKeys } from './mds-helpers';
 
 const ItemDetail = () => {
     const [data, setData] = React.useState();
+    const [buyRequested, setBuyRequested] = React.useState();
+    const [keys, setKeys] = React.useState();
+    const [isSeller, setIsSeller] = React.useState(false);
     const params = useParams();
 
     useEffect(() => {
         getTokenData(params.tokenId, setData);
+        getKeys().then(function (result) {
+            setKeys(result);
+        })
     }, []);
+
+    useEffect(() => {
+        if (data && keys) {
+            if (keys.map(getPublicKey).includes(data.name.sellers_address)) {
+                setIsSeller(true);
+            }
+        }
+    }, [keys, data]);
+
+    function getPublicKey(key) {
+        return key.publickey;
+    }
+
+    useEffect(() => {
+        if (data) {
+            getItem(data.name.database_id)
+                .then(function (result) {
+                    if (result.transactionStatus === 1) {
+                        setBuyRequested(true);
+                    }
+                })
+        }
+    }, [data]);
 
     function handleClick() {
         sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address, data.name.database_id);
@@ -81,8 +111,10 @@ const ItemDetail = () => {
                     </Typography>
                 </CardContent>
                 <CardActions>
-                    <Button onClick={handleClick} size="small">Buy Now</Button>
-                    <Button onClick={handleRefresh} size="small">Refresh</Button>
+
+                    {isSeller ? '' : <Button onClick={handleClick} size="small">Buy Now</Button>}
+                    {buyRequested ? <Button onClick={handleRefresh} size="small">Approve sale</Button> : ''}
+
                 </CardActions>
             </Card >
         )
