@@ -75,6 +75,7 @@ itemRoutes.route("/update/:id").post(function (req, response) {
             amount: req.body.amount,
             tokenId: req.body.tokenId,
             coinId: req.body.coinId,
+            transactionStatus: req.body.txnStatus,
         },
     };
     db_connect

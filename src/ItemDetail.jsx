@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { sendPurchaseRequest, getTokenData } from './mds-helpers';
+import { sendPurchaseRequest, getTokenData, checkAndSignTransaction, receivePurchaseRequest } from './mds-helpers';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
@@ -19,8 +19,14 @@ const ItemDetail = () => {
     function handleClick() {
         sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address, data.name.database_id);
     }
-    function handleRefresh() {
-        getTokenData(params.tokenId, setData);
+    async function handleRefresh() {
+        const item = await getItem(data.name.database_id);
+        if (item.transactionStatus === 1) {
+            receivePurchaseRequest(item.txnName, item.data, item._id, item.buyersAddress);
+        }
+        if (item.transactionStatus === 2) {
+            checkAndSignTransaction(item.txnName, item.data);
+        }
     }
     async function getItem(id) {
         let response = await fetch(`http://localhost:5001/item/${id}`, {

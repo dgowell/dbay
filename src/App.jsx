@@ -43,21 +43,6 @@ function App() {
   //  const [data, setData] = useState();
   const [activePage, setActivePage] = useState();
 
-  useEffect(() => {
-    window.MDS.init((msg) => {
-      if (msg.event === 'MAXIMA') {
-        console.log(msg);
-        if (msg.data.data) {
-          if (msg.data.application.includes("stampd-seller-")) {
-            receivePurchaseRequest(msg.data);
-          } else if (msg.data.application.includes("stampd-buyer-")) {
-            checkAndSignTransaction(msg.data);
-          }
-        }
-      }
-    });
-  }, []);
-
   return (
     <Router>
       <ThemeProvider theme={theme}>

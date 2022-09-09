@@ -1,19 +1,6 @@
 /*
  * Function to create NFT and return the tokenID
  */
-export function createNFT(name, link, description, setTokenCreated) {
-    const command = `tokencreate amount:1 decimal:0 name:{"name":"${name}","link":"${link}","description":"${description}"}`;
-    window.MDS.cmd(command, function (res) {
-        if (res.status) {
-            setTokenCreated(true);
-            console.log(`Create NFT ${name}`);
-        } else {
-            console.log(res.error);
-        }
-
-    })
-}
-
 /* Return token Id with a given token name */
 export function getTokenId(name) {
     return new Promise(function (resolve, reject) {
@@ -21,8 +8,8 @@ export function getTokenId(name) {
             if (res.status) {
                 let t = res.response.find(token => slugify(token.name.name) === slugify(name));
                 if (t) {
-                    resolve(t['tokenid']);
-                    console.log(`Get token: ${name}`);
+                    resolve(t.tokenid);
+                    console.log(`Token ID: ${t.tokenid}`);
                 } else {
                     reject("No Token with that name");
                 }
@@ -42,7 +29,7 @@ export function getTokenAmount(name) {
                 let t = res.response.find(token => slugify(token.name.name) === slugify(name));
                 if (t) {
                     resolve(t.name.sale_price);
-                    console.log(`Get token: ${name}`);
+                    console.log(`Token Amount is ${t.name.sale_price}`);
                 } else {
                     reject(`No Token with this name: ${name}`);
                 }
@@ -61,7 +48,7 @@ export function getTokenData(id, setData) {
         if (res.status) {
             let data = res.response.find(token => token.tokenid === id);
             setData(data);
-            console.log(`Get token: ${id}`);
+            console.log(`tokens -> matching token data: ${data}`);
         } else {
             console.log(res.error);
         }
@@ -73,7 +60,7 @@ export function getTokens(tokens) {
     window.MDS.cmd(`tokens`, function (res) {
         if (res.status) {
             tokens(res.response);
-            console.log(`Get tokens: ${tokens}`);
+            console.log(`tokens: ${tokens}`);
         } else {
             console.log(res.error);
         }
@@ -86,7 +73,7 @@ export function getAddress() {
         window.MDS.cmd('getaddress', function (res) {
             if (res.status) {
                 resolve(res.response.miniaddress);
-                console.log(`Get address ${res.response.miniaddress}`);
+                console.log(`getaddress: ${res.response.miniaddress}`);
             } else {
                 reject(res.error);
                 console.log(res.error);
@@ -101,7 +88,7 @@ export function getMaximaAddress() {
         window.MDS.cmd('maxima', function (res) {
             if (res.status) {
                 resolve(res.response.contact);
-                console.log(`Get address ${res.response.contact}`);
+                console.log(`maxima ${res.response.contact}`);
             } else {
                 reject(res.error);
                 console.log(res.error);
@@ -141,8 +128,8 @@ export function createTransaction(name) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`txncreate id:${name}`, function (res) {
             if (res.status) {
-                //console.log(`Create transaction ${res.response.transaction.transactionid}`);
                 resolve(res.response.transaction.transactionid);
+                console.log(`txncreate id:${name}`);
             } else if (res.error.includes('Txn with this ID already exists')) {
                 resolve(res.error);
             } else {
@@ -158,7 +145,7 @@ export function addTxnOutput(txnName, address, amount, tokenId) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`txnoutput id:${txnName} address:${address} amount:${amount} tokenid:${tokenId}`, function (res) {
             if (res.status) {
-                console.log(`Add output to transaction: ${txnName}`);
+                console.log(`txnoutput id:${txnName} address:${address} amount:${amount} tokenid:${tokenId}`);
                 resolve(true);
             } else {
                 console.log(res.error);
@@ -169,13 +156,13 @@ export function addTxnOutput(txnName, address, amount, tokenId) {
 }
 
 /* returns coin Id when given a name */
-export function getCoinIdByAmount(amount) {
+export function getCoinAddressByAmount(amount) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`coins`, function (res) {
             if (res.status) {
-                let coin = res.response.find(c => c.amount === amount);
+                let coin = res.response.find(c => c.amount >= amount);
                 coin ? resolve(coin.coinid) : reject('No coin with that amount');
-                console.log(`Get Coin: ${coin.coinid}`);
+                console.log(`Buyer Input Coin: ${coin.coinid}`);
             } else {
                 reject(res.error);
                 console.log(res.error);
@@ -191,7 +178,7 @@ export function getCoinIdFromMiniAddress(miniaddress) {
             if (res.status) {
                 let coin = res.response.find(c => c.miniaddress === miniaddress);
                 coin ? resolve(coin.coinid) : reject(`No coin with that miniaddress ${miniaddress}`);
-                console.log(`Get Coin: ${coin.coinid}`);
+                console.log(`Get Coin ID: ${coin.coinid}`);
             } else {
                 reject(res.error);
                 console.log(res.error);
@@ -207,7 +194,7 @@ export function getCoin(tokenId) {
             if (res.status) {
                 let coin = res.response.find(c => c.tokenid === tokenId);
                 coin ? resolve(coin.coinid) : reject('No coin with that ID');
-                console.log(`Get Coin: ${coin['coinid']}`);
+                console.log(`Get Seller Coin NFT: ${coin.coinid}`);
             } else {
                 reject(res.error);
                 console.log(res.error);
@@ -219,9 +206,9 @@ export function getCoin(tokenId) {
 /* Add input to transaction */
 export function addTxnInput(txnName, coinId, amount) {
     return new Promise(function (resolve, reject) {
-        window.MDS.cmd(`txninput id:${txnName} coinid:${coinId} scriptmmr:true`, function (res) {
+        window.MDS.cmd(`txninput id:${txnName} coinid:${coinId} amount:${amount} scriptmmr:true`, function (res) {
             if (res.status) {
-                console.log(`Add input to transaction: ${txnName}`);
+                console.log(`txninput id:${txnName} coinid:${coinId} amount:${amount} scriptmmr:true`);
                 resolve(true);
             } else {
                 console.log(res.error);
@@ -237,7 +224,7 @@ export function exportTxn(txnName) {
         window.MDS.cmd(`txnexport id:${txnName}`, function (res) {
             if (res.status) {
                 resolve(res.response.data);
-                console.log(`Export transaction ${txnName}`);
+                console.log(`txnexport id:${txnName}`);
             } else {
                 console.log(res.error);
                 reject(res.error);
@@ -249,7 +236,7 @@ export function exportTxn(txnName) {
 /* Use maxima to send transaction data to another node on the network */
 export function sendTxn(data, contact, tag) {
     return new Promise(function (resolve, reject) {
-        window.MDS.cmd(`maxima action:send to:${contact} application:stampd-${tag} data:${data}`, function (res) {
+        window.MDS.cmd(`maxima action:send to:${contact} application:stampd_${tag} data:${data}`, function (res) {
             if (res.response.delivered) {
                 console.log(`You've sent a transaction at ${res.response.time} and it's been delivered`);
                 resolve(true);
@@ -265,7 +252,7 @@ export function txnImport(data) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`txnimport data:${data}`, function (res) {
             if (res.status) {
-                console.log(`You've imported a transaction`);
+                console.log(`txnimport data:${data}`);
                 resolve(true);
             } else {
                 console.log(res.error);
@@ -296,7 +283,7 @@ export function createPurchaseCoin(amount, address) {
                 const coin = res.response.body.txn.outputs.find(coin => coin.amount === amount);
                 console.log(`Create coin for ${amount} minima`);
                 //wait for coin to be processed properly before resolving otherwise it won't appear in the chain
-                setTimeout(resolve(coin.miniaddress), 3000);
+                setTimeout(resolve(true), 10000);
             } else {
                 console.log(res.error);
                 reject(res.error);
@@ -322,7 +309,22 @@ export function signTxn(txnName) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`txnsign id:${txnName} publickey:auto`, function (res) {
             if (res.status) {
-                console.log(`Transaction ${txnName} has been signed!`);
+                console.log(`Transaction ${txnName} has been signed! ${res}`);
+                resolve(txnName);
+            } else {
+                console.log(res.error);
+                reject(res.error);
+            }
+        })
+    });
+}
+
+/* post to the chain the transaction */
+export function postTxn(txnName) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`txnpost id:${txnName}`, function (res) {
+            if (res.status) {
+                console.log(`Transaction ${txnName} has been posted! ${res}`);
                 resolve(true);
             } else {
                 console.log(res.error);
@@ -333,7 +335,7 @@ export function signTxn(txnName) {
 }
 
 /* save data to a database */
-export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, data, amount, tokenId, coinId, itemDatabaseId) {
+export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, data, amount, tokenId, coinId, itemDatabaseId, txnStatus) {
     return new Promise(function (resolve, reject) {
         console.log("Saving to database...");
         const transaction = {
@@ -343,7 +345,8 @@ export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, 
             data,
             amount,
             tokenId,
-            coinId
+            coinId,
+            txnStatus,
         }
         fetch(`http://localhost:5001/update/${itemDatabaseId}`, {
             method: "POST",
@@ -353,21 +356,7 @@ export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, 
             body: JSON.stringify(transaction),
         }).then(function (result) {
             console.log(`successfully updated ${itemDatabaseId}`);
-            resolve(result);
-        }).catch(error => {
-            window.alert(error);
-            reject(error);
-        });
-
-        fetch("http://localhost:5001/transaction/add", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(transaction),
-        }).then(function (result) {
-            console.log("successfully dsaved to db");
-            resolve(result);
+            resolve(data);
         }).catch(error => {
             window.alert(error);
             reject(error);
@@ -377,38 +366,33 @@ export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, 
 }
 
 export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseId) {
+    console.log("send pruchase request called");
     const txnName = slugify(tokenName);
     let tokenId, address, coinId;
     Promise.all([getTokenId(tokenName), getAddress(), createTransaction(txnName)])
         .then(function (result) {
             tokenId = result[0];
             address = result[1];
-            return createPurchaseCoin(amount, address);
-        }).then(function (result) {
-            return getCoinIdByAmount(amount);
+            return getCoinAddressByAmount(amount);
         }).then(function (result) {
             coinId = result;
             return addTxnOutput(txnName, address, amount, tokenId);
         }).then(function (result) {
-            return addTxnInput(txnName, coinId);
+            return addTxnInput(txnName, coinId, amount);
         }).then(function (result) {
             return exportTxn(txnName);
         }).then(function (result) {
-            return saveTxnToDatabase(txnName, address, sellersAddress, result, amount, tokenId, coinId, databaseId);
-            //return sendTxn(result, sellersAddress, 'seller-'.concat(txnName));
+            return saveTxnToDatabase(txnName, address, sellersAddress, result, amount, tokenId, coinId, databaseId, 1);
+        }).then(function (result) {
+            return sendTxn(result, sellersAddress, `seller_${txnName}_${databaseId}`);
         }).catch(function (error) {
             console.log(error);
         });
 }
 
-export function receivePurchaseRequest(msg) {
-    const data = msg.data;
+export function receivePurchaseRequest(txnName, data, databaseId, buyersAddress) {
     let address, tokenId, coinId, amount;
-    const buyersAddress = msg.from;
-    //the application name contains the transaction name with stampd- infront of it so this is removed
-    const txnName = msg.application.slice(14)
-
-    Promise.all([txnImport(data), getAddress(), getTokenAmount(txnName)])
+    return Promise.all([txnImport(data), getAddress(), getTokenAmount(txnName)])
         .then(function (result) {
             address = result[1];
             amount = result[2];
@@ -418,7 +402,7 @@ export function receivePurchaseRequest(msg) {
             return getCoin(tokenId);
         }).then(function (result) {
             coinId = result;
-            return addTxnOutput(txnName, address, amount, tokenId);
+            return addTxnOutput(txnName, address, amount, '0x00');
         }).then(function (result) {
             return addTxnInput(txnName, coinId, amount);
         }).then(function (result) {
@@ -426,12 +410,18 @@ export function receivePurchaseRequest(msg) {
         }).then(function (result) {
             return exportTxn(txnName);
         }).then(function (result) {
-            return saveTxnToDatabase(txnName, buyersAddress, result, amount, tokenId, coinId);
+            return saveTxnToDatabase(txnName, buyersAddress, address, result, amount, tokenId, coinId, databaseId, 2);
         }).catch(function (error) {
             console.log(error);
         });
 }
 
-export function checkAndSignTransaction(msg) {
-    console.log(msg);
+export function checkAndSignTransaction(txnName, data) {
+    txnImport(data).then(function (result) {
+        return signTxn(txnName);
+    }).then(function (result) {
+        postTxn(result);
+    }).catch(function (error) {
+        console.log(error);
+    });
 }
