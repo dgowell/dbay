@@ -12,6 +12,7 @@ import CreateTokenForm from "./components/AddItem";
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import AppsIcon from '@mui/icons-material/Apps';
+import HomeIcon from '@mui/icons-material/Home';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import WebStoriesIcon from '@mui/icons-material/WebStories';
@@ -21,7 +22,7 @@ import ResponsiveAppBar from "./ResponsiveAppBar";
 import InteractiveList from "./ItemList";
 import ItemDetail from "./ItemDetail";
 import MyItems from "./components/MyItems";
-import { receivePurchaseRequest, checkAndSignTransaction } from './mds-helpers';
+
 
 function Router(props) {
   const { children } = props;
@@ -74,7 +75,7 @@ function App() {
 
               >
                 <BottomNavigationAction component={RouterLink} to="/marketplace" label="Marketplace" icon={<AppsIcon />} />
-                <BottomNavigationAction component={RouterLink} to="/my-items" label="My Items" icon={<AppsIcon />} />
+                <BottomNavigationAction component={RouterLink} to="/my-items" label="My Items" icon={<HomeIcon />} />
                 <BottomNavigationAction component={RouterLink} to="/add-item" label="Add Item" icon={<WebStoriesIcon />} />
               </BottomNavigation>
             </Paper>

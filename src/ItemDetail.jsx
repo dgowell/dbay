@@ -6,15 +6,21 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
+import LoadingButton from '@mui/lab/LoadingButton';
 import Typography from '@mui/material/Typography';
 import { getKeys } from './mds-helpers';
 
+
 const ItemDetail = () => {
     const [data, setData] = React.useState();
-    const [buyRequested, setBuyRequested] = React.useState();
+    const [buyRequested, setBuyRequested] = React.useState(false);
+    const [settlePayment, setSettlePayment] = React.useState(false);
     const [keys, setKeys] = React.useState();
     const [isSeller, setIsSeller] = React.useState(false);
+    const [item, setItem] = React.useState();
+    const [txnComplete, setTxnComplete] = React.useState(false);
     const params = useParams();
+    const [loading, setLoading] = React.useState(false);
 
     useEffect(() => {
         getTokenData(params.tokenId, setData);
@@ -39,24 +45,36 @@ const ItemDetail = () => {
         if (data) {
             getItem(data.name.database_id)
                 .then(function (result) {
+                    setItem(result);
                     if (result.transactionStatus === 1) {
                         setBuyRequested(true);
+                    } else if (result.transactionStatus === 2) {
+                        setSettlePayment(true);
                     }
                 })
         }
     }, [data]);
 
-    function handleClick() {
-        sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address, data.name.database_id);
+    function handleClick(e) {
+        e.preventDefault();
+        setLoading(true);
+        sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address, data.name.database_id).then(function (result) {
+            setBuyRequested(true);
+            setLoading(false);
+        })
     }
-    async function handleRefresh() {
-        const item = await getItem(data.name.database_id);
-        if (item.transactionStatus === 1) {
-            receivePurchaseRequest(item.txnName, item.data, item._id, item.buyersAddress);
-        }
-        if (item.transactionStatus === 2) {
-            checkAndSignTransaction(item.txnName, item.data);
-        }
+    function handleRefresh(e) {
+        e.preventDefault();
+        receivePurchaseRequest(item.txnName, item.data, item._id, item.buyersAddress).then(function (result) {
+            setSettlePayment(true);
+        })
+    }
+
+    function handleApprove(e) {
+        e.preventDefault();
+        checkAndSignTransaction(item.txnName, item.data).then(function (result) {
+            setTxnComplete(true);
+        })
     }
     async function getItem(id) {
         let response = await fetch(`http://localhost:5001/item/${id}`, {
@@ -112,8 +130,11 @@ const ItemDetail = () => {
                 </CardContent>
                 <CardActions>
 
-                    {isSeller ? '' : <Button onClick={handleClick} size="small">Buy Now</Button>}
-                    {buyRequested ? <Button onClick={handleRefresh} size="small">Approve sale</Button> : ''}
+                    {isSeller || buyRequested || settlePayment ? '' : <LoadingButton loading={loading} onClick={handleClick} size="small">Buy Now</LoadingButton>}
+                    {buyRequested && isSeller && !settlePayment ? <Button onClick={handleRefresh} size="small">Approve Sale</Button> : ''}
+                    {buyRequested && !isSeller ? <p>Request Sent!</p> : null}
+                    {settlePayment && !isSeller ? <Button onClick={handleApprove} size="small">Approve Payment</Button> : ''}
+                    {txnComplete && !isSeller ? <p>Congratulations it's now yours!</p> : ''}
 
                 </CardActions>
             </Card >

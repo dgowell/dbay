@@ -399,7 +399,7 @@ export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseI
     console.log("send pruchase request called");
     const txnName = slugify(tokenName);
     let tokenId, address, coinId;
-    Promise.all([getTokenId(tokenName), getAddress(), createTransaction(txnName)])
+    return Promise.all([getTokenId(tokenName), getAddress(), createTransaction(txnName)])
         .then(function (result) {
             tokenId = result[0];
             address = result[1];
@@ -447,7 +447,7 @@ export function receivePurchaseRequest(txnName, data, databaseId, buyersAddress)
 }
 
 export function checkAndSignTransaction(txnName, data) {
-    txnImport(data).then(function (result) {
+    return txnImport(data).then(function (result) {
         return signTxn(txnName);
     }).then(function (result) {
         postTxn(result);
