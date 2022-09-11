@@ -52,10 +52,12 @@ const AddItem = () => {
         try {
             const newItem = { ...values };
 
-            let response = await fetch("http://localhost:5001/item/add", {
+            let response = await fetch("https://data.mongodb-api.com/app/data-oixjn/endpoint/data/v1", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "api-key": process.env.ATLAS_API,
+                    "Access-Control-Allow-Origin": "*",
                 },
                 body: JSON.stringify(newItem),
             }).catch(error => {
@@ -66,6 +68,10 @@ const AddItem = () => {
                 throw new Error(`HTTP error: ${response.status}`);
             }
             setValues({
+                collection: "item",
+                database: "marketplace",
+                dataSource: "ClusterStampd",
+                projection: { "_id": 1 },
                 name: '',
                 brand: '',
                 model: '',

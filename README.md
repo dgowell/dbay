@@ -3,13 +3,33 @@
 - Code Editor, we recommend Visual Studio code https://code.visualstudio.com/ 
 - a running Minima node
 
-# Getting Started with Create Minima App
 
-This boilerplate has been created with `Create React App`. You can use this boilerplate to build Minima MiniDapps. To create your application, edit the files in the `/src` folder.
 
-## How to build and install my app
 
-To build your app, please run the following command in the `create-minima-app` directory: `npm i` and then run `npm run build`. Once the app has been built, you can run `npm run zip` to create an MiniDapp .mds.zip file in the `/minidapp` folder.
+
+# How to run the Stampd application
+## Run 2 nodes
+- Clone the guthub repo to a folder on your computer
+- Open a Terminal window and navigate to `/create-minima-app/minidapp` (where the minima.jar file is located) and run `java -jar minima.jar -data minidata1 -test -nop2p -genesis -mdsenable -clean`
+- Do the same in second terminal window but run `java -jar minima.jar -data minidata2 -test -nop2p -clean -port 10001 -mdsenable -connect 127.0.0.1:9001`
+- Now you have two nodes running on a network
+- On node 1 (terminal 1) run `mds` to get the connection URL, it should look like -> `https://10.64.25.151:9003`
+- Below is the password you'll need, something like `CAHC-RRGY-C0PU`
+- Open the Url in a broswer (if chrome doesn't let you access it type in `thisisunsafe` and it should let you pass through)
+- Enter the password
+- Do the same for node 2 (terminal 2)
+## How to build and install the stampd app
+- Using terminal in visual studio code (or other terminal)
+- Run the following command in the `/create-minima-app` directory: `npm i` and then run `npm run build`. 
+- Once the app has been built, run `npm run zip` to create an MiniDapp .mds.zip file in the `/minidapp` folder.
+- Then in each node (terminal window) run `mds action:install file:<minidapp zip file> permission:write`, where <minidapp zip file> is replaced by the actual destination of the zip file you just created in the step before.
+- Once run on both nodes you can now go to both of your browser tabs and refresh and the apps should appear.
+- Click on to open each app
+
+
+
+
+
 
 ### Installing on a Desktop node
 
