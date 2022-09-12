@@ -70,15 +70,21 @@ const ItemDetail = () => {
     }
     function handleRefresh(e) {
         e.preventDefault();
+        setLoading(true);
         receivePurchaseRequest(item.txnName, item.data, item._id, item.buyersAddress).then(function (result) {
             setSettlePayment(true);
+            setLoading(false);
         })
     }
 
     function handleApprove(e) {
         e.preventDefault();
+        setLoading(true);
         checkAndSignTransaction(item.txnName, item.data).then(function (result) {
+            console.log(result);
+            alert(result);
             setTxnComplete(true);
+            setLoading(false);
         })
     }
     async function getItem(id) {
@@ -128,7 +134,7 @@ const ItemDetail = () => {
                 />
                 <CardContent>
                     <Typography gutterBottom variant="h5" component="div">
-                        £{data.name.sale_price}
+                        $M{data.name.sale_price}
                     </Typography>
                     <Typography gutterBottom variant="h5" component="div">
                         {data.name.name}
@@ -149,8 +155,8 @@ const ItemDetail = () => {
                     {isSeller || buyRequested || settlePayment ? '' : <LoadingButton loading={loading} onClick={handleClick} size="small">Buy Now</LoadingButton>}
                     {buyRequested && isSeller && !settlePayment ? <LoadingButton loading={loading} onClick={handleRefresh} size="small">Approve Sale</LoadingButton> : ''}
                     {buyRequested && !isSeller ? <p>Request Sent!</p> : null}
-                    {settlePayment && !isSeller ? <LoadingButton loading={loading} onClick={handleApprove} size="small">Approve Payment</LoadingButton> : ''}
-                    {txnComplete && !isSeller ? <p>Congratulations it's now yours!</p> : ''}
+                    {settlePayment && !isSeller && !txnComplete ? <LoadingButton loading={loading} onClick={handleApprove} size="small">Approve Payment</LoadingButton> : ''}
+                    {txnComplete && !isSeller ? <p>Congratulations, the item is yours!</p> : ''}
 
                 </CardActions>
             </Card >

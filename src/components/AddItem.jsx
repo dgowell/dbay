@@ -287,10 +287,9 @@ const AddItem = () => {
                                     onChange={handleChange('condition_state')}
                                 >
                                     <MenuItem value={'pre-loved'}>Pre-loved</MenuItem>
-                                    <MenuItem value={'brenad-new'}>Brand New (Unopened)</MenuItem>
+                                    <MenuItem value={'brand-new'}>Brand New (Unopened)</MenuItem>
                                     <MenuItem value={'as-new'}>As New</MenuItem>
                                     <MenuItem value={'refurbushed'}>Refurbished</MenuItem>
-                                    <MenuItem value={'well-used'}>Well Used (Full working order)</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
