@@ -52,26 +52,37 @@ const AddItem = () => {
         try {
             const newItem = { ...values };
 
-            let response = await fetch("https://data.mongodb-api.com/app/data-oixjn/endpoint/data/v1", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "api-key": process.env.ATLAS_API,
-                    "Access-Control-Allow-Origin": "*",
-                },
-                body: JSON.stringify(newItem),
-            }).catch(error => {
-                window.alert(error);
-                return;
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("api-key", process.env.REACT_APP_ATLAS_KEY);
+            myHeaders.append("X-Requested-With", "XMLHttpRequest");
+
+            var raw = JSON.stringify({
+                "collection": "item",
+                "database": "Marketplace",
+                "dataSource": "ClusterStampd",
+                "document": newItem,
             });
+
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+
+            let response = await fetch(`${process.env.REACT_APP_DATABASE_URL}/action/insertOne`, requestOptions)
+                .catch(error => {
+                    window.alert(error);
+                    return;
+                });
             if (!response.ok) {
                 throw new Error(`HTTP error: ${response.status}`);
             }
             setValues({
                 collection: "item",
-                database: "marketplace",
+                database: "Marketplace",
                 dataSource: "ClusterStampd",
-                projection: { "_id": 1 },
                 name: '',
                 brand: '',
                 model: '',

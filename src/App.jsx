@@ -4,7 +4,7 @@ import './App.css';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
-  Link as RouterLink, Route, Routes, MemoryRouter, useLocation
+  Link as RouterLink, Route, Routes, MemoryRouter
 } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -22,7 +22,6 @@ import ResponsiveAppBar from "./ResponsiveAppBar";
 import InteractiveList from "./ItemList";
 import ItemDetail from "./ItemDetail";
 import MyItems from "./components/MyItems";
-
 
 function Router(props) {
   const { children } = props;
