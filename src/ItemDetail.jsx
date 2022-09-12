@@ -63,6 +63,7 @@ const ItemDetail = () => {
         setLoading(true);
         sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address, data.name.database_id).then(function (result) {
             console.log(result);
+            alert(result);
             setBuyRequested(true);
             setLoading(false);
         })
@@ -146,9 +147,9 @@ const ItemDetail = () => {
                 <CardActions>
 
                     {isSeller || buyRequested || settlePayment ? '' : <LoadingButton loading={loading} onClick={handleClick} size="small">Buy Now</LoadingButton>}
-                    {buyRequested && isSeller && !settlePayment ? <Button onClick={handleRefresh} size="small">Approve Sale</Button> : ''}
+                    {buyRequested && isSeller && !settlePayment ? <LoadingButton loading={loading} onClick={handleRefresh} size="small">Approve Sale</LoadingButton> : ''}
                     {buyRequested && !isSeller ? <p>Request Sent!</p> : null}
-                    {settlePayment && !isSeller ? <Button onClick={handleApprove} size="small">Approve Payment</Button> : ''}
+                    {settlePayment && !isSeller ? <LoadingButton loading={loading} onClick={handleApprove} size="small">Approve Payment</LoadingButton> : ''}
                     {txnComplete && !isSeller ? <p>Congratulations it's now yours!</p> : ''}
 
                 </CardActions>

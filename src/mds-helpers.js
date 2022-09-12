@@ -43,15 +43,17 @@ export function getTokenAmount(name) {
 
 
 /* Return token data with a given token ID */
-export function getTokenData(id, setData) {
-    window.MDS.cmd(`tokens`, function (res) {
-        if (res.status) {
-            let data = res.response.find(token => token.tokenid === id);
-            setData(data);
-            console.log(`tokens -> matching token data: ${data}`);
-        } else {
-            console.log(res.error);
-        }
+export function getTokenData(id) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd(`tokens`, function (res) {
+            if (res.status) {
+                let data = res.response.find(token => token.tokenid === id);
+                resolve(data);
+                console.log(`tokens -> matching token data: ${data}`);
+            } else {
+                reject(res.error);
+            }
+        })
     })
 }
 
@@ -236,9 +238,9 @@ export function getCoin(tokenId) {
 /* Add input to transaction */
 export function addTxnInput(txnName, coinId, amount) {
     return new Promise(function (resolve, reject) {
-        window.MDS.cmd(`txninput id:${txnName} coinid:${coinId} amount:${amount} scriptmmr:true`, function (res) {
+        window.MDS.cmd(`txninput id:${txnName} coinid:${coinId} scriptmmr:true`, function (res) {
             if (res.status) {
-                console.log(`txninput id:${txnName} coinid:${coinId} amount:${amount} scriptmmr:true`);
+                console.log(`txninput id:${txnName} coinid:${coinId} scriptmmr:true`);
                 resolve(true);
             } else {
                 console.log(res.error);
@@ -310,7 +312,7 @@ export function createPurchaseCoin(amount, address) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`send amount:${amount} address:${address}`, function (res) {
             if (res.status) {
-                const coin = res.response.body.txn.outputs.find(coin => coin.amount === amount);
+                res.response.body.txn.outputs.find(coin => coin.amount === amount);
                 console.log(`Create coin for ${amount} minima`);
                 //wait for coin to be processed properly before resolving otherwise it won't appear in the chain
                 setTimeout(resolve(true), 10000);
@@ -368,6 +370,12 @@ export function postTxn(txnName) {
 export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, data, amount, tokenId, coinId, itemDatabaseId, txnStatus) {
     return new Promise(function (resolve, reject) {
         console.log("Saving to database...");
+
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        myHeaders.append("api-key", process.env.REACT_APP_ATLAS_KEY);
+        myHeaders.append("X-Requested-With", "XMLHttpRequest");
+
         const transaction = {
             txnName,
             buyersAddress,
@@ -377,22 +385,39 @@ export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, 
             tokenId,
             coinId,
             txnStatus,
-        }
-        fetch(`http://localhost:5001/update/${itemDatabaseId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(transaction),
-        }).then(function (result) {
-            console.log(`successfully updated ${itemDatabaseId}`);
-            resolve(data);
-        }).catch(error => {
-            window.alert(error);
-            reject(error);
-        });
-    });
+        };
 
+        var raw = JSON.stringify({
+            "collection": "item",
+            "database": "Marketplace",
+            "dataSource": "ClusterStampd",
+            "filter": {
+                "_id": {
+                    "$oid": itemDatabaseId
+                }
+            },
+            "update": {
+                "$set": transaction,
+            }
+        });
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        }
+
+        fetch(`${process.env.REACT_APP_DATABASE_URL}/action/updateOne`, requestOptions)
+            .then(function (result) {
+                console.log(`successfully updated ${itemDatabaseId}`);
+                resolve(data);
+            })
+            .catch(error => {
+                window.alert(error);
+                return;
+            });
+    });
 }
 
 export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseId) {
@@ -413,8 +438,6 @@ export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseI
             return exportTxn(txnName);
         }).then(function (result) {
             return saveTxnToDatabase(txnName, address, sellersAddress, result, amount, tokenId, coinId, databaseId, 1);
-        }).then(function (result) {
-            return sendTxn(result, sellersAddress, `seller_${txnName}_${databaseId}`);
         }).catch(function (error) {
             console.log(error);
         });
@@ -434,7 +457,7 @@ export function receivePurchaseRequest(txnName, data, databaseId, buyersAddress)
             coinId = result;
             return addTxnOutput(txnName, address, amount, '0x00');
         }).then(function (result) {
-            return addTxnInput(txnName, coinId, amount);
+            return addTxnInput(txnName, coinId, 1);
         }).then(function (result) {
             return signTxn(txnName);
         }).then(function (result) {

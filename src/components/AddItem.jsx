@@ -108,7 +108,7 @@ const AddItem = () => {
         e.preventDefault();
         setLoading(true);
         const promise = saveToDatabase();
-        promise.then((data) => data.acknowledged ? saveToMinima(data.insertedId) : null);
+        promise.then((data) => data ? saveToMinima(data.insertedId) : null);
     }
 
     function saveToMinima(id) {
@@ -135,7 +135,7 @@ const AddItem = () => {
                 setLoading(false);
                 navigate("/marketplace");
             } else {
-                console.log(res.error);
+                console.log(res.message);
             }
         })
     }
@@ -209,8 +209,8 @@ const AddItem = () => {
                             <TextField
                                 label="Vendor Link"
                                 id="Vendor-link"
-                                required
                                 fullWidth
+                                required
                                 className="form-field"
                                 type="text"
                                 name="image"
@@ -223,8 +223,8 @@ const AddItem = () => {
                             <TextField
                                 label="Description"
                                 id="description"
-                                required
                                 multiline
+                                required
                                 rows={4}
                                 fullWidth
                                 className="form-field"
@@ -239,8 +239,8 @@ const AddItem = () => {
                             <TextField
                                 label="Link to Image"
                                 id="image"
-                                required
                                 fullWidth
+                                required
                                 className="form-field"
                                 type="text"
                                 name="image"
@@ -250,13 +250,14 @@ const AddItem = () => {
                             />
                         </Grid>
                         <Grid item xs={6}>
-                            <FormControl fullWidth required>
+                            <FormControl fullWidth>
                                 <InputLabel htmlFor="original-price">Original Price</InputLabel>
                                 <OutlinedInput
                                     id="original-price"
                                     value={values.original_price}
+                                    required
                                     onChange={handleChange('original_price')}
-                                    startAdornment={<InputAdornment position="start">£</InputAdornment>}
+                                    startAdornment={<InputAdornment position="start">$M</InputAdornment>}
                                     label="Original Price"
                                 />
                             </FormControl>
@@ -267,8 +268,9 @@ const AddItem = () => {
                                 <OutlinedInput
                                     id="sale-price"
                                     value={values.salePrice}
+                                    required
                                     onChange={handleChange('sale_price')}
-                                    startAdornment={<InputAdornment position="start">£</InputAdornment>}
+                                    startAdornment={<InputAdornment position="start">$M</InputAdornment>}
                                     label="Sale Price"
                                 />
                             </FormControl>
@@ -280,6 +282,7 @@ const AddItem = () => {
                                     labelId="select-condition-label"
                                     id="select-condition"
                                     value={values.condition_state}
+                                    required
                                     label="Condition"
                                     onChange={handleChange('condition_state')}
                                 >
@@ -295,10 +298,10 @@ const AddItem = () => {
                             <TextField
                                 label="Condition Description"
                                 id="condition-description"
-                                required
                                 multiline
                                 rows={4}
                                 fullWidth
+                                required
                                 className="form-field"
                                 type="textarea"
                                 name="condition-description"
