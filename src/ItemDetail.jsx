@@ -23,7 +23,9 @@ const ItemDetail = () => {
     const [loading, setLoading] = React.useState(false);
 
     useEffect(() => {
-        getTokenData(params.tokenId, setData);
+        getTokenData(params.tokenId).then(function (result) {
+            setData(result);
+        })
         getKeys().then(function (result) {
             setKeys(result);
         })
@@ -45,10 +47,11 @@ const ItemDetail = () => {
         if (data) {
             getItem(data.name.database_id)
                 .then(function (result) {
-                    setItem(result);
-                    if (result.transactionStatus === 1) {
+                    setItem(result.document);
+                    if (result.document.txnStatus === 1) {
                         setBuyRequested(true);
-                    } else if (result.transactionStatus === 2) {
+                    } else if (result.document.txnStatus === 2) {
+                        setBuyRequested(false);
                         setSettlePayment(true);
                     }
                 })
@@ -59,6 +62,7 @@ const ItemDetail = () => {
         e.preventDefault();
         setLoading(true);
         sendPurchaseRequest(data.name.name, data.name.sale_price, data.name.sellers_address, data.name.database_id).then(function (result) {
+            console.log(result);
             setBuyRequested(true);
             setLoading(false);
         })
@@ -77,29 +81,40 @@ const ItemDetail = () => {
         })
     }
     async function getItem(id) {
-        let response = await fetch(`http://localhost:5001/item/${id}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        }).catch(error => {
-            window.alert(error);
-            return;
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        myHeaders.append("api-key", process.env.REACT_APP_ATLAS_KEY);
+        myHeaders.append("X-Requested-With", "XMLHttpRequest");
+
+        var raw = JSON.stringify({
+            "collection": "item",
+            "database": "Marketplace",
+            "dataSource": "ClusterStampd",
+            "filter": {
+                "_id": {
+                    "$oid": id,
+                }
+            },
         });
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+
+        let response = await fetch(`${process.env.REACT_APP_DATABASE_URL}/action/findOne`, requestOptions)
+            .catch(error => {
+                window.alert(error);
+                return;
+            });
         if (!response.ok) {
             throw new Error(`HTTP error: ${response.status}`);
         }
         const data = await response.json();
         return data;
     }
-    useEffect(() => {
-        if (data) {
-            if (data.name.database_id) {
-                let item = getItem(data.name.database_id);
-                console.log(item);
-            }
-        }
-    }, [data]);
 
     if (data) {
         return (
