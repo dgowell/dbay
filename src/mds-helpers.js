@@ -1,3 +1,6 @@
+import {
+    Decimal
+} from 'decimal.js';
 /*
  * Function to create NFT and return the tokenID
  */
@@ -433,6 +436,52 @@ export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, 
             });
     });
 }
+
+/* save data to a database */
+export async function updateDatabase(itemId) {
+    return new Promise(function (resolve, reject) {
+        console.log("updating database...");
+
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        myHeaders.append("api-key", process.env.REACT_APP_ATLAS_KEY);
+        myHeaders.append("X-Requested-With", "XMLHttpRequest");
+
+
+        var raw = JSON.stringify({
+            "collection": "item",
+            "database": "Marketplace",
+            "dataSource": "ClusterStampd",
+            "filter": {
+                "_id": {
+                    "$oid": itemId
+                }
+            },
+            "update": {
+                "$set": {
+                    txnStatus: 3
+                },
+            }
+        });
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        }
+
+        fetch(`${process.env.REACT_APP_DATABASE_URL}/action/updateOne`, requestOptions)
+            .then(function (result) {
+                console.log(`successfully updated ${itemId}`);
+                resolve(`successfully updated ${itemId}`);
+            })
+            .catch(error => {
+                window.alert(error);
+                return;
+            });
+    });
+}
 /* this is the code sent by the buyer */
 export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseId) {
     console.log("send pruchase request called");
@@ -487,11 +536,13 @@ export function receivePurchaseRequest(txnName, data, databaseId, buyersAddress)
         });
 }
 
-export function checkAndSignTransaction(txnName, data) {
+export function checkAndSignTransaction(txnName, data, itemId) {
     return txnImport(data).then(function (result) {
         return signTxn(txnName);
     }).then(function (result) {
         postTxn(result);
+    }).then(function (result) {
+        return updateDatabase(itemId);
     }).catch(function (error) {
         console.log(error);
     });

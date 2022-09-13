@@ -115,7 +115,7 @@ const AddItem = () => {
         const command = `
             tokencreate amount:1 decimals:0 name:{
                 "app":"stampd",
-                "sellers_address": "${address}",
+                "sellers_address":"${address}",
                 "database_id":"${id}",
                 "name":"${values.name}",
                 "original_price":"${values.original_price}",
@@ -257,7 +257,7 @@ const AddItem = () => {
                                     value={values.original_price}
                                     required
                                     onChange={handleChange('original_price')}
-                                    startAdornment={<InputAdornment position="start">$M</InputAdornment>}
+                                    startAdornment={<InputAdornment position="start">MIN</InputAdornment>}
                                     label="Original Price"
                                 />
                             </FormControl>
@@ -267,10 +267,10 @@ const AddItem = () => {
                                 <InputLabel htmlFor="sale-price">Sale Price</InputLabel>
                                 <OutlinedInput
                                     id="sale-price"
-                                    value={values.salePrice}
+                                    value={values.sale_price}
                                     required
                                     onChange={handleChange('sale_price')}
-                                    startAdornment={<InputAdornment position="start">$M</InputAdornment>}
+                                    startAdornment={<InputAdornment position="start">MIN</InputAdornment>}
                                     label="Sale Price"
                                 />
                             </FormControl>

@@ -9,6 +9,7 @@ import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Typography from '@mui/material/Typography';
 import { getKeys } from './mds-helpers';
+import { SettingsOutlined } from '@mui/icons-material';
 
 
 const ItemDetail = () => {
@@ -21,6 +22,7 @@ const ItemDetail = () => {
     const [txnComplete, setTxnComplete] = React.useState(false);
     const params = useParams();
     const [loading, setLoading] = React.useState(false);
+    const [sold, setSold] = React.useState(false);
 
     useEffect(() => {
         getTokenData(params.tokenId).then(function (result) {
@@ -53,6 +55,10 @@ const ItemDetail = () => {
                     } else if (result.document.txnStatus === 2) {
                         setBuyRequested(false);
                         setSettlePayment(true);
+                    } else if (result.document.txnStatus === 3) {
+                        setBuyRequested(false);
+                        setSettlePayment(false);
+                        setSold(true);
                     }
                 })
         }
@@ -80,7 +86,7 @@ const ItemDetail = () => {
     function handleApprove(e) {
         e.preventDefault();
         setLoading(true);
-        checkAndSignTransaction(item.txnName, item.data).then(function (result) {
+        checkAndSignTransaction(item.txnName, item.data, item._id).then(function (result) {
             console.log(result);
             alert(result);
             setTxnComplete(true);
@@ -152,13 +158,15 @@ const ItemDetail = () => {
                 </CardContent>
                 <CardActions>
 
-                    {isSeller || buyRequested || settlePayment ? '' : <LoadingButton loading={loading} onClick={handleClick} size="small">Buy Now</LoadingButton>}
-                    {buyRequested && isSeller && !settlePayment ? <LoadingButton loading={loading} onClick={handleRefresh} size="small">Approve Sale</LoadingButton> : ''}
-                    {buyRequested && !isSeller ? <p>Request Sent!</p> : null}
-                    {settlePayment && !isSeller && !txnComplete ? <LoadingButton loading={loading} onClick={handleApprove} size="small">Approve Payment</LoadingButton> : ''}
-                    {txnComplete && !isSeller ? <p>Congratulations, the item is yours!</p> : ''}
+                    {isSeller || buyRequested || settlePayment || sold ? '' : <LoadingButton loading={loading} onClick={handleClick} size="small">Buy Now</LoadingButton>}
+                    {buyRequested && isSeller && !settlePayment && !sold ? <LoadingButton loading={loading} onClick={handleRefresh} size="small">Approve Sale</LoadingButton> : ''}
+                    {buyRequested && !isSeller && !sold ? <p>Request Sent!</p> : null}
+                    {settlePayment && !isSeller && !txnComplete && !sold ? <LoadingButton loading={loading} onClick={handleApprove} size="small">Approve Payment</LoadingButton> : ''}
+                    {txnComplete && !isSeller && !sold ? <Typography><p>Congratulations, the item is yours!</p></Typography> : ''}
+                    {sold ? <Typography><h3>SOLD!</h3></Typography> : ""}
 
                 </CardActions>
+
             </Card >
         )
     } else {
