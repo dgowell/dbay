@@ -30,6 +30,12 @@ export default function InteractiveList() {
         return key.publickey;
     }
 
+    const style = {
+        width: '100%',
+        maxWidth: 500,
+        bgcolor: 'background.paper',
+    };
+
     if (tokens && keys) {
         return (
             <Box sx={{ flexGrow: 1, maxWidth: 752 }}>
@@ -38,9 +44,10 @@ export default function InteractiveList() {
                         <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
                             Marketplace
                         </Typography>
-                        <List>
+                        <List sx={style}>
                             {tokens.filter(isMarketplaceItem).map(token =>
                                 <MarketplaceListItem
+
                                     image={token.name.image}
                                     price={token.name.price}
                                     key={token.tokenid}

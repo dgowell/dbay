@@ -130,7 +130,7 @@ const ItemDetail = () => {
                     component="img"
                     height="250"
                     image={data.name.image}
-                    alt="green iguana"
+                    alt={data.name.name}
                 />
                 <CardContent>
                     <Typography gutterBottom variant="h5" component="div">
