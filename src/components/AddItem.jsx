@@ -112,8 +112,7 @@ const AddItem = () => {
     }
 
     function saveToMinima(id) {
-        const command = `
-            tokencreate amount:1 decimals:0 name:{
+        const command = `tokencreate amount:1 decimals:0 name:{
                 "app":"stampd",
                 "sellers_address":"${address}",
                 "database_id":"${id}",

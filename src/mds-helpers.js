@@ -498,7 +498,10 @@ export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseI
             change = coinAmount - amount;
             return addTxnOutput(txnName, buyersAddress, 1, tokenId);
         }).then(function (result) {
-            return addTxnOutput(txnName, buyersAddress, change);
+            //if there is no change there's no need to add the change output
+            if (change > 0) {
+                return addTxnOutput(txnName, buyersAddress, change);
+            }
         }).then(function (result) {
             return addTxnInput(txnName, coinId, amount);
         }).then(function (result) {
