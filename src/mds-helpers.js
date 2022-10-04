@@ -1,6 +1,10 @@
 import {
     Decimal
 } from 'decimal.js';
+Decimal.set({
+    precision: 44,
+    rounding: Decimal.ROUND_FLOOR
+})
 /*
  * Function to create NFT and return the tokenID
  */
@@ -494,16 +498,19 @@ export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseI
             return getCoinAddressByAmount(amount);
         }).then(function (result) {
             coinId = result.coinId;
-            coinAmount = result.coinAmount;
-            change = coinAmount - amount;
+            coinAmount = new Decimal(result.coinAmount);
+            console.log(`Coin Value: ${coinAmount.toString(44)}`);
+            amount = new Decimal(amount);
+            change = coinAmount.minus(amount);
+            console.log(`Change: ${change.toString(44)}`);
             return addTxnOutput(txnName, buyersAddress, 1, tokenId);
         }).then(function (result) {
             //if there is no change there's no need to add the change output
-            if (change > 0) {
-                return addTxnOutput(txnName, buyersAddress, change);
+            if (change.gt(0)) {
+                return addTxnOutput(txnName, buyersAddress, change.toString(44));
             }
         }).then(function (result) {
-            return addTxnInput(txnName, coinId, amount);
+            return addTxnInput(txnName, coinId, amount.toString(44));
         }).then(function (result) {
             return exportTxn(txnName);
         }).then(function (result) {
@@ -525,6 +532,7 @@ export function receivePurchaseRequest(txnName, data, databaseId, buyersAddress)
             return getCoin(tokenId);
         }).then(function (result) {
             coinId = result;
+            //where does the minima go?
             return addTxnOutput(txnName, address, amount, '0x00');
         }).then(function (result) {
             return addTxnInput(txnName, coinId);
