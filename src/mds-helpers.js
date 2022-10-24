@@ -162,21 +162,39 @@ function slugify(str) {
     }
 }
 
-/* returns coin amount and ID that is greater than or euqal to and ammount */
-export function getCoinAddressByAmount(amount) {
+/* returns first coin larger than the amount, otherwise sums up coin to be equal or be greater than the amount */
+export function getCoinsByAmount(amount) {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd(`coins`, function (res) {
             if (res.status) {
                 let coin = res.response.find(c => c.amount >= amount);
                 if (coin) {
                     const coinRes = {
-                        coinAmount: coin.amount,
+                        coinAmount: new Decimal(coin.amount),
                         coinId: coin.coinid,
                     }
                     coin ? resolve(coinRes) : reject('No coin with that amount');
                     console.log(`Buyer Input Coin: ${coin.coinid}`);
                 } else {
-                    reject("There are no coins");
+                    let coinTotal = new Decimal(0);
+                    let allCoins = res.response;
+                    let countedCoins = [];
+                    //what happens if all the coins are counted but they don't meet the correct value?
+                    //what happens if only 2 coins are needed to meet the value but there are 40 coins?
+                    allCoins.foreach(coin => {
+                        if (coinTotal.lt(amount)) {
+                            //add coins to the coinsArray & add coin amount to coin total
+                            countedCoins.push({
+                                coinAmount: coin.amount,
+                                coinId: coin.coinid
+                            });
+                            coinTotal = new Decimal(coin.amount).plus(coinTotal);
+                        }
+                    }); //foreach
+                    if (coinTotal.lt(amount)) {
+                        reject(`Insufficient funds: Can't find enough coins!`);
+                    }
+                    resolve(countedCoins);
                 }
             } else {
                 reject(res.error);
@@ -386,6 +404,10 @@ export function postTxn(txnName) {
         })
     });
 }
+/* takes in array of coinId's and amount and gives back change */
+function getChange(coinTotal, amount) {
+    return coinTotal.minus(amount);
+}
 
 /* save data to a database */
 export async function saveTxnToDatabase(txnName, buyersAddress, sellersAddress, data, amount, tokenId, coinId, itemDatabaseId, txnStatus) {
@@ -490,19 +512,17 @@ export async function updateDatabase(itemId) {
 export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseId) {
     console.log("send pruchase request called");
     const txnName = slugify(tokenName);
-    let tokenId, buyersAddress, coinId, coinAmount, change;
+    let tokenId, buyersAddress, coinIds, coinTotal, change;
     return Promise.all([getTokenId(tokenName), getAddress(), createTransaction(txnName)])
         .then(function (result) {
             tokenId = result[0];
             buyersAddress = result[1];
-            return getCoinAddressByAmount(amount);
+            return getCoinsByAmount(amount);
         }).then(function (result) {
-            coinId = result.coinId;
-            coinAmount = new Decimal(result.coinAmount);
-            console.log(`Coin Value: ${coinAmount.toString(44)}`);
-            amount = new Decimal(amount);
-            change = coinAmount.minus(amount);
-            console.log(`Change: ${change.toString(44)}`);
+            coinIds = result.coinIds
+            coinTotal = result.coinTotal;
+            return getChange(coinTotal, amount);
+        }).then(function (result) {
             return addTxnOutput(txnName, buyersAddress, 1, tokenId);
         }).then(function (result) {
             //if there is no change there's no need to add the change output
@@ -510,11 +530,14 @@ export function sendPurchaseRequest(tokenName, amount, sellersAddress, databaseI
                 return addTxnOutput(txnName, buyersAddress, change.toString(44));
             }
         }).then(function (result) {
-            return addTxnInput(txnName, coinId, amount.toString(44));
+            //for each coin add an input
+            return coinIds.foreach(coinId => {
+                addTxnInput(txnName, coinId, amount.toString(44));
+            });
         }).then(function (result) {
             return exportTxn(txnName);
         }).then(function (result) {
-            return saveTxnToDatabase(txnName, buyersAddress, sellersAddress, result, amount, tokenId, coinId, databaseId, 1);
+            return saveTxnToDatabase(txnName, buyersAddress, sellersAddress, result, amount, tokenId, coinIds, databaseId, 1);
         }).catch(function (error) {
             console.log(error);
         });

@@ -5,7 +5,7 @@ import List from '@mui/material/List';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { getKeys, getTokens } from '../mds-helpers';
-import MarketplaceListItem from '../MarketplaceListItem';
+import MarketplaceListItem from './MarketplaceListItem';
 
 
 const Demo = styled('div')(({ theme }) => ({

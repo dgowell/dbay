@@ -1,15 +1,13 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { sendPurchaseRequest, getTokenData, checkAndSignTransaction, receivePurchaseRequest } from './mds-helpers';
+import { sendPurchaseRequest, getTokenData, checkAndSignTransaction, receivePurchaseRequest } from '../mds-helpers';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
-import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Typography from '@mui/material/Typography';
-import { getKeys } from './mds-helpers';
-import { SettingsOutlined } from '@mui/icons-material';
+import { getKeys } from '../mds-helpers';
 
 
 const ItemDetail = () => {

@@ -18,15 +18,15 @@ import Paper from '@mui/material/Paper';
 import WebStoriesIcon from '@mui/icons-material/WebStories';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import ResponsiveAppBar from "./ResponsiveAppBar";
-import InteractiveList from "./ItemList";
-import ItemDetail from "./ItemDetail";
+import ResponsiveAppBar from "./components/ResponsiveAppBar";
+import InteractiveList from "./components/ItemList";
+import ItemDetail from "./components/ItemDetail";
 import MyItems from "./components/MyItems";
 
 function Router(props) {
   const { children } = props;
   if (typeof window === 'undefined') {
-    return <StaticRouter location="/">{children}</StaticRouter>;
+    return <StaticRouter location="">{children}</StaticRouter>;
   }
 
   return <MemoryRouter>{children}</MemoryRouter>;

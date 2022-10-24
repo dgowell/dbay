@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import { getKeys, getTokens } from './mds-helpers';
+import { getKeys, getTokens } from '../mds-helpers';
 import MarketplaceListItem from './MarketplaceListItem';
 
 export default function InteractiveList() {
