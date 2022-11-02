@@ -50,5 +50,8 @@
   "devDependencies": {
     "gulp": "^4.0.2",
     "gulp-zip": "^5.1.0"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
