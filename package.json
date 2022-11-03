@@ -14,7 +14,10 @@
     "react-ui/node_modules"
   ],
   "dependencies": {
-    "express": ""
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "",
+    "mongodb": "^4.11.0"
   },
   "repository": {
     "type": "git",
@@ -26,6 +29,5 @@
     "create-react-app",
     "react"
   ],
-  "license": "MIT",
-  "devDependencies": {}
+  "license": "MIT"
 }

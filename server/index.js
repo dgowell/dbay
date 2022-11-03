@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
+const cors = require('cors');
+require("dotenv").config();
 
 const isDev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 9003;
@@ -21,6 +23,11 @@ if (!isDev && cluster.isMaster) {
 
 } else {
     const app = express();
+    app.use(cors());
+
+    app.use(require("./routes/listing"));
+    // get driver connection
+    const dbo = require("./db/conn");
 
     // Priority serve any static files.
     app.use(express.static(path.resolve(__dirname, '../react-ui/build')));
@@ -37,6 +44,12 @@ if (!isDev && cluster.isMaster) {
     });
 
     app.listen(PORT, function () {
+        // perform a database connection when server starts
+        dbo.connectToServer(function (err) {
+            if (err) console.error(err);
+
+        });
+        console.log(`Server is running on port: ${PORT}`);
         console.error(`Node ${isDev ? 'dev server' : 'cluster worker '+process.pid}: listening on port ${PORT}`);
     });
 }

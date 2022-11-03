@@ -112,6 +112,7 @@ const AddItem = () => {
     }
 
     function saveToMinima(id) {
+        /*
         const command = `tokencreate amount:1 decimals:0 name:{
                 "app":"stampd",
                 "sellers_address":"${address}",
@@ -126,6 +127,14 @@ const AddItem = () => {
                 "vendor_link":"${values.vendor_link}",
                 "condition_state":"${values.condition_state}",
                 "condition_description":"${values.condition_description}"}`;
+        */
+       const command = `tokencreate amount:1 decimals:0 name:{
+               "app":"stampd",
+               "sellers_address":"${address}",
+               "database_id":"${id}",
+               "name":"${values.name}",
+               "sale_price":"${values.sale_price}",
+            }`;
 
         window.MDS.cmd(command, function (res) {
             if (res.status) {
@@ -180,7 +189,6 @@ const AddItem = () => {
                                 id="brand"
                                 className="form-field"
                                 type="text"
-                                required
                                 fullWidth
                                 name="brand"
                                 value={values.brand}
@@ -195,7 +203,6 @@ const AddItem = () => {
                                 id="model"
                                 className="form-field"
                                 type="text"
-                                required
                                 fullWidth
                                 name="model"
                                 value={values.model}
@@ -209,7 +216,6 @@ const AddItem = () => {
                                 label="Vendor Link"
                                 id="Vendor-link"
                                 fullWidth
-                                required
                                 className="form-field"
                                 type="text"
                                 name="image"
@@ -223,7 +229,6 @@ const AddItem = () => {
                                 label="Description"
                                 id="description"
                                 multiline
-                                required
                                 rows={4}
                                 fullWidth
                                 className="form-field"
@@ -239,7 +244,6 @@ const AddItem = () => {
                                 label="Link to Image"
                                 id="image"
                                 fullWidth
-                                required
                                 className="form-field"
                                 type="text"
                                 name="image"
@@ -254,7 +258,6 @@ const AddItem = () => {
                                 <OutlinedInput
                                     id="original-price"
                                     value={values.original_price}
-                                    required
                                     onChange={handleChange('original_price')}
                                     startAdornment={<InputAdornment position="start">MIN</InputAdornment>}
                                     label="Original Price"
@@ -267,7 +270,6 @@ const AddItem = () => {
                                 <OutlinedInput
                                     id="sale-price"
                                     value={values.sale_price}
-                                    required
                                     onChange={handleChange('sale_price')}
                                     startAdornment={<InputAdornment position="start">MIN</InputAdornment>}
                                     label="Sale Price"
@@ -281,7 +283,6 @@ const AddItem = () => {
                                     labelId="select-condition-label"
                                     id="select-condition"
                                     value={values.condition_state}
-                                    required
                                     label="Condition"
                                     onChange={handleChange('condition_state')}
                                 >
@@ -299,7 +300,6 @@ const AddItem = () => {
                                 multiline
                                 rows={4}
                                 fullWidth
-                                required
                                 className="form-field"
                                 type="textarea"
                                 name="condition-description"
