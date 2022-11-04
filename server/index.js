@@ -4,6 +4,13 @@ const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 const cors = require('cors');
 require("dotenv").config();
+const app = express();
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+app.use(require("body-parser").json());
 
 const isDev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 9003;
@@ -21,8 +28,7 @@ if (!isDev && cluster.isMaster) {
         console.error(`Node cluster worker ${worker.process.pid} exited: code ${code}, signal ${signal}`);
     });
 
-} else {
-    const app = express();
+} else {  
     app.use(cors());
 
     app.use(require("./routes/listing"));

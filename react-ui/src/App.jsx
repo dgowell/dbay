@@ -18,10 +18,10 @@ import Paper from '@mui/material/Paper';
 import WebStoriesIcon from '@mui/icons-material/WebStories';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import ResponsiveAppBar from "./components/ResponsiveAppBar";
-import InteractiveList from "./components/ItemList";
-import ItemDetail from "./components/ItemDetail";
-import MyItems from "./components/MyItems";
+import Navbar from "./components/Navbar";
+import ListingCreate from "./components/ListingCreate";
+import ListingList from "./components/ListingList";
+import ListingUpdate from "./components/ListingUpdate";
 
 function Router(props) {
   const { children } = props;
@@ -48,7 +48,7 @@ function App() {
   return (
     <Router>
       <ThemeProvider theme={theme}>
-        <ResponsiveAppBar />
+        <Navbar />
         <Container component="main" maxWidth="xs">
           <CssBaseline />
           <Box
@@ -61,25 +61,10 @@ function App() {
             }}
           >
             <Routes>
-              <Route path="/marketplace" element={<InteractiveList />} />
-              <Route path="item/:tokenId" element={<ItemDetail />} />
-              <Route path="/my-items" element={<MyItems />} />
-              <Route path="/add-item" element={<CreateTokenForm />} />
+              <Route exact path="/" element={<ListingList />} />
+              <Route path="/edit/:id" element={<ListingUpdate />} />
+              <Route path="/create" element={<ListingCreate />} />
             </Routes>
-            <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
-              <BottomNavigation
-                showLabels
-                value={activePage}
-                onChange={(event, page) => {
-                  setActivePage(page);
-                }}
-
-              >
-                <BottomNavigationAction component={RouterLink} to="/marketplace" label="Marketplace" icon={<AppsIcon />} />
-                <BottomNavigationAction component={RouterLink} to="/my-items" label="My Items" icon={<HomeIcon />} />
-                <BottomNavigationAction component={RouterLink} to="/add-item" label="Add Item" icon={<WebStoriesIcon />} />
-              </BottomNavigation>
-            </Paper>
           </Box>
         </Container>
       </ThemeProvider>

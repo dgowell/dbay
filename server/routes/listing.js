@@ -14,7 +14,7 @@ const ObjectId = require("mongodb").ObjectId;
 
 // This section will help you get a list of all the listings.
 listingRoutes.route("/listing").get(function (req, res) {
-    let db_connect = dbo.getDb("marketplace");
+    let db_connect = dbo.getDb("Marketplace");
     db_connect
         .collection("listings")
         .find({})
