@@ -1,112 +1,114 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import LoadingButton from "@mui/lab/LoadingButton";
+import Grid from "@mui/material/Grid";
+import InputAdornment from "@mui/material/InputAdornment";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import OutlinedInput from "@mui/material/OutlinedInput";
 
 export default function ListingCreate() {
-    const [form, setForm] = useState({
-        name: "",
-        position: "",
-        level: "",
+    const [loading, setLoading] = React.useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    original_price: "",
+  });
+  const navigate = useNavigate();
+
+  // These methods will update the state properties.
+  function updateForm(value) {
+    return setForm((prev) => {
+      return { ...prev, ...value };
     });
-    const navigate = useNavigate();
+  }
 
-    // These methods will update the state properties.
-    function updateForm(value) {
-        return setForm((prev) => {
-            return { ...prev, ...value };
-        });
-    }
+  // This function will handle the submission.
+  async function onSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
 
-    // This function will handle the submission.
-    async function onSubmit(e) {
-        e.preventDefault();
-        debugger;
-        // When a post request is sent to the create url, we'll add a new record to the database.
-        const newListing = { ...form };
+    // When a post request is sent to the create url, we'll add a new record to the database.
+    const newListing = { ...form };
 
-        await fetch("http://localhost:5000/listing/add", {
-          method: "POST",
-          headers: { "Content-Type": "application/json;charset=utf-8" },
-          body: JSON.stringify(newListing),
-        }).catch((error) => {
-          window.alert(error);
-          return;
-        });
+    await fetch(`${process.env.HOST}/listing/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json;charset=utf-8" },
+      body: JSON.stringify(newListing),
+    }).catch((error) => {
+      window.alert(error);
+      return;
+    });
 
-        setForm({ name: "", position: "", level: "" });
-        navigate("/");
-    }
+    setForm({ name: "", original_price: "" });
+    navigate("/");
+    setLoading(false);
+  }
 
-    // This following section will display the form that takes the input from the user.
-    return (
-        <div>
-            <h3>Create New Listing</h3>
-            <form onSubmit={onSubmit}>
-                <div className="form-group">
-                    <label htmlFor="name">Name</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        id="name"
-                        value={form.name}
-                        onChange={(e) => updateForm({ name: e.target.value })}
-                    />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="position">Position</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        id="position"
-                        value={form.position}
-                        onChange={(e) => updateForm({ position: e.target.value })}
-                    />
-                </div>
-                <div className="form-group">
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="positionOptions"
-                            id="positionIntern"
-                            value="Intern"
-                            checked={form.level === "Intern"}
-                            onChange={(e) => updateForm({ level: e.target.value })}
-                        />
-                        <label htmlFor="positionIntern" className="form-check-label">Intern</label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="positionOptions"
-                            id="positionJunior"
-                            value="Junior"
-                            checked={form.level === "Junior"}
-                            onChange={(e) => updateForm({ level: e.target.value })}
-                        />
-                        <label htmlFor="positionJunior" className="form-check-label">Junior</label>
-                    </div>
-                    <div className="form-check form-check-inline">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="positionOptions"
-                            id="positionSenior"
-                            value="Senior"
-                            checked={form.level === "Senior"}
-                            onChange={(e) => updateForm({ level: e.target.value })}
-                        />
-                        <label htmlFor="positionSenior" className="form-check-label">Senior</label>
-                    </div>
-                </div>
-                <div className="form-group">
-                    <input
-                        type="submit"
-                        value="Create person"
-                        className="btn btn-primary"
-                    />
-                </div>
-            </form>
-        </div>
-    );
+  // This following section will display the form that takes the input from the user.
+  return (
+    <Box
+      sx={{
+        marginTop: 4,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Create New Listing
+      </Typography>
+      <Box
+        component="form"
+        sx={{ mt: 3 }}
+        noValidate
+        autoComplete="off"
+        onSubmit={onSubmit}
+      >
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              label="Item Title"
+              id="item-name"
+              className="form-field"
+              type="text"
+              required
+              fullWidth
+              name="title"
+              value={form.name}
+              onChange={(e) => updateForm({ name: e.target.value })}
+              ariant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel htmlFor="original-price">Original Price</InputLabel>
+              <OutlinedInput
+                id="original-price"
+                value={form.original_price}
+                onChange={(e) => updateForm({ original_price: e.target.value })}
+                startAdornment={
+                  <InputAdornment position="start">MIN</InputAdornment>
+                }
+                label="Original Price"
+              />
+            </FormControl>
+          </Grid>
+        </Grid>
+        <LoadingButton
+          fullWidth
+          variant="contained"
+          type="submit"
+          value="Create Token"
+          loading={loading}
+          loadingPosition="end"
+          sx={{ mt: 3, mb: 2 }}
+        >
+          Submit
+        </LoadingButton>
+      </Box>
+    </Box>
+  );
 }
