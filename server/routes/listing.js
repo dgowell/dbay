@@ -43,8 +43,7 @@ listingRoutes.route("/listing/add").post(function (req, response) {
     let db_connect = dbo.getDb();
     let myobj = {
         name: req.body.name,
-        position: req.body.position,
-        level: req.body.level,
+        asking_price: req.body.asking_price,
     };
     db_connect.collection("listings").insertOne(myobj, function (err, res) {
         if (err) throw err;
@@ -61,8 +60,7 @@ listingRoutes.route("/update/:id").post(function (req, response) {
     let newvalues = {
         $set: {
             name: req.body.name,
-            position: req.body.position,
-            level: req.body.level,
+            asking_price: req.body.asking_price,
         },
     };
     db_connect

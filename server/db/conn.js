@@ -1,7 +1,12 @@
 const {
     MongoClient
 } = require("mongodb");
+const env = process.env.NODE_ENV || 'development';
 const Db = process.env.ATLAS_URI;
+if (env === 'test') {
+    Db = process.env.LOCAL_DATABASE;
+}
+
 const client = new MongoClient(Db, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -14,7 +19,7 @@ module.exports = {
         client.connect(function (err, db) {
             // Verify we got a good "db" object
             if (db) {
-                _db = db.db("employees");
+                _db = db.db("Marketplace");
                 console.log("Successfully connected to MongoDB.");
             }
             return callback(err);

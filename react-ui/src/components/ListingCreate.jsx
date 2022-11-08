@@ -14,7 +14,7 @@ export default function ListingCreate() {
     const [loading, setLoading] = React.useState(false);
   const [form, setForm] = useState({
     name: "",
-    original_price: "",
+    asking_price: "",
   });
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ export default function ListingCreate() {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
-    await fetch(`${process.env.HOST}/listing/add`, {
+    await fetch(`http://localhost:5000/listing/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json;charset=utf-8" },
       body: JSON.stringify(newListing),
@@ -42,7 +42,7 @@ export default function ListingCreate() {
       return;
     });
 
-    setForm({ name: "", original_price: "" });
+    setForm({ name: "", asking_price: "" });
     navigate("/");
     setLoading(false);
   }
@@ -84,15 +84,15 @@ export default function ListingCreate() {
           </Grid>
           <Grid item xs={12}>
             <FormControl fullWidth>
-              <InputLabel htmlFor="original-price">Original Price</InputLabel>
+              <InputLabel htmlFor="asking-price">Asking Price</InputLabel>
               <OutlinedInput
-                id="original-price"
-                value={form.original_price}
-                onChange={(e) => updateForm({ original_price: e.target.value })}
+                id="asking-price"
+                value={form.asking_price}
+                onChange={(e) => updateForm({ asking_price: e.target.value })}
                 startAdornment={
                   <InputAdornment position="start">MIN</InputAdornment>
                 }
-                label="Original Price"
+                label="Asking Price"
               />
             </FormControl>
           </Grid>
