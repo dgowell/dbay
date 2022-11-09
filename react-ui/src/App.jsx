@@ -8,7 +8,6 @@ import {
 } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
 import CssBaseline from '@mui/material/CssBaseline';
-import CreateTokenForm from "./components/AddItem";
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import AppsIcon from '@mui/icons-material/Apps';
@@ -18,7 +17,7 @@ import Paper from '@mui/material/Paper';
 import WebStoriesIcon from '@mui/icons-material/WebStories';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import Navbar from "./components/Navbar";
+import ResponsiveAppBar from './components/ResponsiveAppBar';
 import ListingCreate from "./components/ListingCreate";
 import ListingList from "./components/ListingList";
 import ListingUpdate from "./components/ListingUpdate";
@@ -48,16 +47,16 @@ function App() {
   return (
     <Router>
       <ThemeProvider theme={theme}>
-        <Navbar />
+        <ResponsiveAppBar />
         <Container component="main" maxWidth="xs">
           <CssBaseline />
           <Box
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mb: 10
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 10,
             }}
           >
             <Routes>
@@ -65,6 +64,37 @@ function App() {
               <Route path="/edit/:id" element={<ListingUpdate />} />
               <Route path="/create" element={<ListingCreate />} />
             </Routes>
+            <Paper
+              sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
+              elevation={3}
+            >
+              <BottomNavigation
+                showLabels
+                value={activePage}
+                onChange={(event, page) => {
+                  setActivePage(page);
+                }}
+              >
+                <BottomNavigationAction
+                  component={RouterLink}
+                  to="/list"
+                  label="Marketplace"
+                  icon={<AppsIcon />}
+                />
+                <BottomNavigationAction
+                  component={RouterLink}
+                  to="/list"
+                  label="My Items"
+                  icon={<HomeIcon />}
+                />
+                <BottomNavigationAction
+                  component={RouterLink}
+                  to="/create"
+                  label="Add Listing"
+                  icon={<WebStoriesIcon />}
+                />
+              </BottomNavigation>
+            </Paper>
           </Box>
         </Container>
       </ThemeProvider>

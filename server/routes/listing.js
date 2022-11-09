@@ -18,6 +18,7 @@ listingRoutes.route("/listing").get(function (req, res) {
     db_connect
         .collection("listings")
         .find({})
+        .limit(20)
         .toArray(function (err, result) {
             if (err) throw err;
             res.json(result);

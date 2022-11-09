@@ -2,7 +2,7 @@ const {
     MongoClient
 } = require("mongodb");
 const env = process.env.NODE_ENV || 'development';
-const Db = process.env.ATLAS_URI;
+let Db = process.env.ATLAS_URI;
 if (env === 'test') {
     Db = process.env.LOCAL_DATABASE;
 }
