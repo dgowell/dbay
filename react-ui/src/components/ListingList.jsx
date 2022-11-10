@@ -14,7 +14,6 @@ import IconButton from "@mui/material/IconButton";
 import { getAllListings } from '../db';
 
 const Listing = (props) => (
-  <Link edge="end" aria-label="delete" to={`/edit/${props.listing.ID}`}>
     <ListItem button >
       <ListItemAvatar>
         {props.listing.image ? (
@@ -32,7 +31,6 @@ const Listing = (props) => (
         }
       />
     </ListItem>
-  </Link>
 );
 
 export default function ListingList() {
