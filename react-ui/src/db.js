@@ -1,6 +1,6 @@
 /* adds a listing to the database */
 export function createListing(name, price, listingCallback) {
-    let fullsql = `INSERT INTO listings (name,price) VALUES ('${name}','${price}')`;
+    let fullsql = `INSERT INTO listings (name,price) VALUES ('${name}','${price}');`;
     console.log(`name: ${name}, price: ${price}`);
     window.MDS.sql(fullsql, (res) => {
         if (res.status){
@@ -22,10 +22,16 @@ export function getAllListings(allListingsCallback) {
     });
 }
 
-export function getListingById(id, data) {
-    window.MDS.sql(`SELECT * FROM listings WHERE id = ${id}`, function (sqlmsg) {
-        if (sqlmsg) {
-            data(sqlmsg.rows);
+export function getListingById(id, listingsIdCallback) {
+    window.MDS.sql(`SELECT * FROM listings WHERE id = ${id};`, function (res) {
+        if (res.status) {
+            if (res.count >1) {
+                listingsIdCallback(`More than one listing with id ${id}`, null);
+            } else {
+                listingsIdCallback(null, res.rows[0]);
+            }
+        } else {
+            listingsIdCallback(res.error, null);
         }
     });
 }

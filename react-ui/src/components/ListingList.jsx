@@ -12,6 +12,7 @@ import BungalowIcon from "@mui/icons-material/Bungalow";
 import SendIcon from "@mui/icons-material/Send";
 import IconButton from "@mui/material/IconButton";
 import { getAllListings } from "../db";
+import { sendListing } from "../comms";
 
 const Listing = (props) => (
   <ListItem
@@ -63,9 +64,13 @@ export default function ListingList() {
     return;
   }, []);
 
-  // This method will delete a listing
-  function sendListing(id) {
-    console.log(`send listing ${id}`);
+  //what to do once listing has been sent
+  function listingsIdCallback(error, success) {
+    if (success) {
+      console.log(`successfully sent listing!`);
+    } else {
+      console.error(error);
+    }
   }
 
   // This method will map out the listings on the table
@@ -74,7 +79,7 @@ export default function ListingList() {
       return (
         <Listing
           listing={listing}
-          sendListing={() => sendListing(listing.ID)}
+          sendListing={() => sendListing(listing.ID, listingsIdCallback)}
           key={listing.ID}
         />
       );

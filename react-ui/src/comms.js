@@ -1,9 +1,34 @@
 /*
-All functions that communicate via maxima are held in this file
+    All functions that communicate via maxima are held in this file
 */
 
-export function sendData(jsondata) {
+import { getListingById } from './db';
 
+export function sendListing(id, sendListingCallback){
+    function listingCallback(error, data){
+        if (data) {
+            //send listing
+            sendData(data, sendCallback);
+        } else {
+            console.error(error);
+        }
+    }
+    function sendCallback(error, success){
+        if (success) {
+            sendListingCallback(success);
+        } else {
+            sendListingCallback(error);
+        }
+    }
+    //get listing
+    getListingById(id, listingCallback);
+
+    //return OK or Error 
+}
+
+export function sendData(jsondata) {
+    debugger;
+    /*
     //Convert to a string..
     const datastr = JSON.stringify(jsondata);
 
@@ -36,4 +61,5 @@ export function sendData(jsondata) {
         //Enable send button again
         document.getElementById("sendbutton").disabled = false;
     });
+    */
 }
