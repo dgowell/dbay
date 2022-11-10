@@ -1,30 +1,33 @@
 import { useEffect, useState } from "react";
-import './App.css';
+import "./App.css";
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import * as React from 'react';
-import PropTypes from 'prop-types';
+import * as React from "react";
+import PropTypes from "prop-types";
 import {
-  Link as RouterLink, Route, Routes, MemoryRouter
-} from 'react-router-dom';
-import { StaticRouter } from 'react-router-dom/server';
-import CssBaseline from '@mui/material/CssBaseline';
-import BottomNavigation from '@mui/material/BottomNavigation';
-import BottomNavigationAction from '@mui/material/BottomNavigationAction';
-import AppsIcon from '@mui/icons-material/Apps';
-import HomeIcon from '@mui/icons-material/Home';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import WebStoriesIcon from '@mui/icons-material/WebStories';
-import Container from '@mui/material/Container';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import ResponsiveAppBar from './components/ResponsiveAppBar';
+  Link as RouterLink,
+  Route,
+  Routes,
+  MemoryRouter,
+} from "react-router-dom";
+import { StaticRouter } from "react-router-dom/server";
+import CssBaseline from "@mui/material/CssBaseline";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import AppsIcon from "@mui/icons-material/Apps";
+import HomeIcon from "@mui/icons-material/Home";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import WebStoriesIcon from "@mui/icons-material/WebStories";
+import Container from "@mui/material/Container";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import ListingCreate from "./components/ListingCreate";
 import ListingList from "./components/ListingList";
 import ListingUpdate from "./components/ListingUpdate";
 
 function Router(props) {
   const { children } = props;
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return <StaticRouter location="">{children}</StaticRouter>;
   }
 
@@ -37,12 +40,26 @@ Router.propTypes = {
 
 const theme = createTheme();
 
-
 function App() {
   //  const [data, setData] = useState();
   const [activePage, setActivePage] = useState();
   useEffect(() => {
-    window.MDS.init();
+    window.MDS.init(function (msg) {
+      //Do initialisation
+      if (msg.event == "inited") {
+        //Create the DB if not exists
+        const initsql =
+          "CREATE TABLE IF NOT EXISTS `listings` ( " +
+          "  `id` IDENTITY PRIMARY KEY, " +
+          "  `name` varchar(160) NOT NULL, " +
+          "  `price` varchar(50) NOT NULL " +
+          " )";
+        //Run this..
+        window.MDS.sql(initsql, function (msg) {
+          window.MDS.log("StampD Service SQL Inited..");
+        });
+      }
+    });
   }, []);
   return (
     <Router>
@@ -77,7 +94,7 @@ function App() {
               >
                 <BottomNavigationAction
                   component={RouterLink}
-                  to="/list"
+                  to="/"
                   label="Marketplace"
                   icon={<AppsIcon />}
                 />

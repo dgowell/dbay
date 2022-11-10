@@ -11,23 +11,11 @@ import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
+import { readListing } from '../db';
 
 const Listing = (props) => (
-  <Link edge="end" aria-label="delete" to={`/edit/${props.listing._id}`}>
-    <ListItem
-      button
-      secondaryAction={
-        <IconButton
-          edge="end"
-          aria-label="delete"
-          onClick={() => {
-            props.deleteListing(props.listing._id);
-          }}
-        >
-          <DeleteIcon />
-        </IconButton>
-      }
-    >
+  <Link edge="end" aria-label="delete" to={`/edit/${props.listing.ID}`}>
+    <ListItem button >
       <ListItemAvatar>
         {props.listing.image ? (
           <Avatar alt={props.listing.name} src={props.listing.image} />
@@ -38,9 +26,9 @@ const Listing = (props) => (
         )}
       </ListItemAvatar>
       <ListItemText
-        primary={props.listing.name}
+        primary={props.listing.NAME}
         secondary={
-          props.listing.asking_price ? `£${props.listing.asking_price}` : null
+          props.listing.PRICE ? `£${props.listing.PRICE}` : null
         }
       />
     </ListItem>
@@ -52,32 +40,22 @@ export default function ListingList() {
 
   // This method fetches the listings from the database.
   useEffect(() => {
-    async function getListings() {
-      const response = await fetch(`http://localhost:5000/listing/`);
-
-      if (!response.ok) {
-        const message = `An error occurred: ${response.statusText}`;
-        window.alert(message);
-        return;
+     async function getListings(){
+      function data(results) {
+        console.log(`results: ${results}`);
+        setListings(results);
       }
-
-      const listings = await response.json();
-      setListings(listings);
+      const response = await readListing(data);
+      debugger;
+      console.log(`response: ${response}`);
     }
-
     getListings();
-
     return;
-  }, [listings.length]);
+  }, []);
 
   // This method will delete a listing
-  async function deleteListing(id) {
-    await fetch(`http://localhost:5000/${id}`, {
-      method: "DELETE",
-    });
-
-    const newListings = listings.filter((el) => el._id !== id);
-    setListings(newListings);
+  function deleteListing(id) {
+    console.log("delete me");
   }
 
   // This method will map out the listings on the table

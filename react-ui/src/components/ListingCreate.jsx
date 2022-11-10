@@ -9,6 +9,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
+import { createListing } from '../db';
 
 export default function ListingCreate() {
     const [loading, setLoading] = React.useState(false);
@@ -33,15 +34,17 @@ export default function ListingCreate() {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
-    await fetch(`http://localhost:5000/listing/add`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json;charset=utf-8" },
-      body: JSON.stringify(newListing),
-    }).catch((error) => {
-      window.alert(error);
-      return;
-    });
 
+    function listingCallback(onError, onSuccess){
+      if (onSuccess) {
+        console.log("Listing added!");
+      }
+      if (onError){
+        console.error(onError);
+      }
+    }
+
+    createListing(newListing.name, newListing.asking_price, listingCallback);
     setForm({ name: "", asking_price: "" });
     navigate("/");
     setLoading(false);
