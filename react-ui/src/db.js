@@ -6,18 +6,18 @@ export function createListing(name, price, listingCallback) {
         if (res.status){
             listingCallback(null, true);
         } else {
-           listingCallback(res, null);
+           listingCallback(res.error, null);
         }
     });
 }
 
 /* retrieves all listings */
 export function getAllListings(allListingsCallback) {
-    window.MDS.sql(`SELECT name, price FROM listings;`, (res) =>{
+    window.MDS.sql(`SELECT id, name, price FROM listings;`, (res) =>{
         if (res.status) {
             allListingsCallback(null, res.rows);
         } else {
-            allListingsCallback(res, null);
+            allListingsCallback(res.error, null);
         }
     });
 }

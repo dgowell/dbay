@@ -9,28 +9,38 @@ import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemText from "@mui/material/ListItemText";
 import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
-import DeleteIcon from "@mui/icons-material/Delete";
+import SendIcon from "@mui/icons-material/Send";
 import IconButton from "@mui/material/IconButton";
-import { getAllListings } from '../db';
+import { getAllListings } from "../db";
 
 const Listing = (props) => (
-    <ListItem button >
-      <ListItemAvatar>
-        {props.listing.image ? (
-          <Avatar alt={props.listing.name} src={props.listing.image} />
-        ) : (
-          <Avatar>
-            <BungalowIcon />
-          </Avatar>
-        )}
-      </ListItemAvatar>
-      <ListItemText
-        primary={props.listing.NAME}
-        secondary={
-          props.listing.PRICE ? `£${props.listing.PRICE}` : null
-        }
-      />
-    </ListItem>
+  <ListItem
+    secondaryAction={
+      <IconButton
+        edge="end"
+        aria-label="delete"
+        onClick={() => {
+          props.sendListing(props.listing.ID);
+        }}
+      >
+        <SendIcon />
+      </IconButton>
+    }
+  >
+    <ListItemAvatar>
+      {props.listing.image ? (
+        <Avatar alt={props.listing.name} src={props.listing.image} />
+      ) : (
+        <Avatar>
+          <BungalowIcon />
+        </Avatar>
+      )}
+    </ListItemAvatar>
+    <ListItemText
+      primary={props.listing.NAME}
+      secondary={props.listing.PRICE ? `£${props.listing.PRICE}` : null}
+    />
+  </ListItem>
 );
 
 export default function ListingList() {
@@ -38,22 +48,24 @@ export default function ListingList() {
 
   /* fetches the listings from local database */
   useEffect(() => {
-     function getListings(){
+    function getListings() {
       function allListingsCallback(error, data) {
-        if (data){
+        if (data) {
           setListings(data);
           console.log(`results: ${data}`);
-        } else { console.error(error);}
+        } else {
+          console.error(error);
+        }
       }
       getAllListings(allListingsCallback);
     }
     getListings();
     return;
-  }, [listings]);
+  }, []);
 
   // This method will delete a listing
-  function deleteListing(id) {
-    console.log(`delete me ${id}`);
+  function sendListing(id) {
+    console.log(`send listing ${id}`);
   }
 
   // This method will map out the listings on the table
@@ -62,8 +74,8 @@ export default function ListingList() {
       return (
         <Listing
           listing={listing}
-          deleteListing={() => deleteListing(listing._id)}
-          key={listing._id}
+          sendListing={() => sendListing(listing.ID)}
+          key={listing.ID}
         />
       );
     });
