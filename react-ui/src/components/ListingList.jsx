@@ -11,7 +11,7 @@ import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import { readListing } from '../db';
+import { getAllListings } from '../db';
 
 const Listing = (props) => (
   <Link edge="end" aria-label="delete" to={`/edit/${props.listing.ID}`}>
@@ -38,24 +38,24 @@ const Listing = (props) => (
 export default function ListingList() {
   const [listings, setListings] = useState([]);
 
-  // This method fetches the listings from the database.
+  /* fetches the listings from local database */
   useEffect(() => {
-     async function getListings(){
-      function data(results) {
-        console.log(`results: ${results}`);
-        setListings(results);
+     function getListings(){
+      function allListingsCallback(error, data) {
+        if (data){
+          setListings(data);
+          console.log(`results: ${data}`);
+        } else { console.error(error);}
       }
-      const response = await readListing(data);
-      debugger;
-      console.log(`response: ${response}`);
+      getAllListings(allListingsCallback);
     }
     getListings();
     return;
-  }, []);
+  }, [listings]);
 
   // This method will delete a listing
   function deleteListing(id) {
-    console.log("delete me");
+    console.log(`delete me ${id}`);
   }
 
   // This method will map out the listings on the table

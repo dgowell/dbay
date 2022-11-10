@@ -1,6 +1,5 @@
-//Insert into the DB
+/* adds a listing to the database */
 export function createListing(name, price, listingCallback) {
-
     let fullsql = `INSERT INTO listings (name,price) VALUES ('${name}','${price}')`;
     console.log(`name: ${name}, price: ${price}`);
     window.MDS.sql(fullsql, (res) => {
@@ -12,14 +11,13 @@ export function createListing(name, price, listingCallback) {
     });
 }
 
-export function readListing(data) {
-    //Load the last message in each room..
-    window.MDS.sql(`SELECT name, price FROM listings;`, function (sqlmsg) {
-        //Get the data
-        if (sqlmsg) {
-            data(sqlmsg.rows);
+/* retrieves all listings */
+export function getAllListings(allListingsCallback) {
+    window.MDS.sql(`SELECT name, price FROM listings;`, (res) =>{
+        if (res.status) {
+            allListingsCallback(null, res.rows);
         } else {
-            console.error("Cannot select from listings");
+            allListingsCallback(res, null);
         }
     });
 }
