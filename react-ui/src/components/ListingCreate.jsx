@@ -34,17 +34,11 @@ export default function ListingCreate() {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
+    createListing(newListing.name, newListing.asking_price)
+      .then((result) => {
+        console.log(`Listing added: ${result}`);
+      }).catch((e)=> console.error(e));
 
-    function listingCallback(onError, onSuccess){
-      if (onSuccess) {
-        console.log("Listing added!");
-      }
-      if (onError){
-        console.error(onError);
-      }
-    }
-
-    createListing(newListing.name, newListing.asking_price, listingCallback);
     setForm({ name: "", asking_price: "" });
     navigate("/");
     setLoading(false);

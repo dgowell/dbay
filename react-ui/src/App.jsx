@@ -24,6 +24,7 @@ import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import ListingCreate from "./components/ListingCreate";
 import ListingList from "./components/ListingList";
 import ListingUpdate from "./components/ListingUpdate";
+import { processMaximaEvent } from './comms';
 
 function Router(props) {
   const { children } = props;
@@ -46,7 +47,7 @@ function App() {
   useEffect(() => {
     window.MDS.init(function (msg) {
       //Do initialisation
-      if (msg.event == "inited") {
+      if (msg.event === "inited") {
         //Create the DB if not exists
         const initsql =
           "CREATE TABLE IF NOT EXISTS `listings` ( " +
@@ -58,6 +59,13 @@ function App() {
         window.MDS.sql(initsql, function (msg) {
           window.MDS.log("StampD Service SQL Inited..");
         });
+      }
+      if (msg.event === "MAXIMA") {
+        debugger;
+        console.log(`recieved maxima message:${msg}`);
+
+        //Process this message
+        processMaximaEvent(msg);
       }
     });
   }, []);

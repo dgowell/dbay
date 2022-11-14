@@ -12,7 +12,7 @@ import BungalowIcon from "@mui/icons-material/Bungalow";
 import SendIcon from "@mui/icons-material/Send";
 import IconButton from "@mui/material/IconButton";
 import { getAllListings } from "../db";
-import { sendListing } from "../comms";
+import { sendListingToContacts } from "../comms";
 
 const Listing = (props) => (
   <ListItem
@@ -49,29 +49,17 @@ export default function ListingList() {
 
   /* fetches the listings from local database */
   useEffect(() => {
-    function getListings() {
-      function allListingsCallback(error, data) {
-        if (data) {
+      getAllListings()
+        .then((data) => {
           setListings(data);
           console.log(`results: ${data}`);
-        } else {
-          console.error(error);
-        }
-      }
-      getAllListings(allListingsCallback);
-    }
-    getListings();
+        })
+        .catch((e) => {
+          console.error(e);
+        });
     return;
   }, []);
 
-  //what to do once listing has been sent
-  function listingsIdCallback(error, success) {
-    if (success) {
-      console.log(`successfully sent listing!`);
-    } else {
-      console.error(error);
-    }
-  }
 
   // This method will map out the listings on the table
   function listingList() {
@@ -79,7 +67,13 @@ export default function ListingList() {
       return (
         <Listing
           listing={listing}
-          sendListing={() => sendListing(listing.ID, listingsIdCallback)}
+          sendListing={() => sendListingToContacts(listing.ID)
+            .then((res) => {
+              console.log(`successfully sent listing!`)
+            })
+            .catch((e)=>{
+              console.error(e);
+            })}
           key={listing.ID}
         />
       );
