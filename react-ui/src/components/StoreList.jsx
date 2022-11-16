@@ -12,34 +12,35 @@ import SendIcon from "@mui/icons-material/Send";
 import IconButton from "@mui/material/IconButton";
 import { getAllStores } from "../db";
 import { sendStoreToContacts } from "../comms";
+import { ListItemButton } from "@mui/material";
 
 const Store = (props) => (
-  <ListItem
-    secondaryAction={
-      <IconButton
-        edge="end"
-        aria-label="delete"
-        onClick={() => {
-          props.sendStore(props.store['STORE_ID']);
-        }}
-      >
-        <SendIcon />
-      </IconButton>
-    }
-  >
-    <ListItemAvatar>
-      {props.store.image ? (
-        <Avatar alt={props.store['NAME']} src={props.store['IMAGE']} />
-      ) : (
-        <Avatar>
-          <BungalowIcon />
-        </Avatar>
-      )}
-    </ListItemAvatar>
-    <ListItemText
-      primary={props.store['NAME']}
-    />
-  </ListItem>
+  <ListItemButton edge="end" aria-label="view store" to={`/store/${props.store['STORE_ID']}`}>
+    <ListItem
+      secondaryAction={
+        <IconButton
+          edge="end"
+          aria-label="delete"
+          onClick={() => {
+            props.sendStore(props.store["STORE_ID"]);
+          }}
+        >
+          <SendIcon />
+        </IconButton>
+      }
+    >
+      <ListItemAvatar>
+        {props.store.image ? (
+          <Avatar alt={props.store["NAME"]} src={props.store["IMAGE"]} />
+        ) : (
+          <Avatar>
+            <BungalowIcon />
+          </Avatar>
+        )}
+      </ListItemAvatar>
+      <ListItemText primary={props.store["NAME"]} />
+    </ListItem>
+  </ListItemButton>
 );
 
 export default function StoreList() {

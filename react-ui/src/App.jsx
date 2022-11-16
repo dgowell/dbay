@@ -4,17 +4,17 @@ import "./App.css";
 import * as React from "react";
 import PropTypes from "prop-types";
 import {
-  Link as RouterLink,
+  Link,
   Route,
   Routes,
   MemoryRouter,
+  Outlet
 } from "react-router-dom";
 import { StaticRouter } from "react-router-dom/server";
 import CssBaseline from "@mui/material/CssBaseline";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import AppsIcon from "@mui/icons-material/Apps";
-import HomeIcon from "@mui/icons-material/Home";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import WebStoriesIcon from "@mui/icons-material/WebStories";
@@ -23,22 +23,9 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import StoreCreate from "./components/StoreCreate";
 import StoreList from "./components/StoreList";
-import ListingUpdate from "./components/ListingUpdate";
+import StoreDetail from "./components/StoreDetail";
 import { processMaximaEvent } from './comms';
 import { schema } from './schema';
-
-function Router(props) {
-  const { children } = props;
-  if (typeof window === "undefined") {
-    return <StaticRouter location="">{children}</StaticRouter>;
-  }
-
-  return <MemoryRouter>{children}</MemoryRouter>;
-}
-
-Router.propTypes = {
-  children: PropTypes.node,
-};
 
 const theme = createTheme();
 
@@ -54,7 +41,6 @@ function App() {
         });
       }
       if (msg.event === "MAXIMA") {
-        debugger;
         console.log(`recieved maxima message:${msg}`);
 
         //Process this message
@@ -63,7 +49,6 @@ function App() {
     });
   }, []);
   return (
-    <Router>
       <ThemeProvider theme={theme}>
         <ResponsiveAppBar />
         <Container component="main" maxWidth="xs">
@@ -79,8 +64,9 @@ function App() {
           >
             <Routes>
               <Route exact path="/" element={<StoreList />} />
-              <Route path="/edit/:id" element={<ListingUpdate />} />
-              <Route path="/create" element={<StoreCreate />} />
+              <Route path="store/create" element={<StoreCreate />} />
+              <Route path="store/:id" element={<StoreDetail />} />
+              <Route path="*" element={<NoMatch />} />
             </Routes>
             <Paper
               sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
@@ -94,20 +80,14 @@ function App() {
                 }}
               >
                 <BottomNavigationAction
-                  component={RouterLink}
+                  component={Link}
                   to="/"
                   label="Marketplace"
                   icon={<AppsIcon />}
                 />
                 <BottomNavigationAction
-                  component={RouterLink}
-                  to="/list"
-                  label="My Items"
-                  icon={<HomeIcon />}
-                />
-                <BottomNavigationAction
-                  component={RouterLink}
-                  to="/create"
+                  component={Link}
+                  to="/store/create"
                   label="Add Store"
                   icon={<WebStoriesIcon />}
                 />
@@ -116,8 +96,19 @@ function App() {
           </Box>
         </Container>
       </ThemeProvider>
-    </Router>
   );
 }
+
+function NoMatch() {
+  return (
+    <div>
+      <h2>Nothing to see here!</h2>
+      <p>
+        <Link to="/">Go to the home page</Link>
+      </p>
+    </div>
+  );
+}
+
 
 export default App;
