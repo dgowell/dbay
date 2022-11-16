@@ -106,7 +106,7 @@ export function processMaximaEvent(msg) {
     var maxjson = JSON.parse(jsonstr);
 
     //save to database
-    createListing(maxjson.NAME, maxjson.PRICE)
+    createListing(maxjson.name, maxjson.price)
         .then((res) => {
                 console.log(`Listing ${maxjson.name} added!`);
         })

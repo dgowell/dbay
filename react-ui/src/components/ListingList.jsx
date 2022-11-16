@@ -38,8 +38,8 @@ const Listing = (props) => (
       )}
     </ListItemAvatar>
     <ListItemText
-      primary={props.listing.NAME}
-      secondary={props.listing.PRICE ? `£${props.listing.PRICE}` : null}
+      primary={props.listing.name}
+      secondary={props.listing.price ? `£${props.listing.price}` : null}
     />
   </ListItem>
 );

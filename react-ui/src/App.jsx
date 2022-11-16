@@ -21,10 +21,11 @@ import WebStoriesIcon from "@mui/icons-material/WebStories";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ResponsiveAppBar from "./components/ResponsiveAppBar";
-import ListingCreate from "./components/ListingCreate";
+import StoreCreate from "./components/StoreCreate";
 import ListingList from "./components/ListingList";
 import ListingUpdate from "./components/ListingUpdate";
 import { processMaximaEvent } from './comms';
+import { schema } from './schema';
 
 function Router(props) {
   const { children } = props;
@@ -48,15 +49,7 @@ function App() {
     window.MDS.init(function (msg) {
       //Do initialisation
       if (msg.event === "inited") {
-        //Create the DB if not exists
-        const initsql =
-          "CREATE TABLE IF NOT EXISTS `listings` ( " +
-          "  `id` IDENTITY PRIMARY KEY, " +
-          "  `name` varchar(160) NOT NULL, " +
-          "  `price` varchar(50) NOT NULL " +
-          " )";
-        //Run this..
-        window.MDS.sql(initsql, function (msg) {
+        window.MDS.sql(schema, function (msg) {
           window.MDS.log("StampD Service SQL Inited..");
         });
       }
@@ -87,7 +80,7 @@ function App() {
             <Routes>
               <Route exact path="/" element={<ListingList />} />
               <Route path="/edit/:id" element={<ListingUpdate />} />
-              <Route path="/create" element={<ListingCreate />} />
+              <Route path="/create" element={<StoreCreate />} />
             </Routes>
             <Paper
               sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
@@ -115,7 +108,7 @@ function App() {
                 <BottomNavigationAction
                   component={RouterLink}
                   to="/create"
-                  label="Add Listing"
+                  label="Add Store"
                   icon={<WebStoriesIcon />}
                 />
               </BottomNavigation>
