@@ -42,6 +42,20 @@ export function getAllListings() {
     });
 }
 
+/* retrieves all listings */
+export function getListings(storeId) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT listing_id, name, price FROM listing WHERE store_id = ${storeId};`, (res) => {
+            if (res.status) {
+                resolve(res.rows);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
+
 /* returns listing by id */
 export function getListingById(id) {
     return new Promise(function (resolve, reject) {

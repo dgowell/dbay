@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import Box from "@mui/material/Box";
 import List from "@mui/material/List";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
 import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemText from "@mui/material/ListItemText";
@@ -11,7 +7,7 @@ import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import SendIcon from "@mui/icons-material/Send";
 import IconButton from "@mui/material/IconButton";
-import { getAllListings } from "../db";
+import { getListings } from "../db";
 import { sendListingToContacts } from "../comms";
 
 const Listing = (props) => (
@@ -44,12 +40,12 @@ const Listing = (props) => (
   </ListItem>
 );
 
-export default function ListingList() {
+export default function ListingList(storeId) {
   const [listings, setListings] = useState([]);
 
   /* fetches the listings from local database */
   useEffect(() => {
-      getAllListings()
+      getListings(storeId)
         .then((data) => {
           setListings(data);
           console.log(`results: ${data}`);
@@ -87,15 +83,6 @@ export default function ListingList() {
 
   // This following section will display the table with the listings of individuals.
   return (
-    <Box sx={{ flexGrow: 1, maxWidth: 752 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-            Marketplace
-          </Typography>
-          <List sx={style}>{listingList()}</List>
-        </Grid>
-      </Grid>
-    </Box>
+    <List sx={style}>{listingList()}</List>
   );
 }

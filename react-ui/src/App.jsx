@@ -2,15 +2,11 @@ import { useEffect, useState } from "react";
 import "./App.css";
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import PropTypes from "prop-types";
 import {
   Link,
   Route,
-  Routes,
-  MemoryRouter,
-  Outlet
+  Routes
 } from "react-router-dom";
-import { StaticRouter } from "react-router-dom/server";
 import CssBaseline from "@mui/material/CssBaseline";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
