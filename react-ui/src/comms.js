@@ -3,13 +3,28 @@
 */
 import {
     createListing,
-    getListingById
+    getListingById,
+    getStoreById
 } from './db';
 import {
     utf8ToHex,
     hexToUtf8
 } from './utils';
 const APPLICATION_NAME = 'stampd';
+
+export function sendStoreToContacts(storeId) {
+    return Promise.all([getStoreById(storeId), getContacts()])
+        .then(function (result) {
+            console.log(result);
+            const store = result[0];
+            const contacts = result[1];
+            contacts.forEach((contact) => send(store, contact));
+        })
+        .catch((e) => {
+            console.error(e)
+        });
+}
+
 
 export function sendListingToContacts(listingId) {
     return Promise.all([getListingById(listingId), getContacts()])

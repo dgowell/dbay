@@ -22,7 +22,7 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import StoreCreate from "./components/StoreCreate";
-import ListingList from "./components/ListingList";
+import StoreList from "./components/StoreList";
 import ListingUpdate from "./components/ListingUpdate";
 import { processMaximaEvent } from './comms';
 import { schema } from './schema';
@@ -78,7 +78,7 @@ function App() {
             }}
           >
             <Routes>
-              <Route exact path="/" element={<ListingList />} />
+              <Route exact path="/" element={<StoreList />} />
               <Route path="/edit/:id" element={<ListingUpdate />} />
               <Route path="/create" element={<StoreCreate />} />
             </Routes>

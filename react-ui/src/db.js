@@ -1,8 +1,8 @@
 /* adds a listing to the database */
 export function createStore(name) {
     return new Promise(function (resolve, reject) {
-        let fullsql = `INSERT INTO shop (name) VALUES ('${name}');`;
-        console.log(`Shop added: ${name}`);
+        let fullsql = `INSERT INTO store (name) VALUES ('${name}');`;
+        console.log(`Store added: ${name}`);
         window.MDS.sql(fullsql, (res) => {
             if (res.status) {
                 resolve(true);
@@ -17,7 +17,7 @@ export function createStore(name) {
 /* adds a listing to the database */
 export function createListing(name, price) {
     return new Promise(function (resolve, reject) {
-        let fullsql = `INSERT INTO listing (name,price,shop_id,category_id) VALUES ('${name}','${price}','${1}', '${1}');`;
+        let fullsql = `INSERT INTO listing (name,price,store_id,category_id) VALUES ('${name}','${price}','${1}', '${1}');`;
         console.log(`name: ${name}, price: ${price}`);
         window.MDS.sql(fullsql, (res) => {
             if (res.status) {
@@ -52,6 +52,36 @@ export function getListingById(id) {
                 } else {
                     resolve(res.rows[0]);
                 }
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
+/* returns store by id */
+export function getStoreById(id) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT * FROM store WHERE id = ${id};`, function (res) {
+            if (res.status) {
+                if (res.count > 1) {
+                    reject(`More than one store with id ${id}`, null);
+                } else {
+                    resolve(res.rows[0]);
+                }
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
+/* retrieves all listings */
+export function getAllStores() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT store_id, name FROM store;`, (res) => {
+            if (res.status) {
+                resolve(res.rows);
             } else {
                 reject(res.error);
             }
