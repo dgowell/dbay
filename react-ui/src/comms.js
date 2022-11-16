@@ -2,6 +2,7 @@
     All functions that communicate via maxima are held in this file
 */
 import {
+    createStore,
     createListing,
     getListingById,
     getStoreById
@@ -16,9 +17,11 @@ export function sendStoreToContacts(storeId) {
     return Promise.all([getStoreById(storeId), getContacts()])
         .then(function (result) {
             console.log(result);
-            const store = result[0];
+            let data = result[0];
+            data.version = '0.1';
+            data.type = 'store';
             const contacts = result[1];
-            contacts.forEach((contact) => send(store, contact));
+            contacts.forEach((contact) => send(data, contact));
         })
         .catch((e) => {
             console.error(e)
@@ -42,6 +45,9 @@ export function sendListingToContacts(listingId) {
 /* takes data and sends it to a publickey address via maxima */
 export function send(data, publickey) {
     return new Promise(function (resolve, reject) {
+
+        //before sending append version number of application
+
 
         //Convert to a string..
         const datastr = JSON.stringify(data);
@@ -80,7 +86,7 @@ export function getContacts() {
             .then((res) => {
                 resolve(res.map((contact) => contact.publickey));
             })
-            .catch((e) => console.error(e))
+            .catch((e) => reject(console.error(e)))
     });
 
 }
@@ -120,10 +126,22 @@ export function processMaximaEvent(msg) {
     //And create the actual JSON
     var maxjson = JSON.parse(jsonstr);
 
-    //save to database
-    createListing(maxjson.name, maxjson.price)
-        .then((res) => {
-                console.log(`Listing ${maxjson.name} added!`);
-        })
+    //determine if you're receiving a store or a listing
+    switch(maxjson.type) {
+        case 'store':
+            createStore(maxjson['NAME'])
+                .then((res) => {
+                    console.log(`Store ${maxjson['NAME']} added!`);
+                })
+            break;
+        case 'listing':
+            createListing(maxjson['NAME'], maxjson['PRICE'])
+            .then((res) => {
+                    console.log(`Listing ${maxjson['NAME']} added!`);
+            })
+            break;
+        default:
+            console.log(maxjson);
+    }
 
 }

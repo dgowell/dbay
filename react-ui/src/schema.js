@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS category
     (
         category_id IDENTITY PRIMARY KEY,
         parent_category_id INT NULL,
-        name CHAR(30) NOT NULL,
+        name CHAR(50) NOT NULL,
         CONSTRAINT AK_category_name UNIQUE(name),
         CONSTRAINT FK_FROM_category_TO_parent_category FOREIGN KEY(parent_category_id) REFERENCES category(category_id)
     );
@@ -11,14 +11,14 @@ CREATE TABLE IF NOT EXISTS category
 CREATE TABLE IF NOT EXISTS store
     (
         store_id IDENTITY PRIMARY KEY,
-        name CHAR(30) NOT NULL,
+        name CHAR(50) NOT NULL,
         CONSTRAINT AK_store_name UNIQUE(name)
     );
 
 CREATE TABLE IF NOT EXISTS listing
     (
         listing_id IDENTITY PRIMARY KEY,
-        name CHAR(30) NOT NULL,
+        name CHAR(50) NOT NULL,
         price INT NOT NULL,
         store_id INT NOT NULL,
         category_id INT NOT NULL,
