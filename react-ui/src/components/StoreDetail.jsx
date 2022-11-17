@@ -68,7 +68,7 @@ function StoreDetail() {
           </CardActions>
           <Collapse in={expanded} timeout="auto" unmountOnExit>
             <CardContent>
-              <ListingCreate />
+              <ListingCreate storeId={store.STORE_ID} />
             </CardContent>
           </Collapse>
         </Card>

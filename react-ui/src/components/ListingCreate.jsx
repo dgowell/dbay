@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -9,15 +9,29 @@ import InputAdornment from "@mui/material/InputAdornment";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
-import { createListing } from '../db';
+import { createListing, getCategories } from "../db";
+import Autocomplete from "@mui/material/Autocomplete";
 
-export default function ListingCreate() {
-    const [loading, setLoading] = React.useState(false);
+export default function ListingCreate(storeId) {
+  const [loading, setLoading] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
+    category: categories[0]
   });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    getCategories()
+      .then(function (result) {
+        setCategories(result);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, []);
 
   // These methods will update the state properties.
   function updateForm(value) {
@@ -34,12 +48,13 @@ export default function ListingCreate() {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
-    createListing(newListing.name, newListing.asking_price)
+    createListing(newListing.name, newListing.asking_price, storeId)
       .then((result) => {
         console.log(`Listing added: ${result}`);
-      }).catch((e)=> console.error(e));
+      })
+      .catch((e) => console.error(e));
 
-    setForm({ name: "", asking_price: "" });
+    setForm({ name: "", asking_price: "", category: categories[0] });
     navigate("/");
     setLoading(false);
   }
@@ -67,8 +82,8 @@ export default function ListingCreate() {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
-              label="Item Title"
-              id="item-name"
+              label="Listing Title"
+              id="listing-name"
               className="form-field"
               type="text"
               required
@@ -80,11 +95,34 @@ export default function ListingCreate() {
             />
           </Grid>
           <Grid item xs={12}>
+            <Autocomplete
+              value={form.category}
+              getOptionLabel={(option) => option.NAME ?? null}
+              onChange={function (e) {
+                updateForm({
+                  category: categories[e.target.dataset.optionIndex],
+                });
+              }}
+              inputValue={inputValue}
+              onInputChange={(event, newInputValue) => {
+                setInputValue(newInputValue);
+              }}
+              disablePortal
+              required
+              id="listing-category"
+              options={categories}
+              renderInput={(params) => (
+                <TextField {...params} label="Category" />
+              )}
+            />
+          </Grid>
+          <Grid item xs={12}>
             <FormControl fullWidth>
               <InputLabel htmlFor="asking-price">Asking Price</InputLabel>
               <OutlinedInput
                 id="asking-price"
                 value={form.asking_price}
+                required
                 onChange={(e) => updateForm({ asking_price: e.target.value })}
                 startAdornment={
                   <InputAdornment position="start">MIN</InputAdornment>

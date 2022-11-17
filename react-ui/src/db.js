@@ -102,3 +102,16 @@ export function getAllStores() {
         });
     });
 }
+
+/* retrieves all categories */
+export function getCategories() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT name, category_id FROM category;`, (res) => {
+            if (res.status) {
+                resolve(res.rows);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
