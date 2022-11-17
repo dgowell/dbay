@@ -17,7 +17,7 @@ const Listing = (props) => (
         edge="end"
         aria-label="delete"
         onClick={() => {
-          props.sendListing(props.listing.ID);
+          props.sendListing(props.listing.LISTING_ID);
         }}
       >
         <SendIcon />
@@ -26,7 +26,7 @@ const Listing = (props) => (
   >
     <ListItemAvatar>
       {props.listing.image ? (
-        <Avatar alt={props.listing.name} src={props.listing.image} />
+        <Avatar alt={props.listing.NAME} src={props.listing.IMAGE} />
       ) : (
         <Avatar>
           <BungalowIcon />
@@ -34,8 +34,8 @@ const Listing = (props) => (
       )}
     </ListItemAvatar>
     <ListItemText
-      primary={props.listing.name}
-      secondary={props.listing.price ? `£${props.listing.price}` : null}
+      primary={props.listing.NAME}
+      secondary={props.listing.PRICE ? `£${props.listing.PRICE}` : null}
     />
   </ListItem>
 );
@@ -45,7 +45,7 @@ export default function ListingList(storeId) {
 
   /* fetches the listings from local database */
   useEffect(() => {
-      getListings(storeId)
+      getListings(storeId.storeId)
         .then((data) => {
           setListings(data);
           console.log(`results: ${data}`);
@@ -63,7 +63,7 @@ export default function ListingList(storeId) {
       return (
         <Listing
           listing={listing}
-          sendListing={() => sendListingToContacts(listing.ID)
+          sendListing={() => sendListingToContacts(listing.LISTING_ID, storeId.storeId)
             .then((res) => {
               console.log(`successfully sent listing!`)
             })

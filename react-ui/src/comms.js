@@ -29,13 +29,16 @@ export function sendStoreToContacts(storeId) {
 }
 
 
-export function sendListingToContacts(listingId) {
+export function sendListingToContacts(listingId, storeId) {
     return Promise.all([getListingById(listingId), getContacts()])
         .then(function (result) {
             console.log(result);
-            const listing = result[0];
+            let data = result[0];
+            data.version = '0.1';
+            data.type = 'listing';
+            data.STORE_ID = storeId;
             const contacts = result[1];
-            contacts.forEach((contact) => send(listing, contact));
+            contacts.forEach((contact) => send(data, contact));
         })
         .catch((e) => {
             console.error(e)
@@ -43,7 +46,7 @@ export function sendListingToContacts(listingId) {
 }
 
 /* takes data and sends it to a publickey address via maxima */
-export function send(data, publickey) {
+export function send(data, publickey, storeId) {
     return new Promise(function (resolve, reject) {
 
         //before sending append version number of application

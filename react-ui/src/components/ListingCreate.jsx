@@ -48,7 +48,7 @@ export default function ListingCreate(storeId) {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
-    createListing(newListing.name, newListing.asking_price, storeId)
+    createListing(newListing.name, newListing.asking_price, newListing.category.CATEGORY_ID, storeId.storeId)
       .then((result) => {
         console.log(`Listing added: ${result}`);
       })

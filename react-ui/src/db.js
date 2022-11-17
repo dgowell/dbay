@@ -15,9 +15,9 @@ export function createStore(name) {
 
 
 /* adds a listing to the database */
-export function createListing(name, price) {
+export function createListing(name, price, category, store) {
     return new Promise(function (resolve, reject) {
-        let fullsql = `INSERT INTO listing (name,price,store_id,category_id) VALUES ('${name}','${price}','${1}', '${1}');`;
+        let fullsql = `INSERT INTO listing (name,price,category_id,store_id) VALUES ('${name}','${price}','${category}', '${store}');`;
         console.log(`name: ${name}, price: ${price}`);
         window.MDS.sql(fullsql, (res) => {
             if (res.status) {
