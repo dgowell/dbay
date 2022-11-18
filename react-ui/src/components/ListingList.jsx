@@ -54,7 +54,7 @@ export default function ListingList(storeId) {
           console.error(e);
         });
     return;
-  }, []);
+  }, [storeId.storeId]);
 
 
   // This method will map out the listings on the table

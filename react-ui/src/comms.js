@@ -5,7 +5,7 @@ import {
     createStore,
     createListing,
     getListingById,
-    getStoreById
+    getStoreByPubkey
 } from './db';
 import {
     utf8ToHex,
@@ -14,7 +14,7 @@ import {
 const APPLICATION_NAME = 'stampd';
 
 export function sendStoreToContacts(storeId) {
-    return Promise.all([getStoreById(storeId), getContacts()])
+    return Promise.all([getStoreByPubkey(storeId), getContacts()])
         .then(function (result) {
             console.log(result);
             let data = result[0];
@@ -29,14 +29,13 @@ export function sendStoreToContacts(storeId) {
 }
 
 
-export function sendListingToContacts(listingId, storeId) {
+export function sendListingToContacts(listingId) {
     return Promise.all([getListingById(listingId), getContacts()])
         .then(function (result) {
             console.log(result);
             let data = result[0];
             data.version = '0.1';
             data.type = 'listing';
-            data.STORE_ID = storeId;
             const contacts = result[1];
             contacts.forEach((contact) => send(data, contact));
         })
@@ -107,6 +106,19 @@ function getMaxContacts() {
     })
 }
 
+export function getPublicKey(){
+    return new Promise(function (resolve, reject) {
+        //get contacts list from maxima
+        window.MDS.cmd('maxima', function (res) {
+            if (res.status) {
+                resolve(res.response.publickey);
+            } else {
+                reject(res.error);
+            }
+        })
+    })
+}
+
 export function processMaximaEvent(msg) {
 
     //Is it for us.. ?
@@ -115,7 +127,7 @@ export function processMaximaEvent(msg) {
     }
 
     //Who is this message from..
-    var pubkey = msg.data.from;
+    //var pubkey = msg.data.from;
 
     //Get the data packet..
     var datastr = msg.data.data;
@@ -132,16 +144,17 @@ export function processMaximaEvent(msg) {
     //determine if you're receiving a store or a listing
     switch(maxjson.type) {
         case 'store':
-            createStore(maxjson['NAME'])
+            createStore(maxjson['NAME'],maxjson["STORE_PUBKEY"])
                 .then((res) => {
                     console.log(`Store ${maxjson['NAME']} added!`);
                 })
+                .catch((e)=> console.error(`Could not create store: ${e}`));
             break;
         case 'listing':
-            createListing(maxjson['NAME'], maxjson['PRICE'])
+            createListing(maxjson['NAME'], maxjson['PRICE'], maxjson['CATEGORY_ID'], maxjson['STORE_PUBKEY'], maxjson['LISTING_ID'])
             .then((res) => {
                     console.log(`Listing ${maxjson['NAME']} added!`);
-            })
+            }).catch((e) => console.error(`Could not create listing: ${e}`));
             break;
         default:
             console.log(maxjson);

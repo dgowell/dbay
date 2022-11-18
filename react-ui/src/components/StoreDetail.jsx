@@ -48,7 +48,7 @@ function StoreDetail() {
             <Typography gutterBottom variant="h5" component="div">
               {store.NAME}
             </Typography>
-            <ListingList storeId={store.STORE_ID} />
+            <ListingList storeId={store.STORE_PUBKEY} />
           </CardContent>
           <CardActions disableSpacing>
             <IconButton aria-label="add to favorites">
@@ -68,7 +68,7 @@ function StoreDetail() {
           </CardActions>
           <Collapse in={expanded} timeout="auto" unmountOnExit>
             <CardContent>
-              <ListingCreate storeId={store.STORE_ID} />
+              <ListingCreate storeId={store.STORE_PUBKEY} />
             </CardContent>
           </Collapse>
         </Card>

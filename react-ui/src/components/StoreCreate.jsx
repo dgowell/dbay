@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Grid from "@mui/material/Grid";
 import { createStore } from "../db";
+import { getPublicKey } from "../comms";
 
 export default function StoreCreate() {
   const [loading, setLoading] = React.useState(false);
@@ -29,7 +30,8 @@ export default function StoreCreate() {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newStore = { ...form };
 
-    createStore(newStore.name)
+    let storeId = await getPublicKey();
+    createStore(newStore.name, storeId)
       .then((result) => {
         console.log(`Store added: ${result}`);
       })

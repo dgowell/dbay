@@ -11,8 +11,10 @@ CREATE TABLE IF NOT EXISTS category
 CREATE TABLE IF NOT EXISTS store
     (
         store_id IDENTITY PRIMARY KEY,
+        store_pubkey CHAR(330) NOT NULL,
         name CHAR(50) NOT NULL,
-        CONSTRAINT AK_store_name UNIQUE(name)
+        CONSTRAINT AK_store_name UNIQUE(name),
+        CONSTRAINT AK_store_publickey UNIQUE(store_pubkey)
     );
 
 CREATE TABLE IF NOT EXISTS listing
@@ -20,11 +22,11 @@ CREATE TABLE IF NOT EXISTS listing
         listing_id IDENTITY PRIMARY KEY,
         name CHAR(50) NOT NULL,
         price INT NOT NULL,
-        store_id INT NOT NULL,
+        store_pubkey CHAR(330) NOT NULL,
         category_id INT NOT NULL,
         CONSTRAINT AK_listing_name UNIQUE(name),
-        CONSTRAINT FK_FROM_listing_TO_store FOREIGN KEY(store_id) REFERENCES store(store_id),
-        CONSTRAINT FK_FROM_listing_TO_category FOREIGN KEY(category_id) REFERENCES category(category_id)
+        CONSTRAINT FK_FROM_listing_TO_store FOREIGN KEY (store_pubkey) REFERENCES store (store_pubkey),
+        CONSTRAINT FK_FROM_listing_TO_category FOREIGN KEY (category_id) REFERENCES category (category_id)
     );
 
     INSERT INTO category

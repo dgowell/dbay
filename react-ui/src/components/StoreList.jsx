@@ -15,19 +15,23 @@ import { sendStoreToContacts } from "../comms";
 import { ListItemButton } from "@mui/material";
 
 const Store = (props) => (
-  <ListItemButton edge="end" aria-label="view store" to={`/store/${props.store['STORE_ID']}`}>
-    <ListItem
-      secondaryAction={
-        <IconButton
-          edge="end"
-          aria-label="delete"
-          onClick={() => {
-            props.sendStore(props.store["STORE_ID"]);
-          }}
-        >
-          <SendIcon />
-        </IconButton>
-      }
+  <ListItem
+    secondaryAction={
+      <IconButton
+        edge="end"
+        aria-label="delete"
+        onClick={() => {
+          props.sendStore(props.store["STORE_PUBKEY"]);
+        }}
+      >
+        <SendIcon />
+      </IconButton>
+    }
+  >
+    <ListItemButton
+      edge="end"
+      aria-label="view store"
+      to={`/store/${props.store["STORE_ID"]}`}
     >
       <ListItemAvatar>
         {props.store.image ? (
@@ -39,8 +43,8 @@ const Store = (props) => (
         )}
       </ListItemAvatar>
       <ListItemText primary={props.store["NAME"]} />
-    </ListItem>
-  </ListItemButton>
+    </ListItemButton>
+  </ListItem>
 );
 
 export default function StoreList() {
@@ -51,7 +55,7 @@ export default function StoreList() {
     getAllStores()
       .then((data) => {
         setStores(data);
-        console.log(`results: ${data}`);
+        console.log(`results: ${JSON.stringify(data)}`);
       })
       .catch((e) => {
         console.error(e);
@@ -66,7 +70,7 @@ export default function StoreList() {
         <Store
           store={store}
           sendStore={() =>
-            sendStoreToContacts(store['STORE_ID'])
+            sendStoreToContacts(store['STORE_PUBKEY'])
               .then((res) => {
                 console.log(`successfully sent store!`);
               })
