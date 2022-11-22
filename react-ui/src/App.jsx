@@ -26,7 +26,6 @@ import { schema } from './schema';
 const theme = createTheme();
 
 function App() {
-  //  const [data, setData] = useState();
   const [activePage, setActivePage] = useState();
   useEffect(() => {
     window.MDS.init(function (msg) {

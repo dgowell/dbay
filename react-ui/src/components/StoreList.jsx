@@ -13,39 +13,45 @@ import IconButton from "@mui/material/IconButton";
 import { getAllStores } from "../db";
 import { sendStoreToContacts } from "../comms";
 import { ListItemButton } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const Store = (props) => (
-  <ListItem
-    secondaryAction={
-      <IconButton
+function Store(props) {
+  const navigate = useNavigate();
+  return (
+    <ListItem
+      secondaryAction={
+        <IconButton
+          edge="end"
+          aria-label="delete"
+          onClick={() => {
+            props.sendStore(props.store["STORE_PUBKEY"]);
+          }}
+        >
+          <SendIcon />
+        </IconButton>
+      }
+    >
+      <ListItemButton
         edge="end"
-        aria-label="delete"
+        aria-label="view store"
         onClick={() => {
-          props.sendStore(props.store["STORE_PUBKEY"]);
+          navigate(`/store/${props.store["STORE_ID"]}`);
         }}
       >
-        <SendIcon />
-      </IconButton>
-    }
-  >
-    <ListItemButton
-      edge="end"
-      aria-label="view store"
-      to={`/store/${props.store["STORE_ID"]}`}
-    >
-      <ListItemAvatar>
-        {props.store.image ? (
-          <Avatar alt={props.store["NAME"]} src={props.store["IMAGE"]} />
-        ) : (
-          <Avatar>
-            <BungalowIcon />
-          </Avatar>
-        )}
-      </ListItemAvatar>
-      <ListItemText primary={props.store["NAME"]} />
-    </ListItemButton>
-  </ListItem>
-);
+        <ListItemAvatar>
+          {props.store.image ? (
+            <Avatar alt={props.store["NAME"]} src={props.store["IMAGE"]} />
+          ) : (
+            <Avatar>
+              <BungalowIcon />
+            </Avatar>
+          )}
+        </ListItemAvatar>
+        <ListItemText primary={props.store["NAME"]} />
+      </ListItemButton>
+    </ListItem>
+  );
+}
 
 export default function StoreList() {
   const [stores, setStores] = useState([]);
@@ -70,7 +76,7 @@ export default function StoreList() {
         <Store
           store={store}
           sendStore={() =>
-            sendStoreToContacts(store['STORE_PUBKEY'])
+            sendStoreToContacts(store["STORE_PUBKEY"])
               .then((res) => {
                 console.log(`successfully sent store!`);
               })
@@ -78,7 +84,7 @@ export default function StoreList() {
                 console.error(e);
               })
           }
-          key={store['STORE_ID']}
+          key={store["STORE_ID"]}
         />
       );
     });

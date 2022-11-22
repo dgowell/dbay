@@ -14,7 +14,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 
 export default function ListingCreate(storeId) {
   const [loading, setLoading] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     name: "",
@@ -96,12 +96,10 @@ export default function ListingCreate(storeId) {
           </Grid>
           <Grid item xs={12}>
             <Autocomplete
-              value={form.category}
+              value={categories[form.category]}
               getOptionLabel={(option) => option.NAME ?? null}
-              onChange={function (e) {
-                updateForm({
-                  category: categories[e.target.dataset.optionIndex],
-                });
+              onChange={(e, newValue) => {
+                updateForm({ category: newValue });
               }}
               inputValue={inputValue}
               onInputChange={(event, newInputValue) => {
