@@ -15,9 +15,6 @@ import {
     getPublicKey,
     getMaximaContactName
 } from "../comms";
-import {
-    createStore
-} from "./store";
 
 export async function setup() {
     //register the store name and public key

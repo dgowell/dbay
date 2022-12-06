@@ -9,7 +9,8 @@ import InputAdornment from "@mui/material/InputAdornment";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
-import { createListing, getCategories } from "../db";
+import { createListing } from "../database/listing";
+import { getCategories } from "../database/category";
 import Autocomplete from "@mui/material/Autocomplete";
 
 export default function ListingCreate(storeId) {

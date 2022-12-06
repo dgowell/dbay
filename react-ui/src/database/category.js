@@ -55,3 +55,15 @@ export function preloadCategoryTable() {
     })
 }
 
+/* retrieves all categories */
+export function getCategories() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT "name", "category_id" FROM ${CATEGORIESTABLE};`, (res) => {
+            if (res.status) {
+                resolve(res.rows);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}

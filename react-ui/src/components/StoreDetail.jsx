@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import { getStoreById } from "../db";
+import { getStoreById } from "../database/store";
 import ListingList from "./ListingList";
 import CardActions from "@mui/material/CardActions";
 import Collapse from "@mui/material/Collapse";

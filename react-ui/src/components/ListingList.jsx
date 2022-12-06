@@ -7,7 +7,7 @@ import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import SendIcon from "@mui/icons-material/Send";
 import IconButton from "@mui/material/IconButton";
-import { getListings } from "../db";
+import { getListings } from "../database/listing";
 import { sendListingToContacts } from "../comms";
 
 const Listing = (props) => (

@@ -4,9 +4,11 @@
 import {
     createListing,
     getListingById,
+} from './database/listing';
+import {
+    createStore,
     getStoreByPubkey
-} from './db';
-import { createStore } from './database/store';
+} from './database/store';
 import {
     utf8ToHex,
     hexToUtf8
@@ -119,7 +121,7 @@ export function getMaximaContactName() {
     })
 }
 
-export function getPublicKey(){
+export function getPublicKey() {
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
         window.MDS.cmd('maxima', function (res) {
@@ -155,19 +157,19 @@ export function processMaximaEvent(msg) {
     var maxjson = JSON.parse(jsonstr);
 
     //determine if you're receiving a store or a listing
-    switch(maxjson.type) {
+    switch (maxjson.type) {
         case 'store':
-            createStore(maxjson['NAME'],maxjson["STORE_PUBKEY"])
+            createStore(maxjson['NAME'], maxjson["STORE_PUBKEY"])
                 .then((res) => {
                     console.log(`Store ${maxjson['NAME']} added!`);
                 })
-                .catch((e)=> console.error(`Could not create store: ${e}`));
+                .catch((e) => console.error(`Could not create store: ${e}`));
             break;
         case 'listing':
             createListing(maxjson['NAME'], maxjson['PRICE'], maxjson['CATEGORY_ID'], maxjson['STORE_PUBKEY'], maxjson['LISTING_ID'])
-            .then((res) => {
+                .then((res) => {
                     console.log(`Listing ${maxjson['NAME']} added!`);
-            }).catch((e) => console.error(`Could not create listing: ${e}`));
+                }).catch((e) => console.error(`Could not create listing: ${e}`));
             break;
         default:
             console.log(maxjson);
