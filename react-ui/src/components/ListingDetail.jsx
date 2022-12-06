@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import { getStoreById } from "../db";
+import { getListingById } from "../db";
 import ListingList from "./ListingList";
 import CardActions from "@mui/material/CardActions";
 import Collapse from "@mui/material/Collapse";
@@ -25,9 +25,9 @@ const ExpandMore = styled((props) => {
   }),
 }));
 
-function StoreDetail() {
+function ListingDetail() {
   const params = useParams();
-  const [store, setStore] = React.useState();
+  const [Listing, setListing] = React.useState();
   const [expanded, setExpanded] = React.useState(false);
 
   const handleExpandClick = () => {
@@ -35,20 +35,20 @@ function StoreDetail() {
   };
 
   useEffect(() => {
-    getStoreById(params.id).then(function (result) {
-      setStore(result);
+    getListingById(params.id).then(function (result) {
+      setListing(result);
     });
   }, [params.id]);
 
   return (
     <div>
-      {store ? (
+      {Listing ? (
         <Card sx={{ maxWidth: 345, mt: 2 }}>
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">
-              {store.NAME}
+              {Listing.NAME}
             </Typography>
-            <ListingList storeId={store.store_pubkey} />
+            <ListingList ListingId={Listing.Listing_PUBKEY} />
           </CardContent>
           <CardActions disableSpacing>
             <IconButton aria-label="add to favorites">
@@ -68,7 +68,7 @@ function StoreDetail() {
           </CardActions>
           <Collapse in={expanded} timeout="auto" unmountOnExit>
             <CardContent>
-              <ListingCreate storeId={store.store_pubkey} />
+              <ListingCreate ListingId={Listing.Listing_PUBKEY} />
             </CardContent>
           </Collapse>
         </Card>
@@ -76,4 +76,4 @@ function StoreDetail() {
     </div>
   );
 }
-export default StoreDetail;
+export default ListingDetail;

@@ -17,7 +17,7 @@ const Listing = (props) => (
         edge="end"
         aria-label="delete"
         onClick={() => {
-          props.sendListing(props.listing.LISTING_ID);
+          props.sendListing(props.listing.listing_id);
         }}
       >
         <SendIcon />
@@ -26,7 +26,7 @@ const Listing = (props) => (
   >
     <ListItemAvatar>
       {props.listing.image ? (
-        <Avatar alt={props.listing.NAME} src={props.listing.IMAGE} />
+        <Avatar alt={props.listing.NAME} src={props.listing.image} />
       ) : (
         <Avatar>
           <BungalowIcon />
@@ -34,8 +34,8 @@ const Listing = (props) => (
       )}
     </ListItemAvatar>
     <ListItemText
-      primary={props.listing.NAME}
-      secondary={props.listing.PRICE ? `£${props.listing.PRICE}` : null}
+      primary={props.listing.name}
+      secondary={props.listing.price ? `£${props.listing.price}` : null}
     />
   </ListItem>
 );
@@ -63,7 +63,7 @@ export default function ListingList(storeId) {
       return (
         <Listing
           listing={listing}
-          sendListing={() => sendListingToContacts(listing.LISTING_ID, storeId.storeId)
+          sendListing={() => sendListingToContacts(listing.listing_id, storeId.storeId)
             .then((res) => {
               console.log(`successfully sent listing!`)
             })

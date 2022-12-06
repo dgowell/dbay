@@ -2,11 +2,11 @@
     All functions that communicate via maxima are held in this file
 */
 import {
-    createStore,
     createListing,
     getListingById,
     getStoreByPubkey
 } from './db';
+import { createStore } from './database/store';
 import {
     utf8ToHex,
     hexToUtf8
@@ -99,6 +99,19 @@ function getMaxContacts() {
         window.MDS.cmd('maxcontacts', function (res) {
             if (res.status) {
                 resolve(res.response.contacts);
+            } else {
+                reject(res.error);
+            }
+        })
+    })
+}
+
+export function getMaximaContactName() {
+    return new Promise(function (resolve, reject) {
+        //get name from maxima
+        window.MDS.cmd('maxima', function (res) {
+            if (res.status) {
+                resolve(res.response.name);
             } else {
                 reject(res.error);
             }

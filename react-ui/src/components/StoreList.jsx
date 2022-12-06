@@ -24,7 +24,7 @@ function Store(props) {
           edge="end"
           aria-label="delete"
           onClick={() => {
-            props.sendStore(props.store["STORE_PUBKEY"]);
+            props.sendStore(props.store.store_pubkey);
           }}
         >
           <SendIcon />
@@ -35,19 +35,19 @@ function Store(props) {
         edge="end"
         aria-label="view store"
         onClick={() => {
-          navigate(`/store/${props.store["STORE_ID"]}`);
+          navigate(`/store/${props.store.store_id}`);
         }}
       >
         <ListItemAvatar>
           {props.store.image ? (
-            <Avatar alt={props.store["NAME"]} src={props.store["IMAGE"]} />
+            <Avatar alt={props.store.name} src={props.store.image} />
           ) : (
             <Avatar>
               <BungalowIcon />
             </Avatar>
           )}
         </ListItemAvatar>
-        <ListItemText primary={props.store["NAME"]} />
+        <ListItemText primary={props.store.name} />
       </ListItemButton>
     </ListItem>
   );
@@ -76,7 +76,7 @@ export default function StoreList() {
         <Store
           store={store}
           sendStore={() =>
-            sendStoreToContacts(store["STORE_PUBKEY"])
+            sendStoreToContacts(store.store_pubkey)
               .then((res) => {
                 console.log(`successfully sent store!`);
               })
@@ -84,7 +84,7 @@ export default function StoreList() {
                 console.error(e);
               })
           }
-          key={store["STORE_ID"]}
+          key={store.store_id}
         />
       );
     });

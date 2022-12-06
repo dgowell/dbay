@@ -5,7 +5,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Grid from "@mui/material/Grid";
-import { createStore } from "../db";
+import { createStore } from "../database/store";
 import { getPublicKey } from "../comms";
 
 export default function StoreCreate() {
