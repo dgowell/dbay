@@ -77,9 +77,9 @@ export function getListings(storeId) {
 
 
 /* returns listing by id has to be passed store id too*/
-export function getListingById(id, storeId) {
+export function getListingById(id) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "listing_id"="${id}" AND "store_pubkey"=${storeId};`, function (res) {
+        window.MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
             if (res.status) {
                 if (res.count > 1) {
                     reject(`More than one listing with id ${id}`, null);
