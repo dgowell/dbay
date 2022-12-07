@@ -28,14 +28,16 @@ export function createListingTable() {
 /* adds a listing to the database */
 export function createListing(name, price, category, store, listingId) {
     return new Promise(function (resolve, reject) {
-        let fullsql = listingId ? `INSERT INTO "listing" ("name","price","category_id","store_pubkey","listing_id") VALUES ("${name}","${price}","${category}", "${store}", "${listingId}");` :
-            `INSERT INTO listing ("name","price","category_id","store_pubkey") VALUES ("${name}","${price}","${category}", "${store}");`;
+        let fullsql = listingId ? `insert into ${LISTINGSTABLE}("name","price","category_id","store_pubkey","listing_id") values('${name}','${price}','${category}', '${store}', '${listingId}');` :
+            `insert into ${LISTINGSTABLE}("name","price","category_id","store_pubkey") values('${name}','${price}','${category}', '${store}');`;
         console.log(`name: ${name}, price: ${price}`);
         window.MDS.sql(fullsql, (res) => {
+            window.MDS.log(`MDS.SQL, ${fullsql}`);
             if (res.status) {
                 resolve(true);
             } else {
                 reject(res.error);
+                window.MDS.log(`MDS.SQL ERROR, ${res.error}}`);
             }
         });
     });
@@ -44,7 +46,7 @@ export function createListing(name, price, category, store, listingId) {
 /* retrieves all listings */
 export function getAllListings() {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "listing_id", "name", "price" FROM ${LISTINGSTABLE};`, (res) => {
+        window.MDS.sql(`selkect "listing_id", "name", "price" from ${LISTINGSTABLE};`, (res) => {
             if (res.status) {
                 resolve(res.rows);
             } else {
@@ -56,8 +58,14 @@ export function getAllListings() {
 
 /* retrieves all listings */
 export function getListings(storeId) {
+    let Q;
+    if (storeId) {
+        Q = `SELECT "listing_id", "name", "price" FROM ${LISTINGSTABLE} WHERE "store_pubkey"='${storeId}';`
+    } else {
+        Q = `SELECT "listing_id", "name", "price" FROM ${LISTINGSTABLE};`
+    }
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "listing_id", "name", "price" FROM ${LISTINGSTABLE} WHERE "store_pubkey"="${storeId}";`, (res) => {
+        window.MDS.sql(Q, (res) => {
             if (res.status) {
                 resolve(res.rows);
             } else {

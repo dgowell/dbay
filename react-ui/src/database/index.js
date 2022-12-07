@@ -2,9 +2,11 @@ import {
     createListingTable
 } from "./listing";
 import {
-    createCategoryTable
+    createCategoryTable,
+    preloadCategoryTable
 } from "./category";
 import {
+    createStore,
     createStoresTable
 } from "./store";
 import {
@@ -27,11 +29,15 @@ export async function setup() {
     //return the store name
     return new Promise((resolve, reject) => {
         createCategoryTable().then(() => {
-            createStoresTable().then(() => {
-                createListingTable().then(() => {
-                    createSettingsTable().then(() => {
-                        createStoreHost(storeName, storeId).then(() => {
-                            resolve(storeName);
+            preloadCategoryTable().then(() => {
+                createStoresTable().then(() => {
+                    createListingTable().then(() => {
+                        createSettingsTable().then(() => {
+                            createStoreHost(storeName, storeId).then(() => {
+                                createStore(storeName, storeId).then(() => {
+                                    resolve(storeName);
+                                });
+                            });
                         });
                     });
                 });

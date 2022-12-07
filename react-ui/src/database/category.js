@@ -1,4 +1,4 @@
-const CATEGORIESTABLE = `"CATEGORY"`;
+const CATEGORIESTABLE = 'CATEGORY';
 
 export function createCategoryTable() {
     const Q = `create table if not exists ${CATEGORIESTABLE} (
@@ -23,24 +23,21 @@ export function createCategoryTable() {
 }
 
 export function preloadCategoryTable() {
-    const Q = `insert into ${CATEGORIESTABLE}
-            ("name")
-            VALUES
-            ("Audio & Stereo"),
-            ("Baby & Kids Stuff"),
-            ("Cameras, Camcorders & Studio Equipment"),
-            ("Christmas Decorations"),
-            ("Clothes, Footwear & Accessories"),
-            ("Computers & Software"),
-            ("DIY Tools & Materials"),
-            ("Health & Beauty"),
-            ("Home & Garden"),
-            ("Musical Instruments & DJ Equipment"),
-            ("Office Furniture & Equipment"),
-            ("Phones, Mobile Phones & Telecoms"),
-            ("Sports, Leisure & Travel"),
-            ("Tickets");
-            )`;
+    const Q = `insert into ${CATEGORIESTABLE}("name")
+            VALUES('Audio & Stereo'),
+            ('Baby & Kids Stuff'),
+            ('Cameras, Camcorders & Studio Equipment'),
+            ('Christmas Decorations'),
+            ('Clothes, Footwear & Accessories'),
+            ('Computers & Software'),
+            ('DIY Tools & Materials'),
+            ('Health & Beauty'),
+            ('Home & Garden'),
+            ('Musical Instruments & DJ Equipment'),
+            ('Office Furniture & Equipment'),
+            ('Phones, Mobile Phones & Telecoms'),
+            ('Sports, Leisure & Travel'),
+            ('Tickets')`;
 
     return new Promise((resolve, reject) => {
         window.MDS.sql(Q, function (res) {

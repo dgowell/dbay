@@ -13,19 +13,24 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import StoreCreate from "./components/StoreCreate";
-import ListingList from "./components/ListingList";
+import Marketplace from "./pages/Marketplace";
 import ListingDetail from "./components/ListingDetail";
 import StoreDetail from "./components/StoreDetail";
 import ListingCreate from "./components/ListingCreate";
+import MyListingList from "./components/MyListingList";
 import { processMaximaEvent } from "./comms";
 import { getHostStore } from "./database/settings";
 import { setup } from "./database/index";
+
 
 const theme = createTheme();
 
 function App() {
   const [activePage, setActivePage] = useState();
-  const [storeName, setStoreName] = useState('');
+  const [store, setStore] = useState({
+    "name" : '',
+    "pubkey" : ''
+  });
 
   useEffect(() => {
     window.MDS.init(function (msg) {
@@ -34,10 +39,13 @@ function App() {
         //check if store has been created
         getHostStore().then((res) => {
           if (res.count > 0) {
-            setStoreName(res.rows[0].host_store_name);
+            setStore({
+              name: res.rows[0].host_store_name,
+              pubkey: res.rows[0].host_store_pubkey,
+            });
           } else {
             setup().then(function(res){
-              setStoreName(res)
+              setStore({"name": res});
             });
           }
         });
@@ -49,9 +57,9 @@ function App() {
         processMaximaEvent(msg);
       }
     });
-  }, [storeName]);
+  }, [store]);
 
-  if (storeName) {
+  if (store.name) {
     return (
       <ThemeProvider theme={theme}>
         <ResponsiveAppBar />
@@ -67,11 +75,12 @@ function App() {
             }}
           >
             <Routes>
-              <Route exact path="/" element={<ListingList />} />
+              <Route exact path="/" element={<Marketplace />} />
               <Route path="store/create" element={<StoreCreate />} />
               <Route path="store/:id" element={<StoreDetail />} />
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
+              <Route path="my-store/" element={<MyListingList storeName={store.name} storePubkey={store.pubkey} />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <Paper
@@ -93,8 +102,8 @@ function App() {
                 />
                 <BottomNavigationAction
                   component={Link}
-                  to="/my-listings"
-                  label={`${storeName}'s Listings`}
+                  to="/my-store"
+                  label={`${store.name}'s Listings`}
                   icon={<AppsIcon />}
                 />
               </BottomNavigation>
