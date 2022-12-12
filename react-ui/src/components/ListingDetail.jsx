@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import { getListingById } from "../database/listing";
@@ -10,17 +10,31 @@ import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
 import TestImage from "../assets/images/test.jpg";
 import Button from "@mui/material/Button";
-
+import Tooltip from "@mui/material/Tooltip";
+import { getHostStore } from "../database/settings";
+import { sendListingToContacts } from "../comms";
 
 function ListingDetail() {
   const params = useParams();
-  const [listing, setListing] = React.useState();
+  const [listing, setListing] = useState();
+  const [owner, setOwner] = useState(false);
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
     });
   }, [params.id]);
+
+
+  useEffect(() => {
+    if (listing) {
+      getHostStore().then((host) => {
+        if (listing.created_by === host.host_store_pubkey) {
+          setOwner(true);
+        }
+      });
+    }
+  }, [listing])
 
   return (
     <div>
@@ -41,12 +55,22 @@ function ListingDetail() {
             </Typography>
           </CardContent>
           <CardActions disableSpacing>
-            <Button size="small">Buy Now</Button>
-            <Button size="small">Contact Seller</Button>
-            <IconButton aria-label="share">
+            {owner ? null : <Button size="small">Buy Now</Button>}
+            {owner ? null : <Button size="small">Contact Seller</Button>}
+            <IconButton
+              onClick={() => {
+                sendListingToContacts(listing.listing_id);
+              }}
+              aria-label="share"
+            >
               <ShareIcon />
             </IconButton>
           </CardActions>
+          {owner ? null :
+            <Tooltip title="Your mum" placement="bottom">
+              <Button>Who sent me this?</Button>
+            </Tooltip>
+          }
         </Card>
       ) : null}
     </div>

@@ -6,9 +6,13 @@ export function createListingTable() {
         "listing_id" int auto_increment primary key,
         "name" varchar(50) NOT NULL,
         "price" INT NOT NULL,
-        "store_pubkey" varchar(330) NOT NULL,
+        "created_by" varchar(330) NOT NULL,
+        "created_at" timestamp with time zone not null,
+        "sent_by" varchar(330),
+        "sent_by_name" char(50),
         "category_id" INT NOT NULL,
-        CONSTRAINT FK_FROM_listing_TO_store FOREIGN KEY("store_pubkey") REFERENCES store("store_pubkey"),
+        constraint UQ_listing_id_and_store unique("listing_id", "created_by"),
+        CONSTRAINT FK_FROM_listing_TO_store FOREIGN KEY("created_by") REFERENCES store("store_pubkey"),
         CONSTRAINT FK_FROM_listing_TO_category FOREIGN KEY("category_id") REFERENCES category("category_id")
         )`;
 
@@ -28,8 +32,8 @@ export function createListingTable() {
 /* adds a listing to the database */
 export function createListing(name, price, category, store, listingId) {
     return new Promise(function (resolve, reject) {
-        let fullsql = listingId ? `insert into ${LISTINGSTABLE}("name","price","category_id","store_pubkey","listing_id") values('${name}','${price}','${category}', '${store}', '${listingId}');` :
-            `insert into ${LISTINGSTABLE}("name","price","category_id","store_pubkey") values('${name}','${price}','${category}', '${store}');`;
+        let fullsql = listingId ? `insert into ${LISTINGSTABLE}("name","price","category_id","created_by","listing_id", "created_at") values('${name}','${price}','${category}', '${store}', '${listingId}', CURRENT_TIMESTAMP);` :
+            `insert into ${LISTINGSTABLE}("name","price","category_id","created_by", "created_at") values('${name}','${price}','${category}', '${store}', CURRENT_TIMESTAMP);`;
         console.log(`name: ${name}, price: ${price}`);
         window.MDS.sql(fullsql, (res) => {
             window.MDS.log(`MDS.SQL, ${fullsql}`);
@@ -60,7 +64,7 @@ export function getAllListings() {
 export function getListings(storeId) {
     let Q;
     if (storeId) {
-        Q = `SELECT "listing_id", "name", "price" FROM ${LISTINGSTABLE} WHERE "store_pubkey"='${storeId}';`
+        Q = `SELECT "listing_id", "name", "price" FROM ${LISTINGSTABLE} WHERE "created_by"='${storeId}';`
     } else {
         Q = `SELECT "listing_id", "name", "price" FROM ${LISTINGSTABLE};`
     }

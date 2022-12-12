@@ -15,7 +15,6 @@ import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import StoreCreate from "./components/StoreCreate";
 import Marketplace from "./pages/Marketplace";
 import ListingDetail from "./components/ListingDetail";
-import StoreDetail from "./components/StoreDetail";
 import ListingCreate from "./components/ListingCreate";
 import MyListingList from "./components/MyListingList";
 import { processMaximaEvent } from "./comms";
@@ -27,28 +26,41 @@ const theme = createTheme();
 
 function App() {
   const [activePage, setActivePage] = useState();
+  const [initialised, setInitialised] = useState(false);
   const [store, setStore] = useState({
     "name" : '',
     "pubkey" : ''
   });
 
   useEffect(() => {
-    window.MDS.init(function (msg) {
+    window.MDS.init(async function (msg) {
       //Do initialisation
       if (msg.event === "inited") {
-        //check if store has been created
-        getHostStore().then((res) => {
-          if (res.count > 0) {
-            setStore({
-              name: res.rows[0].host_store_name,
-              pubkey: res.rows[0].host_store_pubkey,
-            });
-          } else {
-            setup().then(function(res){
-              setStore({"name": res});
-            });
+        if (!initialised) {
+          try {
+            //check if store has been created
+            const hostStore = await getHostStore();
+            if (hostStore.host_store_name) {
+              //if the store has been created set it as the state
+                setStore({
+                  name: hostStore.host_store_name,
+                  pubkey: hostStore.host_store_pubkey,
+                });
+              } else {
+                //if it has not been created, create
+                setup().then(function(res){
+                  setStore({
+                    "name": res.storeName,
+                    "pubkey": res.storePubkey
+                  });
+                });
+              }
+              setInitialised(true);
           }
-        });
+          catch (e) {
+            console.log(`Couldn't get host store ${e}`);
+          }
+        }
       }
       if (msg.event === "MAXIMA") {
         console.log(`recieved maxima message:${msg}`);
@@ -57,7 +69,7 @@ function App() {
         processMaximaEvent(msg);
       }
     });
-  }, [store]);
+  }, [store, initialised]);
 
   if (store.name) {
     return (
@@ -77,7 +89,6 @@ function App() {
             <Routes>
               <Route exact path="/" element={<Marketplace />} />
               <Route path="store/create" element={<StoreCreate />} />
-              <Route path="store/:id" element={<StoreDetail />} />
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
               <Route path="my-store/" element={<MyListingList storeName={store.name} storePubkey={store.pubkey} />} />

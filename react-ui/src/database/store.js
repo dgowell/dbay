@@ -39,7 +39,7 @@ export async function createStore(name, storeId) {
 /* returns store by id */
 export function getStoreById(id) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "store_id", "store_pubkey", "name" FROM ${STORESTABLE} WHERE "store_id"="${id}";`, function (res) {
+        window.MDS.sql(`SELECT "store_id", "store_pubkey", "name" FROM ${STORESTABLE} WHERE "store_id"='${id}';`, function (res) {
             if (res.status) {
                 if (res.count > 1) {
                     reject(`More than one store with id: ${id}`, null);
@@ -56,8 +56,11 @@ export function getStoreById(id) {
 /* returns store by pubkey */
 export function getStoreByPubkey(id) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "store_id", "store_pubkey", "name" FROM ${STORESTABLE} WHERE "store_pubkey"="${id}";`, function (res) {
+        window.MDS.sql(`SELECT "store_id", "store_pubkey", "name" FROM ${STORESTABLE} WHERE "store_pubkey"='${id}';`, function (res) {
             if (res.status) {
+                if (res.count === 0) {
+                    resolve('No stores with that public key');
+                }
                 if (res.count > 1) {
                     reject(`More than one store with publickey: ${id}`, null);
                 } else {

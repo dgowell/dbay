@@ -40,8 +40,8 @@ export async function createStoreHost(name, storeId) {
 export function getHostStore() {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`select "host_store_pubkey", "host_store_name" FROM SETTINGS;`, function (res) {
-            if (res.status) {
-                resolve(res);
+            if (res.status && res.count === 1) {
+                resolve(res.rows[0]);
             } else if (res.error.includes('Table \"SETTINGS\" not found')) {
                 resolve("No Tables Created");
             } else {

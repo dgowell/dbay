@@ -35,7 +35,7 @@ export async function setup() {
                         createSettingsTable().then(() => {
                             createStoreHost(storeName, storeId).then(() => {
                                 createStore(storeName, storeId).then(() => {
-                                    resolve(storeName);
+                                    resolve({storeName, storeId});
                                 });
                             });
                         });
