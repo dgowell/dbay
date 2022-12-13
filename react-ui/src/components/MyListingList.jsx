@@ -6,6 +6,7 @@ import ListingList from "./ListingList";
 import CardActions from "@mui/material/CardActions";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
+import AddIcon from "@mui/icons-material/Add";
 import ShareIcon from "@mui/icons-material/Share";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ListingCreate from "./ListingCreate";
@@ -61,7 +62,7 @@ function MyListingList() {
     return (
       <div>
         <CardContent>
-          <Typography gutterBottom variant="h3" component="div">
+          <Typography gutterBottom variant="h5" component="div">
             {`${store.storeName}'s Listings`}
           </Typography>
           <ListingList listings={listings} />
@@ -76,7 +77,7 @@ function MyListingList() {
             aria-expanded={expanded}
             aria-label="show more"
           >
-            <ExpandMoreIcon />
+            <AddIcon />
           </ExpandMore>
         </CardActions>
         <Collapse in={expanded} timeout="auto" unmountOnExit>

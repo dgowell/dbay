@@ -67,7 +67,7 @@ function ListingDetail() {
             </IconButton>
           </CardActions>
           {owner ? null :
-            <Tooltip title="Your mum" placement="bottom">
+            <Tooltip title={listing.sent_by_name} placement="bottom">
               <Button>Who sent me this?</Button>
             </Tooltip>
           }
