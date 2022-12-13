@@ -91,7 +91,7 @@ function App() {
               <Route path="store/create" element={<StoreCreate />} />
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
-              <Route path="my-store/" element={<MyListingList storeName={store.name} storePubkey={store.pubkey} />} />
+              <Route path="my-store/" element={<MyListingList />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <Paper

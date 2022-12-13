@@ -13,7 +13,7 @@ import { createListing } from "../database/listing";
 import { getCategories } from "../database/category";
 import Autocomplete from "@mui/material/Autocomplete";
 
-export default function ListingCreate(storeId) {
+export default function ListingCreate({storeId, storeName}) {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [categories, setCategories] = useState([]);
@@ -49,7 +49,12 @@ export default function ListingCreate(storeId) {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
-    createListing(newListing.name, newListing.asking_price, newListing.category.category_id, storeId.storeId)
+    createListing({
+      name: newListing.name, 
+      price: newListing.asking_price, 
+      category: newListing.category.category_id, 
+      createdByPk: storeId, 
+      createdByName: storeName })
       .then((result) => {
         console.log(`Listing added: ${result}`);
       })

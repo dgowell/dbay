@@ -2,7 +2,7 @@
     All functions that communicate via maxima are held in this file
 */
 import {
-    createListing,
+    processListing,
     getListingById,
 } from './database/listing';
 import {
@@ -36,13 +36,13 @@ export function sendStoreToContacts(storeId) {
 export function sendListingToContacts(listingId) {
     return Promise.all([getListingById(listingId), getContacts(), getHostStore()])
         .then(function (result) {
-            let listing= result[0];
+            let listing = result[0];
             const contacts = result[1];
             const host = result[2];
             listing.version = '0.1';
             listing.type = 'listing';
-            listing.store_name = host.host_store_name;
-            listing.store_pubkey = host.host_store_pubkey;
+            listing.sent_by_name = host.host_store_name;
+            listing.sent_by_pk = host.host_store_pubkey;
             contacts.forEach((contact) => send(listing, contact));
         })
         .catch((e) => {
@@ -170,26 +170,9 @@ export function processMaximaEvent(msg) {
                 .catch((e) => console.error(`Could not create store: ${e}`));
             break;
         case 'listing':
+
+            processListing(entity);
             //check if store exists if not create one
-            getStoreByPubkey(entity.store_pubkey).then((res) => {
-                if (res === 'No stores with that public key') {
-                    createStore(entity.store_name, entity.store_pubkey)
-                        .then((res) => {
-                            console.log(`Store ${entity.store_name} added!`);
-                            createListing(entity.name, entity.price, entity.category_id, entity.store_pubkey, entity.listing_id)
-                                .then((res) => {
-                                    console.log(`Listing ${entity.name} added!`);
-                                }).catch((e) => console.error(`Could not create listing: ${e}`));
-                        })
-                        .catch((e) => console.error(`Could not create store: ${e}`));
-                }
-                else {
-                    createListing(entity.name, entity.price, entity.category_id, entity.store_pubkey)
-                        .then((res) => {
-                            console.log(`Listing ${entity.name} added!`);
-                        }).catch((e) => console.error(`Could not create listing: ${e}`));
-                }
-            }).catch((e) => new Error(`No stores or too many with that public key ${e}`));
             break;
         default:
             console.log(entity);

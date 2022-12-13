@@ -29,7 +29,7 @@ function ListingDetail() {
   useEffect(() => {
     if (listing) {
       getHostStore().then((host) => {
-        if (listing.created_by === host.host_store_pubkey) {
+        if (listing.created_by_pk === host.host_store_pubkey) {
           setOwner(true);
         }
       });

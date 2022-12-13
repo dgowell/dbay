@@ -1,4 +1,4 @@
-import React, { useEffect ,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { styled } from "@mui/material/styles";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
@@ -10,6 +10,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ListingCreate from "./ListingCreate";
 import { getListings } from "../database/listing";
+import {  getHostStore } from "../database/settings";
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -22,52 +23,73 @@ const ExpandMore = styled((props) => {
   }),
 }));
 
-function MyListingList(props) {
+function MyListingList() {
   const [expanded, setExpanded] = React.useState(false);
   const [listings, setListings] = useState([]);
+  const [store, setStore] = useState({
+    storeName: '',
+    storeId: ''
+  });
 
   useEffect(() => {
-    getListings()
-      .then((data) => {
-        setListings(data);
-        console.log(`results: ${data}`);
-      })
-      .catch((e) => {
-        console.error(e);
+    getHostStore().then((host) => {
+      setStore({
+        storeName: host.host_store_name,
+        storeId: host.host_store_pubkey,
       });
-    return;
-  }, []);
+    });
+  },[]);
+
+  useEffect(() => {
+    if (store) {
+      getListings(store.storeId)
+        .then((data) => {
+          setListings(data);
+          console.log(`results: ${data}`);
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+      return;
+    }
+  }, [store]);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
-  return (
-    <div>
+  if (store) {
+    return (
+      <div>
+        <CardContent>
+          <Typography gutterBottom variant="h3" component="div">
+            {`${store.storeName}'s Listings`}
+          </Typography>
+          <ListingList listings={listings} />
+        </CardContent>
+        <CardActions disableSpacing>
+          <IconButton aria-label="share">
+            <ShareIcon />
+          </IconButton>
+          <ExpandMore
+            expand={expanded}
+            onClick={handleExpandClick}
+            aria-expanded={expanded}
+            aria-label="show more"
+          >
+            <ExpandMoreIcon />
+          </ExpandMore>
+        </CardActions>
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
           <CardContent>
-            <Typography gutterBottom variant="h3" component="div">
-              {`${props.storeName}'s Listings`}
-            </Typography>
-            <ListingList listings={listings} />
+            <ListingCreate
+              storeId={store.storeId} storeName={store.storeName}
+            />
           </CardContent>
-          <CardActions disableSpacing>
-            <IconButton aria-label="share">
-              <ShareIcon />
-            </IconButton>
-            <ExpandMore
-              expand={expanded}
-              onClick={handleExpandClick}
-              aria-expanded={expanded}
-              aria-label="show more"
-            >
-              <ExpandMoreIcon />
-            </ExpandMore>
-          </CardActions>
-          <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <CardContent>
-              <ListingCreate storeId={props.storePubkey} />
-            </CardContent>
-          </Collapse>
-    </div>
-  );
+        </Collapse>
+      </div>
+    );
+  } else {
+    return null;
+  }
 }
 export default MyListingList;
