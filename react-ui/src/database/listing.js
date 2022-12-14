@@ -13,6 +13,7 @@ export function createListingTable() {
         "sent_by_name" char(50),
         "created_at" int not null,
         "wallet_address" varchar(80) not null,
+        "active" boolean default TRUE,
         constraint UQ_timestamp_and_creator unique("created_at", "created_by_pk")
         )`;
 
@@ -84,9 +85,9 @@ export function getAllListings() {
 export function getListings(storeId) {
     let Q;
     if (storeId) {
-        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "created_by_pk"='${storeId}';`
+        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "created_by_pk"='${storeId}' "active"=TRUE;`
     } else {
-        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE};`
+        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "active"=TRUE;`
     }
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
@@ -99,6 +100,23 @@ export function getListings(storeId) {
     });
 }
 
+export function getInactiveListings(storeId){
+    let Q;
+    if (storeId) {
+        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "created_by_pk"='${storeId}' "active"=FALSE;`
+    } else {
+        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "active"=FALSE;`
+    }
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(Q, (res) => {
+            if (res.status) {
+                resolve(res.rows);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
 
 /* returns listing by id has to be passed store id too*/
 export function getListingById(id) {
@@ -110,6 +128,19 @@ export function getListingById(id) {
                 } else {
                     resolve(res.rows[0]);
                 }
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
+/* Updates the listing as inactive so that it can be taken off the listings page */
+function deactivateListing(id) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "active"='FALSE' WHERE "listing_id"='${id}';`, function (res) {
+            if (res.status) {
+                resolve(res);
             } else {
                 reject(res.error);
             }
@@ -143,6 +174,9 @@ export function handlePurchase(listingId) {
     //options:
     //1. remove the item from the listing
     //2. flag the item as purchased
-    //I think i'll do the 2nd as it'll be more useful
+    //update value in listing directly
+    deactivateListing(listingId).then((r)=> {
+        console.log(r);
+    })
 
 }

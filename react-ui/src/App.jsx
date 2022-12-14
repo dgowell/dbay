@@ -19,6 +19,7 @@ import MyListingList from "./components/MyListingList";
 import { processMaximaEvent } from "./comms";
 import { getHostStore } from "./database/settings";
 import { setup } from "./database/index";
+import Purchases from "./pages/Purchases";
 
 
 const theme = createTheme();
@@ -90,6 +91,7 @@ function App() {
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
               <Route path="my-store/" element={<MyListingList />} />
+              <Route path="purchases/" element={<Purchases />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <Paper
@@ -113,6 +115,12 @@ function App() {
                   component={Link}
                   to="/my-store"
                   label={`${store.name}'s Listings`}
+                  icon={<AppsIcon />}
+                />
+                <BottomNavigationAction
+                  component={Link}
+                  to="/purchases"
+                  label={`My Purchases`}
                   icon={<AppsIcon />}
                 />
               </BottomNavigation>
