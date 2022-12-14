@@ -5,13 +5,20 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { getListings } from "../database/listing";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
-import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
-import { getCategories } from "../database/category";
+
+
+const categories = [
+    { category_id: 1, name: "Cat One" },
+    { category_id: 2, name: "Cat Two" },
+    { category_id: 3, name: "Cat Three" },
+    { category_id: 4, name: "Cat Four" },
+    { category_id: 5, name: "Cat Five" },
+  ];
 
 export default function Marketplace() {
   const [listings, setListings] = useState();
-  const [categories, setCategories] = useState();
+
 
   /* fetches the listings from local database */
   useEffect(() => {
@@ -26,18 +33,7 @@ export default function Marketplace() {
     return;
   }, []);
 
-  /* fetches the listings from local database */
-  useEffect(() => {
-    getCategories()
-      .then((data) => {
-        setCategories(data);
-        console.log(`results: ${data}`);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-    return;
-  }, []);
+
 
   function categoryChips() {
     return categories.map((cat) => {

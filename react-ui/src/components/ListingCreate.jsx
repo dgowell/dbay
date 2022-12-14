@@ -10,13 +10,19 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { createListing } from "../database/listing";
-import { getCategories } from "../database/category";
 import Autocomplete from "@mui/material/Autocomplete";
+
+  const categories = [
+    { category_id: 1, name: "Cat One" },
+    { category_id: 2, name: "Cat Two" },
+    { category_id: 3, name: "Cat Three" },
+    { category_id: 4, name: "Cat Four" },
+    { category_id: 5, name: "Cat Five" },
+  ];
 
 export default function ListingCreate({storeId, storeName}) {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
@@ -24,15 +30,6 @@ export default function ListingCreate({storeId, storeName}) {
   });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    getCategories()
-      .then(function (result) {
-        setCategories(result);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  }, []);
 
   // These methods will update the state properties.
   function updateForm(value) {
@@ -49,12 +46,14 @@ export default function ListingCreate({storeId, storeName}) {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
+    const timestamp = Math.floor(Date.now() / 1000);
+
     createListing({
-      name: newListing.name, 
-      price: newListing.asking_price, 
-      category: newListing.category.category_id, 
-      createdByPk: storeId, 
-      createdByName: storeName })
+      name: newListing.name,
+      price: newListing.asking_price,
+      createdByPk: storeId,
+      createdByName: storeName, 
+      created_at: timestamp })
       .then((result) => {
         console.log(`Listing added: ${result}`);
       })
@@ -108,7 +107,7 @@ export default function ListingCreate({storeId, storeName}) {
                 updateForm({ category: newValue });
               }}
               inputValue={inputValue}
-              onInputChange={(event, newInputValue) => {
+              onInputChange={(e, newInputValue) => {
                 setInputValue(newInputValue);
               }}
               disablePortal

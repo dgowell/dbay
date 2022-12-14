@@ -1,5 +1,4 @@
 import { getHostStore } from "./settings";
-import { getStoreByPubkey, createStore } from "./store";
 
 const LISTINGSTABLE = 'LISTING';
 
@@ -10,13 +9,10 @@ export function createListingTable() {
         "price" INT NOT NULL,
         "created_by_pk" varchar(330) NOT NULL,
         "created_by_name" char(50),
-        "created_at" timestamp with time zone not null,
         "sent_by_pk" varchar(330),
         "sent_by_name" char(50),
-        "category_id" INT NOT NULL,
-        constraint UQ_listing_name_and_store unique("name", "created_by_pk"),
-        CONSTRAINT FK_FROM_listing_TO_store FOREIGN KEY("created_by_pk") REFERENCES store("store_pubkey"),
-        CONSTRAINT FK_FROM_listing_TO_category FOREIGN KEY("category_id") REFERENCES category("category_id")
+        "created_at" int not null,
+        constraint UQ_timestamp_and_creator unique("created_at", "created_by_pk")
         )`;
 
     return new Promise((resolve, reject) => {
@@ -33,12 +29,12 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({name, price, category, createdByPk, createdByName, listingId, sentByName, sentByPk}) {
+export function createListing({name, price, createdByPk, createdByName, listingId, sentByName, sentByPk}) {
+    const timestamp = Math.floor(Date.now()/1000);
     return new Promise(function (resolve, reject) {
         let fullsql =`insert into ${LISTINGSTABLE}
         ("name",
         "price",
-        "category_id",
         "created_by_pk",
         "created_by_name",
         ${listingId ? '"listing_id",' : ''}
@@ -48,13 +44,12 @@ export function createListing({name, price, category, createdByPk, createdByName
 
         values('${name}',
         '${price}',
-        '${category}',
         '${createdByPk}',
         '${createdByName}',
         ${listingId ? `'${listingId}',` : ''}
         ${sentByName ? `'${sentByName}',` : ''}
         ${sentByPk ? `'${sentByPk}',` : ''}
-        CURRENT_TIMESTAMP);`;
+        ${timestamp});`;
 
         console.log(`name: ${name}, price: ${price}`);
         window.MDS.sql(fullsql, (res) => {
@@ -127,21 +122,9 @@ export async function processListing(entity){
         return;
     }
 
-    //create store if you don't already have it
-    try {
-        const res = await getStoreByPubkey(entity.created_by_pk);
-        if (res === 'No stores with that public key') {
-            await createStore(entity.created_by_name, entity.created_by_pk);
-        }
-    }
-    catch (err) {
-        alert(err); // TypeError: failed to fetch
-    }
-
     createListing({
         name: entity.name,
         price: entity.price,
-        category: entity.category_id,
         createdByPk: entity.created_by_pk,
         createdByName: entity.created_by_name,
         sentByName: entity.sent_by_name,

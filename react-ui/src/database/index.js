@@ -2,14 +2,6 @@ import {
     createListingTable
 } from "./listing";
 import {
-    createCategoryTable,
-    preloadCategoryTable
-} from "./category";
-import {
-    createStore,
-    createStoresTable
-} from "./store";
-import {
     createSettingsTable,
     createStoreHost
 } from "./settings";
@@ -28,17 +20,12 @@ export async function setup() {
 
     //return the store name
     return new Promise((resolve, reject) => {
-        createCategoryTable().then(() => {
-            preloadCategoryTable().then(() => {
-                createStoresTable().then(() => {
-                    createListingTable().then(() => {
-                        createSettingsTable().then(() => {
-                            createStoreHost(storeName, storeId).then(() => {
-                                createStore(storeName, storeId).then(() => {
-                                    resolve({storeName, storeId});
-                                });
-                            });
-                        });
+        createListingTable().then(() => {
+            createSettingsTable().then(() => {
+                createStoreHost(storeName, storeId).then(() => {
+                    resolve({
+                        storeName,
+                        storeId
                     });
                 });
             });

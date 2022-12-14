@@ -12,7 +12,6 @@ import Paper from "@mui/material/Paper";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ResponsiveAppBar from "./components/ResponsiveAppBar";
-import StoreCreate from "./components/StoreCreate";
 import Marketplace from "./pages/Marketplace";
 import ListingDetail from "./components/ListingDetail";
 import ListingCreate from "./components/ListingCreate";
@@ -88,7 +87,6 @@ function App() {
           >
             <Routes>
               <Route exact path="/" element={<Marketplace />} />
-              <Route path="store/create" element={<StoreCreate />} />
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
               <Route path="my-store/" element={<MyListingList />} />

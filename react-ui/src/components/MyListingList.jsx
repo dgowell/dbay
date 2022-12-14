@@ -8,7 +8,6 @@ import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import AddIcon from "@mui/icons-material/Add";
 import ShareIcon from "@mui/icons-material/Share";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ListingCreate from "./ListingCreate";
 import { getListings } from "../database/listing";
 import {  getHostStore } from "../database/settings";

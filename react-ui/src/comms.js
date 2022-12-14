@@ -6,31 +6,12 @@ import {
     getListingById,
 } from './database/listing';
 import {
-    createStore,
-    getStoreByPubkey
-} from './database/store';
-import {
     utf8ToHex,
     hexToUtf8
 } from './utils';
 import { getHostStore } from "./database/settings";
 
 const APPLICATION_NAME = 'stampd';
-
-export function sendStoreToContacts(storeId) {
-    return Promise.all([getStoreByPubkey(storeId), getContacts()])
-        .then(function (result) {
-            console.log(result);
-            let data = result[0];
-            data.version = '0.1';
-            data.type = 'store';
-            const contacts = result[1];
-            contacts.forEach((contact) => send(data, contact));
-        })
-        .catch((e) => {
-            console.error(e)
-        });
-}
 
 
 export function sendListingToContacts(listingId) {
@@ -162,17 +143,8 @@ export function processMaximaEvent(msg) {
 
     //determine if you're receiving a store or a listing
     switch (entity.type) {
-        case 'store':
-            createStore(entity.name, entity.store_pubkey)
-                .then((res) => {
-                    console.log(`Store ${entity.name} added!`);
-                })
-                .catch((e) => console.error(`Could not create store: ${e}`));
-            break;
         case 'listing':
-
             processListing(entity);
-            //check if store exists if not create one
             break;
         default:
             console.log(entity);
