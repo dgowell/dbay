@@ -151,3 +151,20 @@ export function processMaximaEvent(msg) {
     }
 
 }
+
+
+export function sendMoney({walletAddress,amount}){
+    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount}`;
+    return new Promise(function (resolve, reject) {
+        //get contacts list from maxima
+        window.MDS.cmd(Q, function (res) {
+            if (res.status) {
+                resolve(res);
+            } else if (res.message) {
+                reject(res.message);
+            } else {
+                reject(JSON.stringify(res));
+            }
+        })
+    })
+}

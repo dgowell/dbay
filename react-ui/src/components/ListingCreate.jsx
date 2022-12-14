@@ -11,25 +11,34 @@ import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { createListing } from "../database/listing";
 import Autocomplete from "@mui/material/Autocomplete";
+import { getAddress } from "../mds-helpers";
 
-  const categories = [
-    { category_id: 1, name: "Cat One" },
-    { category_id: 2, name: "Cat Two" },
-    { category_id: 3, name: "Cat Three" },
-    { category_id: 4, name: "Cat Four" },
-    { category_id: 5, name: "Cat Five" },
-  ];
+const categories = [
+  { category_id: 1, name: "Cat One" },
+  { category_id: 2, name: "Cat Two" },
+  { category_id: 3, name: "Cat Three" },
+  { category_id: 4, name: "Cat Four" },
+  { category_id: 5, name: "Cat Five" },
+];
 
-export default function ListingCreate({storeId, storeName}) {
+export default function ListingCreate({ storeId, storeName }) {
   const [loading, setLoading] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
-    category: categories[0]
+    category: categories[0],
   });
+  const [walletAddress, setWalletAddress] = useState("");
+
   const navigate = useNavigate();
 
+  useEffect(() => {
+    async function getWalletAddress() {
+      setWalletAddress(await getAddress());
+    }
+    getWalletAddress();
+  }, []);
 
   // These methods will update the state properties.
   function updateForm(value) {
@@ -46,14 +55,13 @@ export default function ListingCreate({storeId, storeName}) {
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
 
-    const timestamp = Math.floor(Date.now() / 1000);
-
     createListing({
       name: newListing.name,
       price: newListing.asking_price,
       createdByPk: storeId,
-      createdByName: storeName, 
-      created_at: timestamp })
+      createdByName: storeName,
+      walletAddress: walletAddress,
+    })
       .then((result) => {
         console.log(`Listing added: ${result}`);
       })
@@ -64,89 +72,94 @@ export default function ListingCreate({storeId, storeName}) {
     setLoading(false);
   }
 
-  // This following section will display the form that takes the input from the user.
-  return (
-    <Box
-      sx={{
-        marginTop: 4,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      <Typography variant="h4" gutterBottom>
-        Create New Listing
-      </Typography>
+  if (walletAddress) {
+    // This following section will display the form that takes the input from the user.
+    return (
       <Box
-        component="form"
-        sx={{ mt: 3 }}
-        noValidate
-        autoComplete="off"
-        onSubmit={onSubmit}
+        sx={{
+          marginTop: 4,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
       >
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Listing Title"
-              id="listing-name"
-              className="form-field"
-              type="text"
-              required
-              fullWidth
-              name="title"
-              value={form.name}
-              onChange={(e) => updateForm({ name: e.target.value })}
-              ariant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Autocomplete
-              value={categories[form.category]}
-              getOptionLabel={(option) => option.name ?? null}
-              onChange={(e, newValue) => {
-                updateForm({ category: newValue });
-              }}
-              inputValue={inputValue}
-              onInputChange={(e, newInputValue) => {
-                setInputValue(newInputValue);
-              }}
-              disablePortal
-              required
-              id="listing-category"
-              options={categories}
-              renderInput={(params) => (
-                <TextField {...params} label="Category" />
-              )}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel htmlFor="asking-price">Asking Price</InputLabel>
-              <OutlinedInput
-                id="asking-price"
-                value={form.asking_price}
-                required
-                onChange={(e) => updateForm({ asking_price: e.target.value })}
-                startAdornment={
-                  <InputAdornment position="start">MIN</InputAdornment>
-                }
-                label="Asking Price"
-              />
-            </FormControl>
-          </Grid>
-        </Grid>
-        <LoadingButton
-          fullWidth
-          variant="contained"
-          type="submit"
-          value="Create Token"
-          loading={loading}
-          loadingPosition="end"
-          sx={{ mt: 3, mb: 2 }}
+        <Typography variant="h4" gutterBottom>
+          Create New Listing
+        </Typography>
+        <Box
+          component="form"
+          sx={{ mt: 3 }}
+          noValidate
+          autoComplete="off"
+          onSubmit={onSubmit}
         >
-          Submit
-        </LoadingButton>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                label="Listing Title"
+                id="listing-name"
+                className="form-field"
+                type="text"
+                required
+                fullWidth
+                name="title"
+                value={form.name}
+                onChange={(e) => updateForm({ name: e.target.value })}
+                ariant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Autocomplete
+                value={categories[form.category]}
+                getOptionLabel={(option) => option.name ?? null}
+                onChange={(e, newValue) => {
+                  updateForm({ category: newValue });
+                }}
+                inputValue={inputValue}
+                onInputChange={(e, newInputValue) => {
+                  setInputValue(newInputValue);
+                }}
+                disablePortal
+                required
+                id="listing-category"
+                options={categories}
+                renderInput={(params) => (
+                  <TextField {...params} label="Category" />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="asking-price">Asking Price</InputLabel>
+                <OutlinedInput
+                  id="asking-price"
+                  value={form.asking_price}
+                  required
+                  onChange={(e) => updateForm({ asking_price: e.target.value })}
+                  startAdornment={
+                    <InputAdornment position="start">MIN</InputAdornment>
+                  }
+                  label="Asking Price"
+                />
+              </FormControl>
+            </Grid>
+          </Grid>
+          <LoadingButton
+            fullWidth
+            variant="contained"
+            type="submit"
+            value="Create Token"
+            loading={loading}
+            loadingPosition="end"
+            sx={{ mt: 3, mb: 2 }}
+          >
+            Submit
+          </LoadingButton>
+        </Box>
       </Box>
-    </Box>
-  );
+    );
+  }
+  else {
+    return null;
+  }
 }

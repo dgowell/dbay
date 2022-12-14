@@ -12,6 +12,7 @@ export function createListingTable() {
         "sent_by_pk" varchar(330),
         "sent_by_name" char(50),
         "created_at" int not null,
+        "wallet_address" varchar(80) not null,
         constraint UQ_timestamp_and_creator unique("created_at", "created_by_pk")
         )`;
 
@@ -29,7 +30,7 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({name, price, createdByPk, createdByName, listingId, sentByName, sentByPk}) {
+export function createListing({name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress}) {
     const timestamp = Math.floor(Date.now()/1000);
     return new Promise(function (resolve, reject) {
         let fullsql =`insert into ${LISTINGSTABLE}
@@ -40,6 +41,7 @@ export function createListing({name, price, createdByPk, createdByName, listingI
         ${listingId ? '"listing_id",' : ''}
         ${sentByName ? '"sent_by_name",' : ''}
         ${sentByPk ? '"sent_by_pk",' : ''}
+        ${walletAddress ? '"wallet_address",' : ''}
         "created_at")
 
         values('${name}',
@@ -49,6 +51,7 @@ export function createListing({name, price, createdByPk, createdByName, listingI
         ${listingId ? `'${listingId}',` : ''}
         ${sentByName ? `'${sentByName}',` : ''}
         ${sentByPk ? `'${sentByPk}',` : ''}
+        ${walletAddress ? `'${walletAddress}',` : ''}
         ${timestamp});`;
 
         console.log(`name: ${name}, price: ${price}`);
@@ -128,8 +131,18 @@ export async function processListing(entity){
         createdByPk: entity.created_by_pk,
         createdByName: entity.created_by_name,
         sentByName: entity.sent_by_name,
-        sentByPk: entity.sent_by_pk
+        sentByPk: entity.sent_by_pk,
+        walletAddress: entity.wallet_address
     }).then(() => {
         console.log(`Listing ${entity.name} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
+}
+
+/* This function hadles what happens when you purchase a listing */
+export function handlePurchase(listingId) {
+    //options:
+    //1. remove the item from the listing
+    //2. flag the item as purchased
+    //I think i'll do the 2nd as it'll be more useful
+
 }
