@@ -91,6 +91,21 @@ export function getAddress() {
     })
 }
 
+/* Gets the conytact address to use for maxima */
+export function getContactAddress() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('maxima', function (res) {
+            if (res.status) {
+                resolve(res.response.publickey);
+                console.log(`maxima publickey address: ${res.response.publickey}`);
+            } else {
+                reject(res.error);
+                console.log(res.error);
+            }
+        })
+    })
+}
+
 /* Gets the public address and uses the callback to set it */
 export function getPublicAddress() {
     return new Promise(function (resolve, reject) {

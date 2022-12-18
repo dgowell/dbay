@@ -63,7 +63,7 @@ function App() {
         }
       }
       if (msg.event === "MAXIMA") {
-        console.log(`recieved maxima message:${msg}`);
+        console.log(`recieved maxima message:${JSON.stringify(msg)}`);
 
         //Process this message
         processMaximaEvent(msg);

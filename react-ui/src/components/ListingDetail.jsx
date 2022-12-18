@@ -17,10 +17,15 @@ import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { useNavigate } from "react-router";
-import { sendMoney } from "../comms";
-import { handlePurchase } from "../database/listing";
-
-
+import { getContactAddress } from "../mds-helpers";
+import { sendPurchaseRequest, sendMerchantConfirmation } from "../comms";
+import {
+  handlePurchase,
+  updateMerchantConfirmation
+} from "../database/listing";
+import TextField from "@mui/material/TextField";
+import Divider from "@mui/material/Divider";
+import Alert from "@mui/material/Alert";
 
 const style = {
   position: "absolute",
@@ -45,8 +50,17 @@ function ListingDetail() {
   const params = useParams();
   const [listing, setListing] = useState();
   const [owner, setOwner] = useState(false);
+  const [customerAddress, setCustomerAddress] = useState();
+  const [customerName, setCustomerName] = useState();
 
-    const navigate = useNavigate();
+  const [message, setMessage] = useState(
+    "Leave it around the side of the house at 20 Madeup Street, Nowhere, SWU P56"
+  );
+  const handleMessageChange = (event) => {
+    setMessage(event.target.value);
+  };
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
@@ -55,8 +69,15 @@ function ListingDetail() {
   }, [params.id]);
 
   useEffect(() => {
+    getContactAddress().then((address)=> {
+      setCustomerAddress(address);
+    });
+  },[]);
+
+  useEffect(() => {
     if (listing) {
       getHostStore().then((host) => {
+        setCustomerName(host.host_store_name);
         if (listing.created_by_pk === host.host_store_pubkey) {
           setOwner(true);
         }
@@ -64,32 +85,47 @@ function ListingDetail() {
     }
   }, [listing]);
 
+  function handleMerchantConfirmation() {
+    updateMerchantConfirmation(listing.listing_id);
+    sendMerchantConfirmation({
+      id: listing.listing_id,
+      customer: listing.customer_pk
+    }).then(() => {
+      alert("success!");
+    });
+  }
+
   function handleSend(e) {
     e.preventDefault();
 
-    sendMoney({
-      walletAddress: listing.wallet_address,
-      amount: listing.price,
-    }).then((res)=>{
-      //check if it went through
-      if (res.response.size){
-      handleSuccess();
-      handleClose();
-      navigate('/');
-      handlePurchase(listing.listing_id);
-    } else {
-      //somethign went wrong
-      alert(res);
-    }
-    }).catch((e)=> {
-      alert(`There has been an error with your purchase: ${e}`);
-      handleClose();
-    });
+    sendPurchaseRequest({
+      merchant: listing.created_by_pk,
+      createdAt: listing.created_at,
+      customerName: customerName,
+      customerPk: customerAddress,
+      message: message,
+    })
+      .then((res) => {
+        //check if it went through
+        if (res) {
+          handleSuccess();
+          handleClose();
+          navigate("/");
+          handlePurchase(listing.listing_id);
+        } else {
+          //somethign went wrong
+          alert(res);
+        }
+      })
+      .catch((e) => {
+        alert(`There has been an error with your purchase: ${e}`);
+        handleClose();
+      });
   }
 
   return (
     <div>
-      {listing ? (
+      {listing && customerAddress && customerName ? (
         <Card sx={{ maxWidth: 345, marginTop: 2 }}>
           <Modal
             open={open}
@@ -100,12 +136,21 @@ function ListingDetail() {
             <Box sx={style}>
               <Stack spacing={2} direction="column">
                 <Typography id="modal-modal-title" variant="h6" component="h2">
-                  Confirm purchase
+                  Request Purchase
                 </Typography>
                 <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                  You're about to send {listing.created_by_name} £
-                  {listing.price} for the {listing.name}. Are you sure?
+                  Send purchase request to {listing.created_by_name} for the{" "}
+                  {listing.name} listed at M${listing.price}.
                 </Typography>
+                <Typography>Please fill in your address below:</Typography>
+                <TextField
+                  id="outlined-multiline-static"
+                  label="Message for merchant"
+                  multiline
+                  rows={4}
+                  value={message}
+                  onChange={handleMessageChange}
+                />
                 <Stack spacing={2} direction="row">
                   <Button onClick={handleClose} variant="outlined">
                     Cancel
@@ -153,7 +198,7 @@ function ListingDetail() {
           <CardActions disableSpacing>
             {owner ? null : (
               <Button onClick={handleOpen} size="small">
-                Buy Now
+                Request Purchase
               </Button>
             )}
             {owner ? null : <Button size="small">Contact Seller</Button>}
@@ -171,6 +216,40 @@ function ListingDetail() {
               <Button>Who sent me this?</Button>
             </Tooltip>
           )}
+          <Divider />
+          <CardContent>
+            {owner && listing.purchase_text && (
+              <Box sx={{ mb: 2 }}>
+                <Typography gutterBottom variant="p" component="div">
+                  A customer has requested this item, their address details are
+                  below:
+                </Typography>
+                <Typography gutterBottom variant="h6" component="div">
+                  {listing.purchase_text}
+                </Typography>
+              </Box>
+            )}
+            {(owner && (listing.purchase_requested === true ||listing.purchase_requested === 'true')) && (
+              <Box sx={{ mt: 2 }}>
+                <Alert
+                  severity="info"
+                  action={
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => {
+                        handleMerchantConfirmation();
+                      }}
+                    >
+                      Confirm
+                    </Button>
+                  }
+                >
+                  Confirm you can send to this address
+                </Alert>
+              </Box>
+            )}
+          </CardContent>
         </Card>
       ) : null}
     </div>

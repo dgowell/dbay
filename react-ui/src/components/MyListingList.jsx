@@ -24,7 +24,7 @@ const ExpandMore = styled((props) => {
 }));
 
 function MyListingList() {
-  const [expanded, setExpanded] = React.useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [listings, setListings] = useState([]);
   const [store, setStore] = useState({
     storeName: '',
@@ -41,7 +41,7 @@ function MyListingList() {
   },[]);
 
   useEffect(() => {
-    if (store) {
+    if (store.storeId) {
       getListings(store.storeId)
         .then((data) => {
           setListings(data);
@@ -52,7 +52,7 @@ function MyListingList() {
         });
       return;
     }
-  }, [store]);
+  }, [store.storeId]);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);

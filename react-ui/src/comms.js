@@ -3,13 +3,16 @@
 */
 import {
     processListing,
+    processPurchaseRequest,
     getListingById,
 } from './database/listing';
 import {
     utf8ToHex,
     hexToUtf8
 } from './utils';
-import { getHostStore } from "./database/settings";
+import {
+    getHostStore
+} from "./database/settings";
 
 const APPLICATION_NAME = 'stampd';
 
@@ -32,7 +35,7 @@ export function sendListingToContacts(listingId) {
 }
 
 /* takes data and sends it to a publickey address via maxima */
-export function send(data, publickey, storeId) {
+export function send(data, publickey) {
     return new Promise(function (resolve, reject) {
 
         //before sending append version number of application
@@ -143,6 +146,9 @@ export function processMaximaEvent(msg) {
 
     //determine if you're receiving a store or a listing
     switch (entity.type) {
+        case 'purchase_request':
+            processPurchaseRequest(entity);
+            break;
         case 'listing':
             processListing(entity);
             break;
@@ -153,7 +159,10 @@ export function processMaximaEvent(msg) {
 }
 
 
-export function sendMoney({walletAddress,amount}){
+export function sendMoney({
+    walletAddress,
+    amount
+}) {
     const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount}`;
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
@@ -167,4 +176,37 @@ export function sendMoney({walletAddress,amount}){
             }
         })
     })
+}
+
+export function sendPurchaseRequest({
+    merchant,
+    message,
+    customerName,
+    customerPk,
+    createdAt,
+}) {
+    return new Promise(function (resolve, reject) {
+        const data = {
+            "type": "purchase_request",
+            "created_at": createdAt,
+            "customer_name": customerName,
+            "customer_pk": customerPk,
+            "message": message
+        };
+        send(data, merchant).then((res) => {
+            resolve(res);
+        }).catch(e => reject(e));
+    });
+}
+
+export function sendMerchantConfirmation({customer, listingId}) {
+    return new Promise(function (resolve, reject) {
+        const data = {
+            "type": "merchant_confirmation",
+            "listing_id": listingId,
+        };
+        send(data, customer).then((res) => {
+            resolve(res);
+        }).catch(e => reject(e));
+    });
 }

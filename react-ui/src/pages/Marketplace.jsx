@@ -9,11 +9,11 @@ import Chip from "@mui/material/Chip";
 
 
 const categories = [
-    { category_id: 1, name: "Cat One" },
-    { category_id: 2, name: "Cat Two" },
-    { category_id: 3, name: "Cat Three" },
-    { category_id: 4, name: "Cat Four" },
-    { category_id: 5, name: "Cat Five" },
+    { category_id: 1, name: "Not a real category" },
+    { category_id: 2, name: "Pick me" },
+    { category_id: 3, name: "Oh i wish that this worked!" },
+    { category_id: 4, name: "Me encanto albondigas" },
+    { category_id: 5, name: "Surely i'm your best bet" },
   ];
 
 export default function Marketplace() {
