@@ -4,6 +4,7 @@
 import {
     processListing,
     processPurchaseRequest,
+    processMerchantConfirmation,
     getListingById,
 } from './database/listing';
 import {
@@ -149,6 +150,9 @@ export function processMaximaEvent(msg) {
         case 'purchase_request':
             processPurchaseRequest(entity);
             break;
+        case 'merchant_confirmation':
+            processMerchantConfirmation(entity);
+            break;
         case 'listing':
             processListing(entity);
             break;
@@ -199,11 +203,11 @@ export function sendPurchaseRequest({
     });
 }
 
-export function sendMerchantConfirmation({customer, listingId}) {
+export function sendMerchantConfirmation({customer, createdAt}) {
     return new Promise(function (resolve, reject) {
         const data = {
             "type": "merchant_confirmation",
-            "listing_id": listingId,
+            "created_at": createdAt,
         };
         send(data, customer).then((res) => {
             resolve(res);

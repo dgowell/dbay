@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import { getListingById } from "../database/listing";
 import CardActions from "@mui/material/CardActions";
+import CardHeader from "@mui/material/CardHeader";
+
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import IconButton from "@mui/material/IconButton";
@@ -13,19 +16,23 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHostStore } from "../database/settings";
 import { sendListingToContacts } from "../comms";
-import Modal from "@mui/material/Modal";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import { useNavigate } from "react-router";
 import { getContactAddress } from "../mds-helpers";
-import { sendPurchaseRequest, sendMerchantConfirmation } from "../comms";
-import {
-  handlePurchase,
-  updateMerchantConfirmation
-} from "../database/listing";
-import TextField from "@mui/material/TextField";
 import Divider from "@mui/material/Divider";
-import Alert from "@mui/material/Alert";
+import DialogTitle from "@mui/material/DialogTitle";
+import Dialog from "@mui/material/Dialog";
+import CancelIcon from "@mui/icons-material/Cancel";
+import { Stack } from "@mui/system";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import ForwardIcon from "@mui/icons-material/Forward";
+import SendIcon from "@mui/icons-material/Send";
+import PaymentIcon from "@mui/icons-material/Payment";
+
 
 const style = {
   position: "absolute",
@@ -40,27 +47,39 @@ const style = {
   p: 4,
 };
 
+
+function AvailabilityCheckDialog(props) {
+  const  { onClose, open } = props;
+    const handleClose = () => onClose();
+
+    return (
+      <Dialog onClose={handleClose} open={open}>
+        <DialogTitle>Please wait one moment.</DialogTitle>
+        <Typography>We're checking if your item is available</Typography>
+        <Button onClick={handleClose}>
+          <CancelIcon/>
+        </Button>
+      </Dialog>
+    );
+
+}
+AvailabilityCheckDialog.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  open: PropTypes.bool.isRequired,
+}
+
 function ListingDetail() {
-  const [open, setOpen] = React.useState(false);
-  const [success, setSuccess] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  const handleSuccessClose = () => setSuccess(false);
-  const handleSuccess = () => setSuccess(true);
-  const params = useParams();
+  const [open, setOpen] = useState(false);
   const [listing, setListing] = useState();
   const [owner, setOwner] = useState(false);
   const [customerAddress, setCustomerAddress] = useState();
   const [customerName, setCustomerName] = useState();
 
-  const [message, setMessage] = useState(
-    "Leave it around the side of the house at 20 Madeup Street, Nowhere, SWU P56"
-  );
-  const handleMessageChange = (event) => {
-    setMessage(event.target.value);
-  };
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   const navigate = useNavigate();
+  const params = useParams();
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
@@ -85,172 +104,79 @@ function ListingDetail() {
     }
   }, [listing]);
 
-  function handleMerchantConfirmation() {
-    updateMerchantConfirmation(listing.listing_id);
-    sendMerchantConfirmation({
-      id: listing.listing_id,
-      customer: listing.customer_pk
-    }).then(() => {
-      alert("success!");
-    });
-  }
 
-  function handleSend(e) {
-    e.preventDefault();
-
-    sendPurchaseRequest({
-      merchant: listing.created_by_pk,
-      createdAt: listing.created_at,
-      customerName: customerName,
-      customerPk: customerAddress,
-      message: message,
-    })
-      .then((res) => {
-        //check if it went through
-        if (res) {
-          handleSuccess();
-          handleClose();
-          navigate("/");
-          handlePurchase(listing.listing_id);
-        } else {
-          //somethign went wrong
-          alert(res);
-        }
-      })
-      .catch((e) => {
-        alert(`There has been an error with your purchase: ${e}`);
-        handleClose();
-      });
+  function handleShare(){
+    sendListingToContacts(listing.listing_id);
+    //TODO:load pop top show that the listing has been shared
   }
 
   return (
     <div>
       {listing && customerAddress && customerName ? (
-        <Card sx={{ maxWidth: 345, marginTop: 2 }}>
-          <Modal
-            open={open}
-            onClose={handleClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-          >
-            <Box sx={style}>
-              <Stack spacing={2} direction="column">
-                <Typography id="modal-modal-title" variant="h6" component="h2">
-                  Request Purchase
-                </Typography>
-                <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                  Send purchase request to {listing.created_by_name} for the{" "}
-                  {listing.name} listed at M${listing.price}.
-                </Typography>
-                <Typography>Please fill in your address below:</Typography>
-                <TextField
-                  id="outlined-multiline-static"
-                  label="Message for merchant"
-                  multiline
-                  rows={4}
-                  value={message}
-                  onChange={handleMessageChange}
-                />
-                <Stack spacing={2} direction="row">
-                  <Button onClick={handleClose} variant="outlined">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSend} variant="contained">
-                    Send
-                  </Button>
-                </Stack>
-              </Stack>
-            </Box>
-          </Modal>
-          <Modal
-            open={success}
-            onClose={handleSuccessClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-          >
-            <Box sx={style}>
-              <Stack spacing={2} direction="column">
-                <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                  Congratulations, you've successfully sent the money!
-                </Typography>
-                <Stack spacing={2} direction="row">
-                  <Button onClick={handleSuccessClose} variant="contained">
-                    OK
-                  </Button>
-                </Stack>
-              </Stack>
-            </Box>
-          </Modal>
-          <CardMedia
-            component="img"
-            width="100%"
-            image={TestImage}
-            alt="green iguana"
-          />
-          <CardContent>
-            <Typography gutterBottom variant="h4" component="div">
-              £{listing.price}
-            </Typography>
-            <Typography gutterBottom variant="h6" component="div">
-              {listing.name}
-            </Typography>
-          </CardContent>
-          <CardActions disableSpacing>
-            {owner ? null : (
-              <Button onClick={handleOpen} size="small">
-                Request Purchase
+        <div>
+          <Card sx={{ maxWidth: 345, marginTop: 2 }}>
+            <CardHeader
+              action={
+                <Tooltip title="Share to all your contacts" placement="top">
+                  <IconButton onClick={() => handleShare()} aria-label="share">
+                    <ShareIcon />
+                  </IconButton>
+                </Tooltip>
+              }
+            />
+            <CardMedia
+              component="img"
+              width="100%"
+              image={TestImage}
+              alt="Test Image"
+            />
+            <CardContent>
+              <Typography gutterBottom variant="h4" component="div">
+                £{listing.price}
+              </Typography>
+              <Typography gutterBottom variant="h6" component="div">
+                {listing.name}
+              </Typography>
+              <Typography gutterBottom component="div">
+                {listing.description ? listing.description : "This is a fake description while there is no description available. The item for sale is perfect, you should definetly buy it right now before it is too late. In fact fuck it i'm gonna buy it."}
+              </Typography>
+            </CardContent>
+            <Divider />
+            <List>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <StorefrontIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={`Sold by: ${listing.created_by_name}`} />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <ForwardIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={`Sent by: ${listing.sent_by_name}`} />
+                </ListItemButton>
+              </ListItem>
+            </List>
+            <AvailabilityCheckDialog open={open} onClose={handleClose} />
+          </Card>
+          <Stack spacing={2} mt={4}>
+            {owner === false && listing.active === "true" ? (
+              <Button
+                variant="contained"
+                onClick={handleOpen}
+                startIcon={<PaymentIcon />}
+              >
+                I want it
               </Button>
-            )}
-            {owner ? null : <Button size="small">Contact Seller</Button>}
-            <IconButton
-              onClick={() => {
-                sendListingToContacts(listing.listing_id);
-              }}
-              aria-label="share"
-            >
-              <ShareIcon />
-            </IconButton>
-          </CardActions>
-          {owner ? null : (
-            <Tooltip title={listing.sent_by_name} placement="bottom">
-              <Button>Who sent me this?</Button>
-            </Tooltip>
-          )}
-          <Divider />
-          <CardContent>
-            {owner && listing.purchase_text && (
-              <Box sx={{ mb: 2 }}>
-                <Typography gutterBottom variant="p" component="div">
-                  A customer has requested this item, their address details are
-                  below:
-                </Typography>
-                <Typography gutterBottom variant="h6" component="div">
-                  {listing.purchase_text}
-                </Typography>
-              </Box>
-            )}
-            {(owner && (listing.purchase_requested === true ||listing.purchase_requested === 'true')) && (
-              <Box sx={{ mt: 2 }}>
-                <Alert
-                  severity="info"
-                  action={
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => {
-                        handleMerchantConfirmation();
-                      }}
-                    >
-                      Confirm
-                    </Button>
-                  }
-                >
-                  Confirm you can send to this address
-                </Alert>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
+            ) : null}
+            <Button variant="outlined" endIcon={<SendIcon />}>
+              Contact Seller
+            </Button>
+          </Stack>
+        </div>
       ) : null}
     </div>
   );

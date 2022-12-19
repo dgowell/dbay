@@ -14,13 +14,9 @@ export function createListingTable() {
         "created_at" int not null,
         "wallet_address" varchar(80) not null,
         "active" boolean default TRUE,
-        "purchase_requested" boolean default FALSE,
         "purchase_text" varchar(1000),
         "customer_name" char(50),
         "customer_pk" varchar(330),
-        "merchant_confirmed" boolean default FALSE,
-        "payment_sent" boolean default FALSE,
-        "payment_received" boolean default FALSE,
         constraint UQ_timestamp_and_creator unique("created_at", "created_by_pk")
         )`;
 
@@ -155,36 +151,12 @@ function deactivateListing(id) {
     });
 }
 
-function setPurchaseRequested({createdAt, msg, customerName, customerPk}) {
-    const Q = `UPDATE ${LISTINGSTABLE} SET "purchase_requested"=TRUE, "purchase_text"='${msg}', "customer_name"='${customerName}', "customer_pk"='${customerPk}' WHERE "created_at"=${createdAt};`
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(Q, function (res) {
-            if (res.status) {
-                resolve(res);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
-function updatePurchaseRequested({ id }) {
-    const Q = `UPDATE ${LISTINGSTABLE} SET "purchase_requested"='TRUE' WHERE "listing_id"='${id}';`
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(Q, function (res) {
-            if (res.status) {
-                resolve(res);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
 
 function isActive(createdAt) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT "active" FROM ${LISTINGSTABLE} WHERE "created_at"='${createdAt}';`, function (res) {
             if (res.status) {
+                debugger;
                 resolve(res);
             } else {
                 reject(res.error);
@@ -193,9 +165,9 @@ function isActive(createdAt) {
     });
 }
 
-export function updateMerchantConfirmation(id) {
+export function updateMerchantConfirmation(createdAt) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "merchant_confirmed"='TRUE' WHERE "listing_id"='${id}';`, function (res) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "active"='TRUE' WHERE "created_at"='${createdAt}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {
@@ -232,24 +204,25 @@ export async function processListing(entity){
     //if yes get merchant to confirm that the product can be sent
     //by setting purchase_reuqest flag
     if (await isActive(entity.created_at)) {
-        setPurchaseRequested({
-            createdAt: entity.created_at,
-            msg: entity.message,
-            customerName: entity.customer_name,
-            customerPk: entity.customer_pk
-        }).then()
+
     } else {
         //send message to consumer that the product is no longer available
     }
  }
 
+  export async function processMerchantConfirmation(entity) {
+      if (await isActive(entity.created_at)) {
+
+      } else {
+          //send message to consumer that the product is no longer available
+      }
+  }
+
 
 /* This function hadles what happens when you purchase a listing */
 export function handlePurchase(listingId) {
-    //set listing to purchase_requested
-    updatePurchaseRequested({id: listingId}).then(()=>{
-        console.log("set purchase requested");
-    })
+    //set listing to purchuarse_requested
+
     //options:
     //1. remove the item from the listing
     //2. flag the item as purchased
