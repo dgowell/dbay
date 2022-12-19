@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { getListingById } from "../database/listing";
 import CardActions from "@mui/material/CardActions";
 import CardHeader from "@mui/material/CardHeader";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
@@ -32,6 +33,8 @@ import ListItemText from "@mui/material/ListItemText";
 import ForwardIcon from "@mui/icons-material/Forward";
 import SendIcon from "@mui/icons-material/Send";
 import PaymentIcon from "@mui/icons-material/Payment";
+import { DialogContent } from "@mui/material";
+import Box from "@mui/material/Box";
 
 
 const style = {
@@ -54,11 +57,18 @@ function AvailabilityCheckDialog(props) {
 
     return (
       <Dialog onClose={handleClose} open={open}>
-        <DialogTitle>Please wait one moment.</DialogTitle>
-        <Typography>We're checking if your item is available</Typography>
-        <Button onClick={handleClose}>
-          <CancelIcon/>
-        </Button>
+        <DialogContent>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <DialogTitle>Checking item availability</DialogTitle>
+            <CircularProgress />
+          </Box>
+        </DialogContent>
       </Dialog>
     );
 
