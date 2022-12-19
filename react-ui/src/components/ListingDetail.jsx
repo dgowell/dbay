@@ -57,6 +57,7 @@ function AvailabilityCheckDialog(props) {
 
     return (
       <Dialog onClose={handleClose} open={open}>
+        <DialogTitle>Checking item availability</DialogTitle>
         <DialogContent>
           <Box
             sx={{
@@ -65,7 +66,6 @@ function AvailabilityCheckDialog(props) {
               alignItems: "center",
             }}
           >
-            <DialogTitle>Checking item availability</DialogTitle>
             <CircularProgress />
           </Box>
         </DialogContent>

@@ -20,7 +20,11 @@ import { processMaximaEvent } from "./comms";
 import { getHostStore } from "./database/settings";
 import { setup } from "./database/index";
 import Purchases from "./pages/Purchases";
-
+import HomeIcon from "@mui/icons-material/Home";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import MailIcon from "@mui/icons-material/Mail";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 const theme = createTheme();
 
@@ -108,20 +112,32 @@ function App() {
                 <BottomNavigationAction
                   component={Link}
                   to="/"
-                  label="Marketplace"
-                  icon={<AppsIcon />}
+                  label="Home"
+                  icon={<HomeIcon />}
                 />
                 <BottomNavigationAction
                   component={Link}
-                  to="/my-store"
-                  label={`${store.name}'s Listings`}
-                  icon={<AppsIcon />}
+                  to="/"
+                  label="Favourites"
+                  icon={<FavoriteIcon />}
                 />
                 <BottomNavigationAction
                   component={Link}
-                  to="/purchases"
-                  label={`My Purchases`}
-                  icon={<AppsIcon />}
+                  to="/llisting/create"
+                  label="Sell"
+                  icon={<AddCircleIcon />}
+                />
+                <BottomNavigationAction
+                  component={Link}
+                  to="/"
+                  label="Inbox"
+                  icon={<MailIcon />}
+                />
+                <BottomNavigationAction
+                  component={Link}
+                  to="/"
+                  label="Me"
+                  icon={<AccountCircleIcon />}
                 />
               </BottomNavigation>
             </Paper>
