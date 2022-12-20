@@ -5,6 +5,8 @@ import {
     processListing,
     processAvailabilityCheck,
     getListingById,
+    updateStatus,
+    getStatus
 } from './database/listing';
 import {
     utf8ToHex,
@@ -123,9 +125,7 @@ export function getPublicKey() {
 }
 
 function processAvailabilityResponse(entity) {
-    if (entity.active) {
-
-    }
+    updateStatus(entity.listing_id, entity.status);
 }
 
 export function processMaximaEvent(msg) {
@@ -187,36 +187,44 @@ export function sendMoney({
     })
 }
 
+//funciotn that sends anavailablity check to the merchant node then checks the databse for an updated response
 export function checkAvailability({
     merchant,
     customerPk,
-    createdAt,
+    listingId
 }) {
+    const data = {
+        "type": "availability_check",
+        "listing_id": listingId,
+        "customer_pk": customerPk,
+    };
+
     return new Promise(function (resolve, reject) {
-        const data = {
-            "type": "availability_check",
-            "created_at": createdAt,
-            "customer_pk": customerPk,
-        };
-        send(data, merchant).then((res) => {
-            resolve(res);
-        }).catch(e => reject(e));
+        send(data, merchant).catch(e => reject(e));
+        const time = Date.now();
+        let interval = setInterval(() => {
+                getStatus(listingId).then((response) => {
+                    if (response){
+                        const listing = response.rows[0];
+                        if (listing.status === "available") {
+                            clearInterval(interval);
+                            resolve(true);
+                        } else if (listing.status === "unavailable") {
+                            clearInterval(interval);
+                            reject(false);
+                        }
+                    }
+                    //stop checking the db timeout
+                    if (time - Date.now() > 20000) {
+                        clearInterval(interval);
+                        reject("timeout");
+                    }
+                })
+            }, 2000); //every 2 seconds
     });
 }
 checkAvailability.propTypes = {
     merchant: PropTypes.string.isRequired,
     customerPk: PropTypes.string.isRequired,
-    createdAt: PropTypes.string.isRequired
-}
-
-export function sendMerchantConfirmation({customer, createdAt}) {
-    return new Promise(function (resolve, reject) {
-        const data = {
-            "type": "merchant_confirmation",
-            "created_at": createdAt,
-        };
-        send(data, customer).then((res) => {
-            resolve(res);
-        }).catch(e => reject(e));
-    });
+    listingId: PropTypes.string.isRequired
 }

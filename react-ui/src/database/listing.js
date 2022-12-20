@@ -19,7 +19,7 @@ export function createListingTable() {
         "purchase_text" varchar(1000),
         "customer_name" char(50),
         "customer_pk" varchar(330),
-        constraint UQ_timestamp_and_creator unique("created_at", "created_by_pk")
+        constraint UQ_listing_id unique("listing_id")
         )`;
 
     return new Promise((resolve, reject) => {
@@ -38,7 +38,7 @@ export function createListingTable() {
 /* adds a listing to the database */
 export function createListing({name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt}) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
-    const id = `${randomId}#${createdByPk}`;
+    const id = `${randomId}${createdByPk}`;
     const timestamp = Math.floor(Date.now()/1000);
 
     return new Promise(function (resolve, reject) {
@@ -155,9 +155,9 @@ export function getListingById(id) {
 }
 
 /* Updates the listing as instatus so that it can be taken off the listings page */
-function deactivateListing(id) {
+export function updateStatus(listing_id, status) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='' WHERE "listing_id"='${id}';`, function (res) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='${status}' WHERE "listing_id"='${listing_id}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {
@@ -171,9 +171,27 @@ function deactivateListing(id) {
 function isAvailable(listing_id) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res.status) {
-                resolve(res);
+            if (res.count === 1) {
+                const listing = res.rows[0];
+                if (listing.status === "unknown" || listing.status === "available") {
+                    resolve(true);
+                } else if (listing.status === "unavailable") {
+                    reject(false);
+                }
             } else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
+export function getStatus(listing_id) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listing_id}';`, function (res) {
+            if (res){
+                resolve(res);
+            }
+             else {
                 reject(res.error);
             }
         });
@@ -208,13 +226,17 @@ export async function processListing(entity){
         "status": "unavailable",
         "listing_id": entity.listing_id
     }
-    const available = await isAvailable(entity.listing_id);
-    if (available) {
-        data.status = true;
-    }
-    send(data, entity.customer_pk).then(e => {
-        console.log(e);
-    });
+    try {
+        const available = await isAvailable(entity.listing_id);
+        if (available) {
+            data.status = "available";
+        }
+        send(data, entity.customer_pk).then(e => {
+            console.error(e);
+        });
+    } catch (error) {
+        console.error(error);
+    };
  }
 
 /* This function hadles what happens when you purchase a listing */

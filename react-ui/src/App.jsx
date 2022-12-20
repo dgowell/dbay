@@ -15,6 +15,7 @@ import Marketplace from "./pages/Marketplace";
 import ListingDetail from "./components/ListingDetail";
 import ListingCreate from "./components/ListingCreate";
 import MyListingList from "./components/MyListingList";
+import ListingPurchase from "./pages/ListingPurchase";
 import { processMaximaEvent } from "./comms";
 import { getHost } from "./database/settings";
 import { setup } from "./database/index";
@@ -92,6 +93,7 @@ function App() {
               <Route exact path="/" element={<Marketplace />} />
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
+              <Route path="listing/:id/purchase" element={<ListingPurchase />} />
               <Route path="my-store/" element={<MyListingList />} />
               <Route path="purchases/" element={<Purchases />} />
               <Route path="*" element={<NoMatch />} />

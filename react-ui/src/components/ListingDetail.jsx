@@ -19,8 +19,6 @@ import { sendListingToContacts, checkAvailability } from "../comms";
 import { useNavigate } from "react-router";
 import { getContactAddress } from "../mds-helpers";
 import Divider from "@mui/material/Divider";
-import DialogTitle from "@mui/material/DialogTitle";
-import Dialog from "@mui/material/Dialog";
 import { Stack } from "@mui/system";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -31,46 +29,36 @@ import ListItemText from "@mui/material/ListItemText";
 import ForwardIcon from "@mui/icons-material/Forward";
 import SendIcon from "@mui/icons-material/Send";
 import PaymentIcon from "@mui/icons-material/Payment";
-import { DialogContent } from "@mui/material";
 import Box from "@mui/material/Box";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Fab from "@mui/material/Fab";
 
-function AvailabilityCheckDialog(props) {
-  const  { onClose, open } = props;
-    const handleClose = () => onClose();
-
-    return (
-      <Dialog onClose={handleClose} open={open}>
-        <DialogTitle>Checking item availability</DialogTitle>
-        <DialogContent>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        </DialogContent>
-      </Dialog>
-    );
-
+function AvailabilityCheckScreen() {
+  return (
+        <Box
+          sx={{
+            mt: 4,
+            gap: 4,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            verticalAlign: "middle"
+          }}
+        >Checking availability
+          <CircularProgress />
+        </Box>
+  );
 }
-AvailabilityCheckDialog.propTypes = {
+AvailabilityCheckScreen.propTypes = {
   onClose: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired,
-}
+};
 
 function ListingDetail() {
-  const [open, setOpen] = useState(false);
   const [listing, setListing] = useState();
   const [customerAddress, setCustomerAddress] = useState();
   const [customerName, setCustomerName] = useState();
-
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   const navigate = useNavigate();
   const params = useParams();
@@ -82,10 +70,10 @@ function ListingDetail() {
   }, [params.id]);
 
   useEffect(() => {
-    getContactAddress().then((address)=> {
+    getContactAddress().then((address) => {
       setCustomerAddress(address);
     });
-  },[]);
+  }, []);
 
   useEffect(() => {
     if (listing) {
@@ -95,100 +83,111 @@ function ListingDetail() {
     }
   }, [listing]);
 
-  function handleBuy(){
-    handleOpen();
+  function handleBuy() {
+    setCheckingAvailability(true);
     checkAvailability({
       merchant: listing.created_by_pk,
       customerPk: customerAddress,
-      createdAt: listing.created_at
-    }).then(res => {
-      if (res) {
-        handleClose();
+      listingId: listing.listing_id,
+    }).then((res) => {
+      if (res === true) {
+       alert("yay available");
+       navigate(`/listing/${listing.listing_id}/purchase`);
+      } else {
+        console.log("unavailable");
       }
     });
   }
 
-  function handleShare(){
+  function handleShare() {
     sendListingToContacts(listing.listing_id);
     //TODO:load pop top show that the listing has been shared
   }
 
-  return (
-    <div>
-      <Fab color="primary" aria-label="add">
-        <ArrowBackIcon />
-      </Fab>
-      {listing && customerAddress && customerName ? (
-        <div>
-          <Card sx={{ maxWidth: 345, marginTop: 2 }}>
-            <CardHeader
-              action={
-                <Tooltip title="Share to all your contacts" placement="top">
-                  <IconButton onClick={() => handleShare()} aria-label="share">
-                    <ShareIcon />
-                  </IconButton>
-                </Tooltip>
-              }
-            />
-            <CardMedia
-              component="img"
-              width="100%"
-              image={TestImage}
-              alt="Test Image"
-            />
-            <CardContent>
-              <Typography gutterBottom variant="h4" component="div">
-                £{listing.price}
-              </Typography>
-              <Typography gutterBottom variant="h6" component="div">
-                {listing.name}
-              </Typography>
-              <Typography gutterBottom component="div">
-                {listing.description
-                  ? listing.description
-                  : "This is a fake description while there is no description available. The item for sale is perfect, you should definetly buy it right now before it is too late. In fact fuck it i'm gonna buy it."}
-              </Typography>
-            </CardContent>
-            <Divider />
-            <List>
-              <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <StorefrontIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={`Sold by: ${listing.created_by_name}`}
-                  />
-                </ListItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <ForwardIcon />
-                  </ListItemIcon>
-                  <ListItemText primary={`Sent by: ${listing.sent_by_name}`} />
-                </ListItemButton>
-              </ListItem>
-            </List>
-            <AvailabilityCheckDialog open={open} onClose={handleClose} />
-          </Card>
-          <Stack spacing={2} mt={4}>
-            {listing.status === "unknown" ? (
-              <Button
-                variant="contained"
-                onClick={handleBuy}
-                startIcon={<PaymentIcon />}
-              >
-                I want it
+  if (checkingAvailability) {
+    return <AvailabilityCheckScreen />
+  } else {
+    return (
+      <div>
+        <Fab color="primary" aria-label="add">
+          <ArrowBackIcon />
+        </Fab>
+        {listing && customerAddress && customerName ? (
+          <div>
+            <Card sx={{ maxWidth: 345, marginTop: 2 }}>
+              <CardHeader
+                action={
+                  <Tooltip title="Share to all your contacts" placement="top">
+                    <IconButton
+                      onClick={() => handleShare()}
+                      aria-label="share"
+                    >
+                      <ShareIcon />
+                    </IconButton>
+                  </Tooltip>
+                }
+              />
+              <CardMedia
+                component="img"
+                width="100%"
+                image={TestImage}
+                alt="Test Image"
+              />
+              <CardContent>
+                <Typography gutterBottom variant="h4" component="div">
+                  £{listing.price}
+                </Typography>
+                <Typography gutterBottom variant="h6" component="div">
+                  {listing.name}
+                </Typography>
+                <Typography gutterBottom component="div">
+                  {listing.description
+                    ? listing.description
+                    : "This is a fake description while there is no description available. The item for sale is perfect, you should definetly buy it right now before it is too late. In fact fuck it i'm gonna buy it."}
+                </Typography>
+              </CardContent>
+              <Divider />
+              <List>
+                <ListItem disablePadding>
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <StorefrontIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`Sold by: ${listing.created_by_name}`}
+                    />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <ForwardIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`Sent by: ${listing.sent_by_name}`}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Card>
+            <Stack spacing={2} mt={4}>
+              {listing.status === "unknown" ? (
+                <Button
+                  variant="contained"
+                  onClick={handleBuy}
+                  startIcon={<PaymentIcon />}
+                >
+                  I want it
+                </Button>
+              ) : null}
+              <Button variant="outlined" endIcon={<SendIcon />}>
+                Contact Seller
               </Button>
-            ) : null}
-            <Button variant="outlined" endIcon={<SendIcon />}>
-              Contact Seller
-            </Button>
-          </Stack>
-        </div>
-      ) : null}
-    </div>
-  );
+            </Stack>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 }
 export default ListingDetail;
