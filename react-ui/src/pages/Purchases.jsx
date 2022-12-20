@@ -9,8 +9,8 @@ import IconButton from "@mui/material/IconButton";
 import AddIcon from "@mui/icons-material/Add";
 import ShareIcon from "@mui/icons-material/Share";
 import ListingCreate from "../components/ListingCreate";
-import { getInactiveListings } from "../database/listing";
-import { getHostStore } from "../database/settings";
+import { getUnavailableListings } from "../database/listing";
+import { getHost } from "../database/settings";
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -32,17 +32,17 @@ function Purchases() {
   });
 
   useEffect(() => {
-    getHostStore().then((host) => {
+    getHost().then((host) => {
       setStore({
-        storeName: host.host_store_name,
-        storeId: host.host_store_pubkey,
+        name: host.name,
+        pk: host.pk,
       });
     });
   }, []);
 
   useEffect(() => {
     if (store) {
-      getInactiveListings(store.storeId)
+      getUnavailableListings(store.storeId)
         .then((data) => {
           setListings(data);
           console.log(`results: ${data}`);

@@ -1,10 +1,12 @@
-import { getHostStore } from "./settings";
+import { getHost } from "./settings";
+import { send } from "../comms";
+import PropTypes from "prop-types";
 
 const LISTINGSTABLE = 'LISTING';
 
 export function createListingTable() {
     const Q = `create table if not exists ${LISTINGSTABLE} (
-        "listing_id" int auto_increment primary key,
+        "listing_id" varchar(343) primary key,
         "name" varchar(50) NOT NULL,
         "price" INT NOT NULL,
         "created_by_pk" varchar(330) NOT NULL,
@@ -13,7 +15,7 @@ export function createListingTable() {
         "sent_by_name" char(50),
         "created_at" int not null,
         "wallet_address" varchar(80) not null,
-        "active" boolean default TRUE,
+        "status" char(12) not null default 'unknown',
         "purchase_text" varchar(1000),
         "customer_name" char(50),
         "customer_pk" varchar(330),
@@ -35,30 +37,33 @@ export function createListingTable() {
 
 /* adds a listing to the database */
 export function createListing({name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt}) {
+    const randomId = Math.trunc(Math.random() * 10000000000000000);
+    const id = `${randomId}#${createdByPk}`;
     const timestamp = Math.floor(Date.now()/1000);
+
     return new Promise(function (resolve, reject) {
         let fullsql =`insert into ${LISTINGSTABLE}
         (
+            "listing_id",
             "name",
             "price",
             "created_by_pk",
             "created_by_name",
-            ${listingId ? '"listing_id",' : ''}
             ${sentByName ? '"sent_by_name",' : ''}
             ${sentByPk ? '"sent_by_pk",' : ''}
-            ${walletAddress ? '"wallet_address",' : ''}
+            "wallet_address",
             "created_at"
         )
 
         values(
+            ${listingId ? `'${listingId}',` : `'${id}',`}
             '${name}',
             '${price}',
             '${createdByPk}',
             '${createdByName}',
-            ${listingId ? `'${listingId}',` : ''}
             ${sentByName ? `'${sentByName}',` : ''}
             ${sentByPk ? `'${sentByPk}',` : ''}
-            ${walletAddress ? `'${walletAddress}',` : ''}
+            '${walletAddress}',
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
         );`;
 
@@ -73,6 +78,17 @@ export function createListing({name, price, createdByPk, createdByName, listingI
             }
         });
     });
+}
+createListing.propTypes = {
+    name: PropTypes.string.isRequired,
+    price: PropTypes.number.isRequired,
+    createdByPk: PropTypes.string.isRequired,
+    createdByName: PropTypes.string.isRequired,
+    listingId: PropTypes.string,
+    sentByName: PropTypes.string,
+    sentByPk: PropTypes.string,
+    walletAddress: PropTypes.string.isRequired,
+    createdAt: PropTypes.number
 }
 
 /* retrieves all listings */
@@ -91,7 +107,7 @@ export function getAllListings() {
 /* retrieves all listings */
 export function getListings(storeId) {
     const store = `"created_by_pk"='${storeId}' and`;
-    const Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where ${storeId ? `${store}` : ''} "active"='TRUE';`
+    const Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where ${storeId ? `${store}` : ''} "status"='unknown';`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
@@ -103,12 +119,12 @@ export function getListings(storeId) {
     });
 }
 
-export function getInactiveListings(storeId){
+export function getUnavailableListings(storeId){
     let Q;
     if (storeId) {
-        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "created_by_pk"='${storeId}' and "active"='FALSE';`
+        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "created_by_pk"='${storeId}' and "status"='unavailable';`
     } else {
-        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "active"='FALSE';`
+        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "status"='unavailable';`
     }
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
@@ -138,10 +154,10 @@ export function getListingById(id) {
     });
 }
 
-/* Updates the listing as inactive so that it can be taken off the listings page */
+/* Updates the listing as instatus so that it can be taken off the listings page */
 function deactivateListing(id) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "active"='FALSE' WHERE "listing_id"='${id}';`, function (res) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='' WHERE "listing_id"='${id}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {
@@ -152,22 +168,9 @@ function deactivateListing(id) {
 }
 
 
-function isActive(createdAt) {
+function isAvailable(listing_id) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "active" FROM ${LISTINGSTABLE} WHERE "created_at"='${createdAt}';`, function (res) {
-            if (res.status) {
-                debugger;
-                resolve(res);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
-export function updateMerchantConfirmation(createdAt) {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "active"='TRUE' WHERE "created_at"='${createdAt}';`, function (res) {
+        window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listing_id}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {
@@ -180,12 +183,13 @@ export function updateMerchantConfirmation(createdAt) {
 export async function processListing(entity){
 
     //check it's not one of your own
-    const host = await getHostStore();
-    if (host.host_store_pubkey === entity.created_by_pk){
+    const host = await getHost();
+    if (host.pk === entity.created_by_pk){
         return;
     }
 
     createListing({
+        listingId: entity.listing_id,
         name: entity.name,
         price: entity.price,
         createdByPk: entity.created_by_pk,
@@ -198,26 +202,20 @@ export async function processListing(entity){
         console.log(`Listing ${entity.name} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
 }
- export async function processPurchaseRequest(entity) {
-    //check product is active on merchant side
-    //if no return message sayting product is not active
-    //if yes get merchant to confirm that the product can be sent
-    //by setting purchase_reuqest flag
-    if (await isActive(entity.created_at)) {
-
-    } else {
-        //send message to consumer that the product is no longer available
+ export async function processAvailabilityCheck(entity) {
+    const data = {
+        "type": "availability_response",
+        "status": "unavailable",
+        "listing_id": entity.listing_id
     }
+    const available = await isAvailable(entity.listing_id);
+    if (available) {
+        data.status = true;
+    }
+    send(data, entity.customer_pk).then(e => {
+        console.log(e);
+    });
  }
-
-  export async function processMerchantConfirmation(entity) {
-      if (await isActive(entity.created_at)) {
-
-      } else {
-          //send message to consumer that the product is no longer available
-      }
-  }
-
 
 /* This function hadles what happens when you purchase a listing */
 export function handlePurchase(listingId) {

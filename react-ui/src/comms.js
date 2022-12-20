@@ -3,8 +3,7 @@
 */
 import {
     processListing,
-    processPurchaseRequest,
-    processMerchantConfirmation,
+    processAvailabilityCheck,
     getListingById,
 } from './database/listing';
 import {
@@ -12,22 +11,22 @@ import {
     hexToUtf8
 } from './utils';
 import {
-    getHostStore
+    getHost
 } from "./database/settings";
+import PropTypes from 'prop-types';
 
 const APPLICATION_NAME = 'stampd';
 
-
 export function sendListingToContacts(listingId) {
-    return Promise.all([getListingById(listingId), getContacts(), getHostStore()])
+    return Promise.all([getListingById(listingId), getContacts(), getHost()])
         .then(function (result) {
             let listing = result[0];
             const contacts = result[1];
             const host = result[2];
             listing.version = '0.1';
             listing.type = 'listing';
-            listing.sent_by_name = host.host_store_name;
-            listing.sent_by_pk = host.host_store_pubkey;
+            listing.sent_by_name = host.name;
+            listing.sent_by_pk = host.pk;
             contacts.forEach((contact) => send(listing, contact));
         })
         .catch((e) => {
@@ -123,6 +122,12 @@ export function getPublicKey() {
     })
 }
 
+function processAvailabilityResponse(entity) {
+    if (entity.active) {
+
+    }
+}
+
 export function processMaximaEvent(msg) {
 
     //Is it for us.. ?
@@ -147,11 +152,11 @@ export function processMaximaEvent(msg) {
 
     //determine if you're receiving a store or a listing
     switch (entity.type) {
-        case 'purchase_request':
-            processPurchaseRequest(entity);
+        case 'availability_check':
+            processAvailabilityCheck(entity);
             break;
-        case 'merchant_confirmation':
-            processMerchantConfirmation(entity);
+        case 'availability_response':
+            processAvailabilityResponse(entity);
             break;
         case 'listing':
             processListing(entity);
@@ -182,25 +187,26 @@ export function sendMoney({
     })
 }
 
-export function sendPurchaseRequest({
+export function checkAvailability({
     merchant,
-    message,
-    customerName,
     customerPk,
     createdAt,
 }) {
     return new Promise(function (resolve, reject) {
         const data = {
-            "type": "purchase_request",
+            "type": "availability_check",
             "created_at": createdAt,
-            "customer_name": customerName,
             "customer_pk": customerPk,
-            "message": message
         };
         send(data, merchant).then((res) => {
             resolve(res);
         }).catch(e => reject(e));
     });
+}
+checkAvailability.propTypes = {
+    merchant: PropTypes.string.isRequired,
+    customerPk: PropTypes.string.isRequired,
+    createdAt: PropTypes.string.isRequired
 }
 
 export function sendMerchantConfirmation({customer, createdAt}) {

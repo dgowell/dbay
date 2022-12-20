@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import { getListingById } from "../database/listing";
-import CardActions from "@mui/material/CardActions";
 import CardHeader from "@mui/material/CardHeader";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -15,14 +14,13 @@ import Card from "@mui/material/Card";
 import TestImage from "../assets/images/test.jpg";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
-import { getHostStore } from "../database/settings";
-import { sendListingToContacts } from "../comms";
+import { getHost } from "../database/settings";
+import { sendListingToContacts, checkAvailability } from "../comms";
 import { useNavigate } from "react-router";
 import { getContactAddress } from "../mds-helpers";
 import Divider from "@mui/material/Divider";
 import DialogTitle from "@mui/material/DialogTitle";
 import Dialog from "@mui/material/Dialog";
-import CancelIcon from "@mui/icons-material/Cancel";
 import { Stack } from "@mui/system";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -35,21 +33,8 @@ import SendIcon from "@mui/icons-material/Send";
 import PaymentIcon from "@mui/icons-material/Payment";
 import { DialogContent } from "@mui/material";
 import Box from "@mui/material/Box";
-
-
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-};
-
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import Fab from "@mui/material/Fab";
 
 function AvailabilityCheckDialog(props) {
   const  { onClose, open } = props;
@@ -81,7 +66,6 @@ AvailabilityCheckDialog.propTypes = {
 function ListingDetail() {
   const [open, setOpen] = useState(false);
   const [listing, setListing] = useState();
-  const [owner, setOwner] = useState(false);
   const [customerAddress, setCustomerAddress] = useState();
   const [customerName, setCustomerName] = useState();
 
@@ -105,15 +89,24 @@ function ListingDetail() {
 
   useEffect(() => {
     if (listing) {
-      getHostStore().then((host) => {
-        setCustomerName(host.host_store_name);
-        if (listing.created_by_pk === host.host_store_pubkey) {
-          setOwner(true);
-        }
+      getHost().then((host) => {
+        setCustomerName(host.name);
       });
     }
   }, [listing]);
 
+  function handleBuy(){
+    handleOpen();
+    checkAvailability({
+      merchant: listing.created_by_pk,
+      customerPk: customerAddress,
+      createdAt: listing.created_at
+    }).then(res => {
+      if (res) {
+        handleClose();
+      }
+    });
+  }
 
   function handleShare(){
     sendListingToContacts(listing.listing_id);
@@ -122,6 +115,9 @@ function ListingDetail() {
 
   return (
     <div>
+      <Fab color="primary" aria-label="add">
+        <ArrowBackIcon />
+      </Fab>
       {listing && customerAddress && customerName ? (
         <div>
           <Card sx={{ maxWidth: 345, marginTop: 2 }}>
@@ -148,7 +144,9 @@ function ListingDetail() {
                 {listing.name}
               </Typography>
               <Typography gutterBottom component="div">
-                {listing.description ? listing.description : "This is a fake description while there is no description available. The item for sale is perfect, you should definetly buy it right now before it is too late. In fact fuck it i'm gonna buy it."}
+                {listing.description
+                  ? listing.description
+                  : "This is a fake description while there is no description available. The item for sale is perfect, you should definetly buy it right now before it is too late. In fact fuck it i'm gonna buy it."}
               </Typography>
             </CardContent>
             <Divider />
@@ -158,7 +156,9 @@ function ListingDetail() {
                   <ListItemIcon>
                     <StorefrontIcon />
                   </ListItemIcon>
-                  <ListItemText primary={`Sold by: ${listing.created_by_name}`} />
+                  <ListItemText
+                    primary={`Sold by: ${listing.created_by_name}`}
+                  />
                 </ListItemButton>
               </ListItem>
               <ListItem disablePadding>
@@ -173,10 +173,10 @@ function ListingDetail() {
             <AvailabilityCheckDialog open={open} onClose={handleClose} />
           </Card>
           <Stack spacing={2} mt={4}>
-            {owner === false && listing.active === "true" ? (
+            {listing.status === "unknown" ? (
               <Button
                 variant="contained"
-                onClick={handleOpen}
+                onClick={handleBuy}
                 startIcon={<PaymentIcon />}
               >
                 I want it

@@ -2,10 +2,10 @@ const SETTINGSTABLE = 'SETTINGS';
 
 export function createSettingsTable() {
     const Q = `create table if not exists ${SETTINGSTABLE} (
-        "host_store_pubkey" varchar(330),
-        "host_store_name" varchar(50),
-        CONSTRAINT AK_host_store_name UNIQUE("host_store_name"),
-        CONSTRAINT AK_host_store_publickey UNIQUE("host_store_pubkey")
+        "pk" varchar(330),
+        "name" varchar(50),
+        CONSTRAINT AK_name UNIQUE("name"),
+        CONSTRAINT AK_pk UNIQUE("pk")
         )`;
 
     return new Promise((resolve, reject) => {
@@ -22,9 +22,9 @@ export function createSettingsTable() {
 }
 
 /* adds a setting to the database */
-export async function createStoreHost(name, storeId) {
+export async function createHost(name, pk) {
     return new Promise(function (resolve, reject) {
-        let fullsql = `insert into ${SETTINGSTABLE}("host_store_name", "host_store_pubkey") values('${name}', '${storeId}');`;
+        let fullsql = `insert into ${SETTINGSTABLE}("name", "pk") values('${name}', '${pk}');`;
         console.log(`Store added to settings: ${name}`);
         window.MDS.sql(fullsql, (res) => {
             if (res.status) {
@@ -37,9 +37,9 @@ export async function createStoreHost(name, storeId) {
 }
 
 /* returns store by pubkey */
-export function getHostStore() {
+export function getHost() {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`select "host_store_pubkey", "host_store_name" FROM SETTINGS;`, function (res) {
+        window.MDS.sql(`select "pk", "name" FROM SETTINGS;`, function (res) {
             if (res.status && res.count === 1) {
                 resolve(res.rows[0]);
             } else if (res.error.includes('Table \"SETTINGS\" not found')) {

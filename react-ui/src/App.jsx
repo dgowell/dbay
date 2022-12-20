@@ -6,7 +6,6 @@ import { Link, Route, Routes } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-import AppsIcon from "@mui/icons-material/Apps";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Container from "@mui/material/Container";
@@ -17,7 +16,7 @@ import ListingDetail from "./components/ListingDetail";
 import ListingCreate from "./components/ListingCreate";
 import MyListingList from "./components/MyListingList";
 import { processMaximaEvent } from "./comms";
-import { getHostStore } from "./database/settings";
+import { getHost } from "./database/settings";
 import { setup } from "./database/index";
 import Purchases from "./pages/Purchases";
 import HomeIcon from "@mui/icons-material/Home";
@@ -31,9 +30,9 @@ const theme = createTheme();
 function App() {
   const [activePage, setActivePage] = useState();
   const [initialised, setInitialised] = useState(false);
-  const [store, setStore] = useState({
+  const [host, setHost] = useState({
     "name" : '',
-    "pubkey" : ''
+    "pk" : ''
   });
 
   useEffect(() => {
@@ -42,27 +41,26 @@ function App() {
       if (msg.event === "inited") {
         if (!initialised) {
           try {
-            //check if store has been created
-            const hostStore = await getHostStore();
-            if (hostStore.host_store_name) {
-              //if the store has been created set it as the state
-                setStore({
-                  name: hostStore.host_store_name,
-                  pubkey: hostStore.host_store_pubkey,
+            //check if host details have been stored
+            const currentHost = await getHost();
+            if (currentHost.name) {
+                setHost({
+                  name: currentHost.name,
+                  pk: currentHost.pk,
                 });
               } else {
-                //if it has not been created, create
+                //store them
                 setup().then(function(res){
-                  setStore({
-                    "name": res.storeName,
-                    "pubkey": res.storePubkey
+                  setHost({
+                    "name": res.name,
+                    "pk": res.pk
                   });
                 });
               }
               setInitialised(true);
           }
           catch (e) {
-            console.log(`Couldn't get host store ${e}`);
+            console.log(`Couldn't get host info ${e}`);
           }
         }
       }
@@ -73,9 +71,9 @@ function App() {
         processMaximaEvent(msg);
       }
     });
-  }, [store, initialised]);
+  }, [host, initialised]);
 
-  if (store.name) {
+  if (host.name) {
     return (
       <ThemeProvider theme={theme}>
         <ResponsiveAppBar />
@@ -123,7 +121,7 @@ function App() {
                 />
                 <BottomNavigationAction
                   component={Link}
-                  to="/llisting/create"
+                  to="/listing/create"
                   label="Sell"
                   icon={<AddCircleIcon />}
                 />
@@ -148,7 +146,7 @@ function App() {
   }
   else {
     return (
-      <h2>No store created!</h2>
+      <h2>No Host stored!</h2>
     )
   }
 }

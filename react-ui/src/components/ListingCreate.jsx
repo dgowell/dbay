@@ -12,6 +12,7 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import { createListing } from "../database/listing";
 import Autocomplete from "@mui/material/Autocomplete";
 import { getAddress } from "../mds-helpers";
+import { getHost } from "../database/settings";
 
 const categories = [
   { category_id: 1, name: "Cat One" },
@@ -21,9 +22,10 @@ const categories = [
   { category_id: 5, name: "Cat Five" },
 ];
 
-export default function ListingCreate({ storeId, storeName }) {
+export default function ListingCreate() {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [host, setHost] = useState();
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
@@ -32,6 +34,12 @@ export default function ListingCreate({ storeId, storeName }) {
   const [walletAddress, setWalletAddress] = useState("");
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    getHost().then((host) => {
+      setHost(host);
+    });
+  },[]);
 
   useEffect(() => {
     async function getWalletAddress() {
@@ -58,8 +66,8 @@ export default function ListingCreate({ storeId, storeName }) {
     createListing({
       name: newListing.name,
       price: newListing.asking_price,
-      createdByPk: storeId,
-      createdByName: storeName,
+      createdByPk: host.pk,
+      createdByName: host.name,
       walletAddress: walletAddress,
     })
       .then((result) => {
@@ -72,7 +80,7 @@ export default function ListingCreate({ storeId, storeName }) {
     setLoading(false);
   }
 
-  if (walletAddress) {
+  if (walletAddress && host) {
     // This following section will display the form that takes the input from the user.
     return (
       <Box

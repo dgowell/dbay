@@ -10,7 +10,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ShareIcon from "@mui/icons-material/Share";
 import ListingCreate from "./ListingCreate";
 import { getListings } from "../database/listing";
-import {  getHostStore } from "../database/settings";
+import {  getHost } from "../database/settings";
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -32,10 +32,10 @@ function MyListingList() {
   });
 
   useEffect(() => {
-    getHostStore().then((host) => {
+    getHost().then((host) => {
       setStore({
-        storeName: host.host_store_name,
-        storeId: host.host_store_pubkey,
+        name: host.name,
+        pk: host.pk,
       });
     });
   },[]);

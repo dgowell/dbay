@@ -3,7 +3,7 @@ import {
 } from "./listing";
 import {
     createSettingsTable,
-    createStoreHost
+    createHost
 } from "./settings";
 import {
     getPublicKey,
@@ -22,7 +22,7 @@ export async function setup() {
     return new Promise((resolve, reject) => {
         createListingTable().then(() => {
             createSettingsTable().then(() => {
-                createStoreHost(storeName, storeId).then(() => {
+                createHost(storeName, storeId).then(() => {
                     resolve({
                         storeName,
                         storeId
