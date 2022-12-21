@@ -7,12 +7,14 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import { getListingById } from '../database/listing';
-
+import { useNavigate } from "react-router";
+import { sendMoney, sendDeliveryAddress } from "../comms";
 
 function ListingPurchase(props) {
     const [listing, setListing] = useState();
     const [message, setMessage] = useState('Hello this is a great message');
     const params = useParams();
+    const navigate = useNavigate();
 
       useEffect(() => {
         getListingById(params.id).then(function (result) {
@@ -20,8 +22,23 @@ function ListingPurchase(props) {
         });
       }, [params.id]);
 
-      const handleClose = () => console.log("close");
-      const handleSend = () => console.log("send");
+      const handleClose = () => alert("Buy it! you know you want it!");
+      const handleSend = () => {
+        //send address to to merchant
+        sendDeliveryAddress({merchant: listing.created_by_pk, address: message}).then(
+          sendMoney({
+            walletAddress: listing.wallet_address,
+            amount: listing.price,
+          }).then((res) => {
+            if (res) {
+              navigate("/payment-success");
+            }
+          }).catch((error) => {
+            console.error(error)
+          })
+        );
+        //send money to merchant
+      }
        const handleMessageChange = (event) => {
          setMessage(event.target.value);
        };

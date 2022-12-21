@@ -16,6 +16,7 @@ import ListingDetail from "./components/ListingDetail";
 import ListingCreate from "./components/ListingCreate";
 import MyListingList from "./components/MyListingList";
 import ListingPurchase from "./pages/ListingPurchase";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import { processMaximaEvent } from "./comms";
 import { getHost } from "./database/settings";
 import { setup } from "./database/index";
@@ -96,6 +97,7 @@ function App() {
               <Route path="listing/:id/purchase" element={<ListingPurchase />} />
               <Route path="my-store/" element={<MyListingList />} />
               <Route path="purchases/" element={<Purchases />} />
+              <Route path="payment-success/" element={<PaymentSuccess />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <Paper

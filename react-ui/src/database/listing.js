@@ -16,7 +16,7 @@ export function createListingTable() {
         "created_at" int not null,
         "wallet_address" varchar(80) not null,
         "status" char(12) not null default 'unknown',
-        "purchase_text" varchar(1000),
+        "customer_message" varchar(1000),
         "customer_name" char(50),
         "customer_pk" varchar(330),
         constraint UQ_listing_id unique("listing_id")
@@ -158,6 +158,18 @@ export function getListingById(id) {
 export function updateStatus(listing_id, status) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='${status}' WHERE "listing_id"='${listing_id}';`, function (res) {
+            if (res.status) {
+                resolve(res);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
+export function updateCustomerMessage(listing_id, message) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "customer_message"='${message}' WHERE "listing_id"='${listing_id}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {

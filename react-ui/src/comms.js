@@ -4,6 +4,7 @@
 import {
     processListing,
     processAvailabilityCheck,
+    updateCustomerMessage,
     getListingById,
     updateStatus,
     getStatus
@@ -161,6 +162,9 @@ export function processMaximaEvent(msg) {
         case 'listing':
             processListing(entity);
             break;
+        case 'add_delivery_address':
+            updateCustomerMessage(entity.listing_id, entity.address);
+            break;
         default:
             console.log(entity);
     }
@@ -187,6 +191,26 @@ export function sendMoney({
     })
 }
 
+export function sendDeliveryAddress({
+    merchant,
+    address,
+    listing_id
+}) {
+    return new Promise(function (resolve, reject) {
+        const data = {
+            "type": "add_delivery_address",
+            "address": address,
+            "listing_id": listing_id
+        }
+        send(data, merchant).then(e => {
+            resolve(true);
+        }).catch(reject());
+    })
+}
+sendDeliveryAddress.proptypes = {
+    merchant: PropTypes.string.isRequired,
+    address: PropTypes.string.isRequired
+}
 //funciotn that sends anavailablity check to the merchant node then checks the databse for an updated response
 export function checkAvailability({
     merchant,
@@ -203,24 +227,24 @@ export function checkAvailability({
         send(data, merchant).catch(e => reject(e));
         const time = Date.now();
         let interval = setInterval(() => {
-                getStatus(listingId).then((response) => {
-                    if (response){
-                        const listing = response.rows[0];
-                        if (listing.status === "available") {
-                            clearInterval(interval);
-                            resolve(true);
-                        } else if (listing.status === "unavailable") {
-                            clearInterval(interval);
-                            reject(false);
-                        }
-                    }
-                    //stop checking the db timeout
-                    if (time - Date.now() > 20000) {
+            getStatus(listingId).then((response) => {
+                if (response) {
+                    const listing = response.rows[0];
+                    if (listing.status === "available") {
                         clearInterval(interval);
-                        reject("timeout");
+                        resolve(true);
+                    } else if (listing.status === "unavailable") {
+                        clearInterval(interval);
+                        reject(false);
                     }
-                })
-            }, 2000); //every 2 seconds
+                }
+                //stop checking the db timeout
+                if (time - Date.now() > 20000) {
+                    clearInterval(interval);
+                    reject("timeout");
+                }
+            })
+        }, 2000); //every 2 seconds
     });
 }
 checkAvailability.propTypes = {
