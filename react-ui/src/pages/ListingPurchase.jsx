@@ -62,10 +62,13 @@ function ListingPurchase(props) {
     return (
       <Box sx={{
         pt: 2,
-        height:'100%',
-        width: '100%'
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
-        <Button onClick={handleBack}><ArrowBackIcon /></Button>
+        <Box mb={4} >
+          <Button onClick={handleBack}><ArrowBackIcon /></Button>
+        </Box>
         <List>
           <ListItem>
             <ListItemIcon>
@@ -100,8 +103,6 @@ function ListingPurchase(props) {
           m={1}
           display="flex"
           justifyContent="center"
-          alignItems="bottom"
-        
         >
           <Button onClick={handleSend} variant="contained">
             Pay & Confirm
