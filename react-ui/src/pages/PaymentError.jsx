@@ -1,10 +1,10 @@
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { useNavigate } from "react-router";
 
-function PaymentSuccess() {
+function PaymentError() {
     const navigate = useNavigate();
 
     function handleClick() {
@@ -18,10 +18,10 @@ function PaymentSuccess() {
             width: '100%',
             backgroundColor: '#D9D9D9'
         }}>
-            <Typography>Payment Successful</Typography>
-            <CheckCircleIcon color="success"/>
+            <Typography>Something went wrong, please try again</Typography>
+            <CancelIcon color="error"/>
             <Button variant="outlined" onClick={handleClick}>Home</Button>
         </Box>
     )
 }
-export default PaymentSuccess;
+export default PaymentError;
