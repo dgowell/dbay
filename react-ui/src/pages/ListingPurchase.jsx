@@ -3,27 +3,25 @@ import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
+import LoadingButton from '@mui/lab/LoadingButton';
 import { getListingById } from '../database/listing';
 import { useNavigate } from "react-router";
 import { sendMoney, sendDeliveryAddress } from "../comms";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Avatar from '@mui/material/Avatar';
 import ImageIcon from '@mui/icons-material/Image';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
-
+import BackButton from '../components/BackButton';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const params = useParams();
   const navigate = useNavigate();
 
@@ -34,6 +32,7 @@ function ListingPurchase(props) {
   }, [params.id]);
 
   const handleSend = () => {
+    setLoading(true);
     //send address to to merchant
     sendDeliveryAddress({ merchant: listing.created_by_pk, address: message }).then(
       sendMoney({
@@ -48,15 +47,13 @@ function ListingPurchase(props) {
         console.error(error)
       })
     );
-    //send money to merchant
+    setLoading(false);
   }
   const handleMessageChange = (event) => {
     setMessage(event.target.value);
   };
 
-  const handleBack = () => {
-    navigate(`/listing/${listing.listing_id}`);
-  }
+  
 
   if (listing) {
     return (
@@ -67,7 +64,7 @@ function ListingPurchase(props) {
         flexDirection: 'column',
       }}>
         <Box mb={4} >
-          <Button onClick={handleBack}><ArrowBackIcon /></Button>
+          <BackButton route={`/listing/${listing.listing_id}`} />
         </Box>
         <List>
           <ListItem>
@@ -104,9 +101,9 @@ function ListingPurchase(props) {
           display="flex"
           justifyContent="center"
         >
-          <Button onClick={handleSend} variant="contained">
+          <LoadingButton loading={loading} onClick={handleSend} variant="contained">
             Pay & Confirm
-          </Button>
+          </LoadingButton>
         </Box>
       </Box>
     );

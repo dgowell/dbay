@@ -57,11 +57,11 @@ export function send(data, publickey) {
         window.MDS.cmd(fullfunc, function (resp) {
             if (resp.status === false) {
                 reject(resp.error);
-                alert(resp.error);
+                console.error(resp.error);
                 window.MDS.log(JSON.stringify(resp));
             } else if (resp.response.delivered === false) {
                 reject(resp.response.error);
-                alert(resp.response.error);
+                console.error(resp.response.error);
                 window.MDS.log(JSON.stringify(resp));
             } else if (resp.status === true) {
                 resolve(true);

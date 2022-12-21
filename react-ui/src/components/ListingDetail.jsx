@@ -30,8 +30,7 @@ import ForwardIcon from "@mui/icons-material/Forward";
 import SendIcon from "@mui/icons-material/Send";
 import PaymentIcon from "@mui/icons-material/Payment";
 import Box from "@mui/material/Box";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Fab from "@mui/material/Fab";
+import BackButton from "./BackButton";
 
 function AvailabilityCheckScreen() {
   return (
@@ -109,9 +108,7 @@ function ListingDetail() {
   } else {
     return (
       <div>
-        <Fab color="primary" aria-label="add">
-          <ArrowBackIcon />
-        </Fab>
+        <BackButton route={'/'} />
         {listing && customerAddress && customerName ? (
           <div>
             <Card sx={{ maxWidth: 345, marginTop: 2 }}>

@@ -71,10 +71,11 @@ export function createListing({name, price, createdByPk, createdByName, listingI
         window.MDS.sql(fullsql, (res) => {
             window.MDS.log(`MDS.SQL, ${fullsql}`);
             if (res.status) {
-                resolve(true);
+                resolve(listingId ? listingId : id);
             } else {
                 reject(res.error);
-                window.MDS.log(`MDS.SQL ERROR, ${res.error}}`);
+                window.MDS.log(`MDS.SQL ERROR, could not create listing ${res.error}}`);
+                console.error(`MDS.SQL ERROR, could not create listing ${res.error}}`);
             }
         });
     });

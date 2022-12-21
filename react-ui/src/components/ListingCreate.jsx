@@ -13,6 +13,10 @@ import { createListing } from "../database/listing";
 import Autocomplete from "@mui/material/Autocomplete";
 import { getAddress } from "../mds-helpers";
 import { getHost } from "../database/settings";
+import { sendListingToContacts } from '../comms';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+
 
 const categories = [
   { category_id: 1, name: "Cat One" },
@@ -26,6 +30,9 @@ export default function ListingCreate() {
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [host, setHost] = useState();
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [showHome, setShowHome] = useState(null);
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
@@ -59,6 +66,7 @@ export default function ListingCreate() {
   async function onSubmit(e) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...form };
@@ -70,14 +78,24 @@ export default function ListingCreate() {
       createdByName: host.name,
       walletAddress: walletAddress,
     })
-      .then((result) => {
-        console.log(`Listing added: ${result}`);
-      })
-      .catch((e) => console.error(e));
+      .then((listingId) => {
+        console.log(`Listing successfully added: ${listingId}`);
+        sendListingToContacts(listingId).then((res) => {
+          setLoading(false);
+          setForm({ name: "", asking_price: "", category: categories[0] });
+          setSuccess(true);
+          setShowHome(true);
+        });
 
-    setForm({ name: "", asking_price: "", category: categories[0] });
-    navigate("/");
-    setLoading(false);
+      })
+      .catch((e) => {
+        setError('Could not create listing');
+        setLoading(false);
+      });
+  }
+
+  const handleGoHome = () => {
+    navigate('/');
   }
 
   if (walletAddress && host) {
@@ -113,7 +131,7 @@ export default function ListingCreate() {
                 name="title"
                 value={form.name}
                 onChange={(e) => updateForm({ name: e.target.value })}
-                ariant="outlined"
+                variant="outlined"
               />
             </Grid>
             <Grid item xs={12}>
@@ -161,8 +179,14 @@ export default function ListingCreate() {
             loadingPosition="end"
             sx={{ mt: 3, mb: 2 }}
           >
-            Submit
+            Publish
           </LoadingButton>
+          {error ? <Alert severity="error">{error}</Alert> : null}
+          {success ? <Alert action={
+            <Button color="inherit" size="small" onClick={handleGoHome}>
+              OK
+            </Button>
+          } severity="success">Listing created and shared!</Alert> : null}
         </Box>
       </Box>
     );
