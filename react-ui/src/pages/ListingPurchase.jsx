@@ -17,10 +17,12 @@ import Avatar from '@mui/material/Avatar';
 import ImageIcon from '@mui/icons-material/Image';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import BackButton from '../components/BackButton';
+import Alert from '@mui/material/Alert';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
   const [message, setMessage] = useState('');
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const params = useParams();
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ function ListingPurchase(props) {
 
   const handleSend = () => {
     setLoading(true);
+    setError(false);
     //send address to to merchant
     sendDeliveryAddress({ merchant: listing.created_by_pk, address: message }).then(
       sendMoney({
@@ -43,7 +46,8 @@ function ListingPurchase(props) {
           navigate("/payment-success");
         }
       }).catch((error) => {
-        navigate("payment-error");
+        setError(error);
+        navigate("/payment-error");
         console.error(error)
       })
     );
@@ -52,8 +56,6 @@ function ListingPurchase(props) {
   const handleMessageChange = (event) => {
     setMessage(event.target.value);
   };
-
-  
 
   if (listing) {
     return (
@@ -66,6 +68,7 @@ function ListingPurchase(props) {
         <Box mb={4} >
           <BackButton route={`/listing/${listing.listing_id}`} />
         </Box>
+        {error ? <Alert severity="error">{error}</Alert> : null}
         <List>
           <ListItem>
             <ListItemIcon>
@@ -101,7 +104,7 @@ function ListingPurchase(props) {
           display="flex"
           justifyContent="center"
         >
-          <LoadingButton loading={loading} onClick={handleSend} variant="contained">
+          <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
             Pay & Confirm
           </LoadingButton>
         </Box>

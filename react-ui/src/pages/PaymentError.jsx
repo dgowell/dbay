@@ -13,14 +13,38 @@ function PaymentError() {
 
     return (
         <Box sx={{
-            justifyContent: 'center',
-            alignContent: 'space-between',
-            width: '100%',
-            backgroundColor: '#D9D9D9'
+            mt: 4,
+            pt: 16,
+            height: '100%',
+            minHeight: '70vh',
+            display: 'flex',
+            flexDirection: 'column',
+
         }}>
-            <Typography>Something went wrong, please try again</Typography>
-            <CancelIcon color="error"/>
-            <Button variant="outlined" onClick={handleClick}>Home</Button>
+            <Box
+                m={1}
+                display="flex"
+                justifyContent="center"
+            >
+                <CancelIcon color="error" />
+            </Box>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignSelf: 'center'
+            }} >
+                <Typography>Something went wrong, payment failed!</Typography>
+            </Box>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                height: 60,
+                flex: 1
+            }} >
+                <Button variant="outlined" onClick={handleClick}>Home</Button>
+            </Box>
         </Box>
     )
 }

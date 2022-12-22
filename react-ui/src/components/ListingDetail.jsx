@@ -90,7 +90,6 @@ function ListingDetail() {
       listingId: listing.listing_id,
     }).then((res) => {
       if (res === true) {
-       alert("yay available");
        navigate(`/listing/${listing.listing_id}/purchase`);
       } else {
         console.log("unavailable");
