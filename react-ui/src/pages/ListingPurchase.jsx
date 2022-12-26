@@ -41,6 +41,7 @@ function ListingPurchase(props) {
       sendMoney({
         walletAddress: listing.wallet_address,
         amount: listing.price,
+        purchaseCode: listing.purchase_code
       }).then((res) => {
         if (res) {
           navigate("/payment-success");

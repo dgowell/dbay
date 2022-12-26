@@ -18,7 +18,7 @@ import MyListingList from "./components/MyListingList";
 import ListingPurchase from "./pages/ListingPurchase";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentError from "./pages/PaymentError";
-import { processMaximaEvent } from "./comms";
+import { processMaximaEvent, processNewBlock } from "./comms";
 import { getHost } from "./database/settings";
 import { setup } from "./database/index";
 import Purchases from "./pages/Purchases";
@@ -32,51 +32,50 @@ const theme = createTheme();
 
 function App() {
   const [activePage, setActivePage] = useState();
-  const [initialised, setInitialised] = useState(false);
   const [host, setHost] = useState({
-    "name" : '',
-    "pk" : ''
+    "name": '',
+    "pk": ''
   });
 
-  useEffect(() => {
-    window.MDS.init(async function (msg) {
-      //Do initialisation
-      if (msg.event === "inited") {
-        if (!initialised) {
-          try {
-            //check if host details have been stored
-            const currentHost = await getHost();
-            if (currentHost.name) {
-                setHost({
-                  name: currentHost.name,
-                  pk: currentHost.pk,
-                });
-              } else {
-                //store them
-                setup().then(function(res){
-                  setHost({
-                    "name": res.name,
-                    "pk": res.pk
-                  });
-                });
-              }
-              setInitialised(true);
-          }
-          catch (e) {
-            console.log(`Couldn't get host info ${e}`);
-          }
-        }
-      }
-      if (msg.event === "MAXIMA") {
-        console.log(`recieved maxima message:${JSON.stringify(msg)}`);
 
-        //Process this message
-        processMaximaEvent(msg);
+  async function intialise() {
+    try {
+      await setup();
+    }
+    catch (e) {
+      console.log(`Setup failed! ${e}`);
+    }
+    getHost().then(res => {
+      setHost({
+        'name': res.name,
+        'pk': res.pk
+      });
+    }).catch((e) => console.error(e));
+  }
+
+  useEffect(() => {
+    window.MDS.init(function (msg) {
+      //take action depending on what type of event comes in
+      switch (msg.event) {
+        case "inited":
+          if (host.name === '') {
+            intialise();
+          }
+          break;
+        case "MAXIMA":
+          //console.log(`recieved maxima message:${JSON.stringify(msg)}`);
+          processMaximaEvent(msg);
+          break;
+        case "NEWBLOCK":
+          processNewBlock(msg.data);
+          break;
+        default:
+          //console.log(msg.event);
       }
     });
-  }, [host, initialised]);
+  }, [host.name]);
 
-  if (host.name) {
+  if (host.name !== '') {
     return (
       <ThemeProvider theme={theme}>
         <ResponsiveAppBar />

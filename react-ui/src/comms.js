@@ -4,18 +4,15 @@
 import {
     processListing,
     processAvailabilityCheck,
+    getListingByPurchaseCode,
     updateCustomerMessage,
+    updateListing,
     getListingById,
     updateStatus,
     getStatus
 } from './database/listing';
-import {
-    utf8ToHex,
-    hexToUtf8
-} from './utils';
-import {
-    getHost
-} from "./database/settings";
+import { utf8ToHex, hexToUtf8 } from './utils';
+import { getHost } from "./database/settings";
 import PropTypes from 'prop-types';
 
 const APPLICATION_NAME = 'stampd';
@@ -126,7 +123,9 @@ export function getPublicKey() {
 }
 
 function processAvailabilityResponse(entity) {
+    console.log("processing availability response...");
     updateStatus(entity.listing_id, entity.status);
+    updateListing(entity.listing_id, "purchase_code", entity.purchase_code);
 }
 
 export function processMaximaEvent(msg) {
@@ -154,15 +153,19 @@ export function processMaximaEvent(msg) {
     //determine if you're receiving a store or a listing
     switch (entity.type) {
         case 'availability_check':
+            //cusatomer sends mercahnt a check for availability
             processAvailabilityCheck(entity);
             break;
         case 'availability_response':
+            //merchant respond to customer
             processAvailabilityResponse(entity);
             break;
         case 'listing':
+            //user has sent another user a listing
             processListing(entity);
             break;
         case 'add_delivery_address':
+            //customer sends merchant their address
             updateCustomerMessage(entity.listing_id, entity.address);
             break;
         default:
@@ -174,13 +177,15 @@ export function processMaximaEvent(msg) {
 
 export function sendMoney({
     walletAddress,
-    amount
+    amount,
+    purchaseCode
 }) {
-    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount}`;
+    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} state:{"0":"[${purchaseCode}]"}`;
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
         window.MDS.cmd(Q, function (res) {
             if (res.status) {
+                console.log(`sent ${amount} to ${walletAddress} with state code ${purchaseCode} succesfully!`);
                 resolve(res);
             } else if (res.message) {
                 reject(res.message);
@@ -190,12 +195,13 @@ export function sendMoney({
         })
     })
 }
+sendMoney.propTypes = {
+    walletAddress: PropTypes.string.isRequired,
+    amount: PropTypes.number.isRequired,
+    purchaseCode: PropTypes.string.isRequired
+}
 
-export function sendDeliveryAddress({
-    merchant,
-    address,
-    listing_id
-}) {
+export function sendDeliveryAddress({ merchant, address, listing_id }) {
     return new Promise(function (resolve, reject) {
         const data = {
             "type": "add_delivery_address",
@@ -203,6 +209,7 @@ export function sendDeliveryAddress({
             "listing_id": listing_id
         }
         send(data, merchant).then(e => {
+            console.log(`sent delivery address to seller: ${address}`);
             resolve(true);
         }).catch(reject());
     })
@@ -211,7 +218,8 @@ sendDeliveryAddress.proptypes = {
     merchant: PropTypes.string.isRequired,
     address: PropTypes.string.isRequired
 }
-//funciotn that sends anavailablity check to the merchant node then checks the databse for an updated response
+
+//sends availablity check to the merchant node then checks the databse for an updated response
 export function checkAvailability({
     merchant,
     customerPk,
@@ -222,7 +230,7 @@ export function checkAvailability({
         "listing_id": listingId,
         "customer_pk": customerPk,
     };
-
+    console.log(`checking availability ${listingId} for customer: ${customerPk}`);
     return new Promise(function (resolve, reject) {
         send(data, merchant).catch(e => reject(e));
         const time = Date.now();
@@ -251,4 +259,26 @@ checkAvailability.propTypes = {
     merchant: PropTypes.string.isRequired,
     customerPk: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired
+}
+
+
+export function processNewBlock(data) {
+    try {
+        //get the code and transaction amount
+        let purchaseCode = data.txpow.body.txn.state[0].data;
+        purchaseCode = purchaseCode.replace('[', '');
+        purchaseCode = purchaseCode.replace(']', '');
+        console.log(`Purchase Code: ${purchaseCode}`);
+        const txnAmount = data.txpow.body.txn.outputs[0].amount;
+        console.log(`Purchase Code: ${txnAmount}`);
+        //check if the seller has a listing that matches these values
+        getListingByPurchaseCode(purchaseCode).then((listing) => {
+            //check the amount is the same
+            if (listing.price === txnAmount) {
+                console.log(`A buyer has paid for your item: ${listing.name}`);
+            }
+        }).catch((e) => console.error(`Check purchase code failed: ${e}`))
+    } catch {
+        //console.error("No purchase code data attached to event");
+    }
 }

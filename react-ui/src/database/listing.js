@@ -1,6 +1,8 @@
 import { getHost } from "./settings";
 import { send } from "../comms";
 import PropTypes from "prop-types";
+import { generate } from '@wcj/generate-password';
+
 
 const LISTINGSTABLE = 'LISTING';
 
@@ -19,13 +21,14 @@ export function createListingTable() {
         "customer_message" varchar(1000),
         "customer_name" char(50),
         "customer_pk" varchar(330),
+        "purchase_code" varchar(30),
         constraint UQ_listing_id unique("listing_id")
         )`;
 
     return new Promise((resolve, reject) => {
         window.MDS.sql(Q, function (res) {
-             window.MDS.log(`MDS.SQL, ${Q}`);
-             console.log(res);
+            window.MDS.log(`MDS.SQL, ${Q}`);
+            console.log(res);
             if (res.status) {
                 resolve(true)
             } else {
@@ -36,13 +39,13 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt}) {
+export function createListing({ name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt }) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
     const id = `${randomId}${createdByPk}`;
-    const timestamp = Math.floor(Date.now()/1000);
+    const timestamp = Math.floor(Date.now() / 1000);
 
     return new Promise(function (resolve, reject) {
-        let fullsql =`insert into ${LISTINGSTABLE}
+        let fullsql = `insert into ${LISTINGSTABLE}
         (
             "listing_id",
             "name",
@@ -120,7 +123,7 @@ export function getListings(storeId) {
     });
 }
 
-export function getUnavailableListings(storeId){
+export function getUnavailableListings(storeId) {
     let Q;
     if (storeId) {
         Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "created_by_pk"='${storeId}' and "status"='unavailable';`
@@ -180,6 +183,17 @@ export function updateCustomerMessage(listing_id, message) {
     });
 }
 
+export function updateListing(listing_id, key, value) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listing_id}';`, function (res) {
+            if (res.status) {
+                resolve(res);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
 
 function isAvailable(listing_id) {
     return new Promise(function (resolve, reject) {
@@ -201,21 +215,34 @@ function isAvailable(listing_id) {
 export function getStatus(listing_id) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res){
+            if (res) {
                 resolve(res);
             }
-             else {
+            else {
                 reject(res.error);
             }
         });
     });
 }
 
-export async function processListing(entity){
+export function getListingByPurchaseCode(purchaseCode) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "purchase_code"='${purchaseCode}';`, function (res) {
+            if (res.status && res.count === 1) {
+                resolve(res.rows[0]);
+            }
+            else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
+export async function processListing(entity) {
 
     //check it's not one of your own
     const host = await getHost();
-    if (host.pk === entity.created_by_pk){
+    if (host.pk === entity.created_by_pk) {
         return;
     }
 
@@ -233,7 +260,7 @@ export async function processListing(entity){
         console.log(`Listing ${entity.name} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
 }
- export async function processAvailabilityCheck(entity) {
+export async function processAvailabilityCheck(entity) {
     const data = {
         "type": "availability_response",
         "status": "unavailable",
@@ -244,13 +271,17 @@ export async function processListing(entity){
         if (available) {
             data.status = "available";
         }
+        const purchaseCode = generatePurchaseCode();
+        data.purchase_code = purchaseCode;
         send(data, entity.customer_pk).then(e => {
             console.error(e);
+            updateListing(entity.listing_id, "purchase_code", purchaseCode)
+            .catch((e) => console.error(e));
         });
     } catch (error) {
         console.error(error);
     };
- }
+}
 
 /* This function hadles what happens when you purchase a listing */
 export function handlePurchase(listingId) {
@@ -264,4 +295,8 @@ export function handlePurchase(listingId) {
     //    console.log(r);
     //})
 
+}
+
+function generatePurchaseCode() {
+    return generate({ length: 20, special: false });
 }

@@ -51,4 +51,16 @@ export function getHost() {
     });
 }
 
-
+export function checkTableExists(tableName) {
+    const Q = `SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo'
+               AND TABLE_NAME = '${tableName}';`;
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(Q, function (res) {
+            if (res.status && res.results) {
+                resolve(true);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}

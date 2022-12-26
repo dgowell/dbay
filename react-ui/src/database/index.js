@@ -20,14 +20,24 @@ export async function setup() {
 
     //return the store name
     return new Promise((resolve, reject) => {
-        createListingTable().then(() => {
-            createSettingsTable().then(() => {
-                createHost(storeName, storeId).then(() => {
+        createListingTable().then((r) => {
+            console.log('Listing table created or exists');
+            createSettingsTable().then((r) => {
+                console.log('Settings table created or exists');
+                createHost(storeName, storeId).then((r) => {
+                    console.log('Local hosting info stored in database');
                     resolve({
                         storeName,
                         storeId
                     });
-                });
+                }).catch((e) => {
+                    if (e.includes('Unique index or primary key violation')){
+                        resolve(true);
+                    } else {
+                        console.error(e);
+                        reject(e);
+                    }
+                })
             });
         });
     });
