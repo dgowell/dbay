@@ -63,7 +63,7 @@ export default function Marketplace() {
   if (listings) {
     return (
       <div>
-        <Stack spacing={2} sx={{ width: 300, mt: 2 }}>
+        <Stack spacing={2} sx={{ width: '100%', mt: 2 }}>
           <Autocomplete
             id="free-solo-demo"
             freeSolo
