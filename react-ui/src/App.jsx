@@ -14,7 +14,7 @@ import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import Marketplace from "./pages/Marketplace";
 import ListingDetail from "./components/ListingDetail";
 import ListingCreate from "./components/ListingCreate";
-import MyListingList from "./components/MyListingList";
+import SellerListingList from "./components/SellerListingList";
 import ListingPurchase from "./pages/ListingPurchase";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentError from "./pages/PaymentError";
@@ -27,16 +27,29 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import MailIcon from "@mui/icons-material/Mail";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import Profile from "./pages/Profile";
+import WelcomePage from "./pages/WelcomePage";
 
 const theme = createTheme();
 
+
+theme.typography.h3 = {
+  fontSize: '1.2rem',
+  '@media (min-width:600px)': {
+    fontSize: '1.5rem',
+  },
+  [theme.breakpoints.up('md')]: {
+    fontSize: '2rem',
+  },
+};
+
 function App() {
   const [activePage, setActivePage] = useState();
+  const [loading, setLoading] = useState();
   const [host, setHost] = useState({
     "name": '',
     "pk": ''
   });
-
 
   async function intialise() {
     try {
@@ -50,6 +63,7 @@ function App() {
         'name': res.name,
         'pk': res.pk
       });
+      setLoading(false);
     }).catch((e) => console.error(e));
   }
 
@@ -59,6 +73,7 @@ function App() {
       switch (msg.event) {
         case "inited":
           if (host.name === '') {
+            setLoading(true);
             intialise();
           }
           break;
@@ -75,30 +90,25 @@ function App() {
     });
   }, [host.name]);
 
-  if (host.name !== '') {
+  if (!loading) {
     return (
       <ThemeProvider theme={theme}>
         <ResponsiveAppBar />
         <Container component="main" maxWidth="xs">
           <CssBaseline />
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              mb: 10,
-            }}
-          >
+          <Box>
             <Routes>
               <Route exact path="/" element={<Marketplace />} />
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
               <Route path="listing/:id/purchase" element={<ListingPurchase />} />
-              <Route path="my-store/" element={<MyListingList />} />
               <Route path="purchases/" element={<Purchases />} />
               <Route path="payment-success/" element={<PaymentSuccess />} />
               <Route path="payment-error/" element={<PaymentError />} />
+              <Route path="profile/" element={<Profile />} />
+              <Route path="address/" element={<Profile />} />
+              <Route path="name/" element={<Profile />} />
+              <Route path="my-listings/" element={<SellerListingList />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <Paper
@@ -138,7 +148,7 @@ function App() {
                 />
                 <BottomNavigationAction
                   component={Link}
-                  to="/"
+                  to="/profile"
                   label="Me"
                   icon={<AccountCircleIcon />}
                 />
@@ -151,7 +161,7 @@ function App() {
   }
   else {
     return (
-      <h2>No Host stored!</h2>
+      <WelcomePage />
     )
   }
 }

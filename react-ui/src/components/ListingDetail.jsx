@@ -99,7 +99,11 @@ function ListingDetail() {
 
   function handleShare() {
     sendListingToContacts(listing.listing_id);
-    //TODO:load pop top show that the listing has been shared
+    //TODO:show to user that the listing has been shared
+  }
+
+  function handleContact() {
+    console.log('contact seller clicked!');
   }
 
   if (checkingAvailability) {
@@ -107,7 +111,7 @@ function ListingDetail() {
   } else {
     return (
       <div>
-        <BackButton route={'/'} />
+        <BackButton route={-1} />
         {listing && customerAddress && customerName ? (
           <div>
             <Card sx={{ maxWidth: 345, marginTop: 2 }}>
@@ -176,7 +180,7 @@ function ListingDetail() {
                   I want it
                 </Button>
               ) : null}
-              <Button variant="outlined" endIcon={<SendIcon />}>
+              <Button variant="outlined" onClick={handleContact} endIcon={<SendIcon />}>
                 Contact Seller
               </Button>
             </Stack>

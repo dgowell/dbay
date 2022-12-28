@@ -276,6 +276,7 @@ export function processNewBlock(data) {
             //check the amount is the same
             if (listing.price === txnAmount) {
                 console.log(`A buyer has paid for your item: ${listing.name}`);
+                updateListing(listing.listing_id, 'status','sold')
             }
         }).catch((e) => console.error(`Check purchase code failed: ${e}`))
     } catch {

@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
-import { getListingById } from '../database/listing';
+import { getListingById, resetListingState } from '../database/listing';
 import { useNavigate } from "react-router";
 import { sendMoney, sendDeliveryAddress } from "../comms";
 import List from '@mui/material/List';
@@ -48,6 +48,9 @@ function ListingPurchase(props) {
         }
       }).catch((error) => {
         setError(error);
+        resetListingState(listing.listing_id)
+          .then(console.log('listing state reset because of error'))
+          .catch((e)=>console.error(`Couldn't reset listing state: ${e}`));
         navigate("/payment-error");
         console.error(error)
       })

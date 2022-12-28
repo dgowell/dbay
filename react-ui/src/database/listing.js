@@ -6,6 +6,8 @@ import { generate } from '@wcj/generate-password';
 
 const LISTINGSTABLE = 'LISTING';
 
+//there are 3 states 1.unknown 2.available 3.unavailable
+
 export function createListingTable() {
     const Q = `create table if not exists ${LISTINGSTABLE} (
         "listing_id" varchar(343) primary key,
@@ -17,11 +19,12 @@ export function createListingTable() {
         "sent_by_name" char(50),
         "created_at" int not null,
         "wallet_address" varchar(80) not null,
-        "status" char(12) not null default 'unknown',
+        "status" char(12) not null default 'available',
         "customer_message" varchar(1000),
         "customer_name" char(50),
         "customer_pk" varchar(330),
         "purchase_code" varchar(30),
+        "sent" boolean default false,
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -55,6 +58,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             ${sentByName ? '"sent_by_name",' : ''}
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
+             ${sentByPk ? '"status",' : ''} 
             "created_at"
         )
 
@@ -67,7 +71,9 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             ${sentByName ? `'${sentByName}',` : ''}
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
+            ${sentByPk ? `'unknown',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
+
         );`;
 
         console.log(`name: ${name}, price: ${price}`);
@@ -110,8 +116,8 @@ export function getAllListings() {
 
 /* retrieves all listings */
 export function getListings(storeId) {
-    const store = `"created_by_pk"='${storeId}' and`;
-    const Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where ${storeId ? `${store}` : ''} "status"='unknown';`
+    const store = `where "created_by_pk"='${storeId}'`;
+    const Q = `select * from ${LISTINGSTABLE} ${storeId ? `${store}` : ''};`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
@@ -195,6 +201,18 @@ export function updateListing(listing_id, key, value) {
     });
 }
 
+export function resetListingState(listing_id) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='unknown' WHERE "listing_id"='${listing_id}';`, function (res) {
+            if (res.status) {
+                resolve(res);
+            } else {
+                reject(res.error);
+            }
+        });
+    });
+}
+
 function isAvailable(listing_id) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listing_id}';`, function (res) {
@@ -261,6 +279,7 @@ export async function processListing(entity) {
     }).catch((e) => console.error(`Could not create listing: ${e}`));
 }
 export async function processAvailabilityCheck(entity) {
+    console.log(`received availability check for listing: ${entity.listing_id}`)
     const data = {
         "type": "availability_response",
         "status": "unavailable",
@@ -276,7 +295,10 @@ export async function processAvailabilityCheck(entity) {
         send(data, entity.customer_pk).then(e => {
             console.error(e);
             updateListing(entity.listing_id, "purchase_code", purchaseCode)
-            .catch((e) => console.error(e));
+                .catch((e) => console.error(e));
+            updateListing(entity.listing_id, "status", "unavailable")
+                .catch((e) => console.error(e));
+            resetListingStatusTimeout(entity.listing_id);
         });
     } catch (error) {
         console.error(error);
@@ -299,4 +321,15 @@ export function handlePurchase(listingId) {
 
 function generatePurchaseCode() {
     return generate({ length: 20, special: false });
+}
+
+function resetListingStatusTimeout(listingId) {
+    //after timeout time check that the listing has been sold if not reset it to available
+    async function resetListing(listingId) {
+        const status = await getStatus(listingId);
+        if (status === 'unavailble') {
+            updateListing(listingId, "status", "available")
+        }
+    }
+    setTimeout(resetListing(listingId), 600000);
 }

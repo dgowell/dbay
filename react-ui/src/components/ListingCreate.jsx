@@ -16,6 +16,8 @@ import { getHost } from "../database/settings";
 import { sendListingToContacts } from '../comms';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
+import Skeleton from '@mui/material/Skeleton';
+import Stack from '@mui/material/Stack';
 
 
 const categories = [
@@ -32,7 +34,6 @@ export default function ListingCreate() {
   const [host, setHost] = useState();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [showHome, setShowHome] = useState(null);
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
@@ -84,7 +85,6 @@ export default function ListingCreate() {
           setLoading(false);
           setForm({ name: "", asking_price: "", category: categories[0] });
           setSuccess(true);
-          setShowHome(true);
         });
 
       })
@@ -192,6 +192,15 @@ export default function ListingCreate() {
     );
   }
   else {
-    return null;
+    return (
+      <Stack mt={4} spacing={1}>
+        {/* For variant="text", adjust the height via font-size */}
+        <Skeleton variant="text" sx={{ fontSize: '2rem' }} />
+        {/* For other variants, adjust the size with `width` and `height` */}
+        <Skeleton variant="rounded" width='100%' height={60} />
+        <Skeleton variant="rounded" width='100%' height={60} />
+        <Skeleton variant="rounded" width='100%' height={60} />
+      </Stack>
+    );
   }
 }

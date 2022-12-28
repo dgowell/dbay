@@ -5,18 +5,18 @@ import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemText from "@mui/material/ListItemText";
 import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
-import { ListItemButton } from "@mui/material";
+import { ListItemButton, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 function Listing(props) {
   const navigate = useNavigate();
   return (
-    <ListItem>
+    <ListItem disablePadding>
       <ListItemButton
         edge="end"
         aria-label="view listing"
         onClick={() => {
-          navigate(`/listing/${props.listing.listing_id}`);
+          navigate(`${props.link}/${props.listing.listing_id}`);
         }}
       >
         <ListItemAvatar>
@@ -37,12 +37,14 @@ function Listing(props) {
   );
 }
 
-export default function ListingList(listings) {
+export default function ListingList(props) {
   // This method will map out the listings on the table
-  function listingList(listings) {
-    return listings.listings.map((listing) => {
-      return <Listing listing={listing} key={listing.listing_id} />;
-    });
+  function listingList(props) {
+    if (props.listings.length > 0) {
+      return props.listings.map((listing) => {
+        return <Listing listing={listing} key={listing.listing_id} link={props.link} />;
+      });
+    } else return <Typography m={3}>No listings found.</Typography>;
   }
 
   const style = {
@@ -51,5 +53,5 @@ export default function ListingList(listings) {
   };
 
   // This following section will display the table with the listings of individuals.
-  return <List sx={style}>{listingList(listings)}</List>;
+  return <List sx={style}>{listingList(props)}</List>;
 }
