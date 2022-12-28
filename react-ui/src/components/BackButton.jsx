@@ -7,5 +7,5 @@ export default function BackButton(props){
     const handleBack = () => {
         navigate(props.route);
     }
-    return <Button onClick={handleBack}><ArrowBackIcon /></Button>
+    return <Button sx={{ justifyContent: 'flex-start'}} onClick={handleBack}><ArrowBackIcon /></Button>
 }
