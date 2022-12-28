@@ -114,7 +114,7 @@ function ListingDetail() {
       <div>
         {listing && buyerAddress && buyerName ? (
           <div>
-            <Card sx={{ maxWidth: 345, marginTop: 2 }}>
+            <Card sx={{ maxWidth: '100%', marginTop: 2 }}>
               <CardHeader
                 avatar={
                   <BackButton route={-1} />
