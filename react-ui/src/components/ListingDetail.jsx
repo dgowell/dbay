@@ -31,21 +31,22 @@ import SendIcon from "@mui/icons-material/Send";
 import PaymentIcon from "@mui/icons-material/Payment";
 import Box from "@mui/material/Box";
 import BackButton from "./BackButton";
+import ListingDetailSkeleton from "./ListingDetailSkeleton";
 
 function AvailabilityCheckScreen() {
   return (
-        <Box
-          sx={{
-            mt: 4,
-            gap: 4,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            verticalAlign: "middle"
-          }}
-        >Checking availability
-          <CircularProgress />
-        </Box>
+    <Box
+      sx={{
+        mt: 4,
+        gap: 4,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        verticalAlign: "middle"
+      }}
+    >Checking availability
+      <CircularProgress />
+    </Box>
   );
 }
 AvailabilityCheckScreen.propTypes = {
@@ -90,7 +91,7 @@ function ListingDetail() {
       listingId: listing.listing_id,
     }).then((res) => {
       if (res === true) {
-       navigate(`/listing/${listing.listing_id}/purchase`);
+        navigate(`/listing/${listing.listing_id}/purchase`);
       } else {
         console.log("unavailable");
       }
@@ -111,11 +112,13 @@ function ListingDetail() {
   } else {
     return (
       <div>
-        <BackButton route={-1} />
         {listing && buyerAddress && buyerName ? (
           <div>
             <Card sx={{ maxWidth: 345, marginTop: 2 }}>
               <CardHeader
+                avatar={
+                  <BackButton route={-1} />
+                }
                 action={
                   <Tooltip title="Share to all your contacts" placement="top">
                     <IconButton
@@ -185,7 +188,7 @@ function ListingDetail() {
               </Button>
             </Stack>
           </div>
-        ) : null}
+        ) : <ListingDetailSkeleton />}
       </div>
     );
   }

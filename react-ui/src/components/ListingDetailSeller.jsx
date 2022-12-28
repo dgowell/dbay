@@ -12,6 +12,7 @@ import TestImage from "../assets/images/test.jpg";
 import Tooltip from "@mui/material/Tooltip";
 import { sendListingToContacts } from "../comms";
 import BackButton from "./BackButton";
+import ListingDetailSkeleton from './ListingDetailSkeleton';
 
 function ListingDetailSeller() {
     const [listing, setListing] = useState();
@@ -69,7 +70,7 @@ function ListingDetailSeller() {
                         </CardContent>
                     </Card>
                 </div>
-            ) : null}
+            ) : <ListingDetailSkeleton/>}
         </div>
     );
 }
