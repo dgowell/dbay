@@ -34,7 +34,7 @@ function Profile() {
                         </ListItemButton>
                     </ListItem>
                     <ListItem disablePadding>
-                        <ListItemButton onClick={() => navigate('/my-listings')}>
+                        <ListItemButton onClick={() => navigate('/seller/listings')}>
                             <ListItemText primary="My Listings" />
                         </ListItemButton>
                     </ListItem>

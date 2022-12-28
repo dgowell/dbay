@@ -55,8 +55,8 @@ AvailabilityCheckScreen.propTypes = {
 
 function ListingDetail() {
   const [listing, setListing] = useState();
-  const [customerAddress, setCustomerAddress] = useState();
-  const [customerName, setCustomerName] = useState();
+  const [buyerAddress, setBuyerAddress] = useState();
+  const [buyerName, setBuyerName] = useState();
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   const navigate = useNavigate();
@@ -70,14 +70,14 @@ function ListingDetail() {
 
   useEffect(() => {
     getContactAddress().then((address) => {
-      setCustomerAddress(address);
+      setBuyerAddress(address);
     });
   }, []);
 
   useEffect(() => {
     if (listing) {
       getHost().then((host) => {
-        setCustomerName(host.name);
+        setBuyerName(host.name);
       });
     }
   }, [listing]);
@@ -85,8 +85,8 @@ function ListingDetail() {
   function handleBuy() {
     setCheckingAvailability(true);
     checkAvailability({
-      merchant: listing.created_by_pk,
-      customerPk: customerAddress,
+      seller: listing.created_by_pk,
+      buyerPk: buyerAddress,
       listingId: listing.listing_id,
     }).then((res) => {
       if (res === true) {
@@ -112,7 +112,7 @@ function ListingDetail() {
     return (
       <div>
         <BackButton route={-1} />
-        {listing && customerAddress && customerName ? (
+        {listing && buyerAddress && buyerName ? (
           <div>
             <Card sx={{ maxWidth: 345, marginTop: 2 }}>
               <CardHeader

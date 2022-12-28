@@ -14,7 +14,6 @@ import ResponsiveAppBar from "./components/ResponsiveAppBar";
 import Marketplace from "./pages/Marketplace";
 import ListingDetail from "./components/ListingDetail";
 import ListingCreate from "./components/ListingCreate";
-import SellerListingList from "./components/SellerListingList";
 import ListingPurchase from "./pages/ListingPurchase";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentError from "./pages/PaymentError";
@@ -29,8 +28,22 @@ import MailIcon from "@mui/icons-material/Mail";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Profile from "./pages/Profile";
 import WelcomePage from "./pages/WelcomePage";
+import ListingDetailSeller from "./components/ListingDetailSeller";
+import ListingListSeller from "./components/ListingListSeller";
 
-const theme = createTheme();
+const theme = createTheme({
+  typography: {
+    "fontFamily": `"Karla", "Arial", sans-serif`,
+    "fontSize": 14,
+    "fontWeightRegular": 400,
+    "fontWeightMedium": 700
+  },
+  palette: {
+    primary: {
+      main: '#2e2e2e',
+    }
+  }
+});
 
 
 theme.typography.h3 = {
@@ -102,13 +115,14 @@ function App() {
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
               <Route path="listing/:id/purchase" element={<ListingPurchase />} />
+              <Route path="seller/listings/" element={<ListingListSeller />} />
+              <Route path="seller/listing/:id" element={<ListingDetailSeller />} />
               <Route path="purchases/" element={<Purchases />} />
               <Route path="payment-success/" element={<PaymentSuccess />} />
               <Route path="payment-error/" element={<PaymentError />} />
               <Route path="profile/" element={<Profile />} />
               <Route path="address/" element={<Profile />} />
               <Route path="name/" element={<Profile />} />
-              <Route path="my-listings/" element={<SellerListingList />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <Paper

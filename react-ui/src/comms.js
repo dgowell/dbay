@@ -5,7 +5,7 @@ import {
     processListing,
     processAvailabilityCheck,
     getListingByPurchaseCode,
-    updateCustomerMessage,
+    updateBuyerMessage,
     updateListing,
     getListingById,
     updateStatus,
@@ -153,11 +153,11 @@ export function processMaximaEvent(msg) {
     //determine if you're receiving a store or a listing
     switch (entity.type) {
         case 'availability_check':
-            //cusatomer sends mercahnt a check for availability
+            //buyer sends seller a check for availability
             processAvailabilityCheck(entity);
             break;
         case 'availability_response':
-            //merchant respond to customer
+            //seller respond to buyer
             processAvailabilityResponse(entity);
             break;
         case 'listing':
@@ -165,8 +165,8 @@ export function processMaximaEvent(msg) {
             processListing(entity);
             break;
         case 'add_delivery_address':
-            //customer sends merchant their address
-            updateCustomerMessage(entity.listing_id, entity.address);
+            //buyer sends seller their address
+            updateBuyerMessage(entity.listing_id, entity.address);
             break;
         default:
             console.log(entity);
@@ -201,38 +201,38 @@ sendMoney.propTypes = {
     purchaseCode: PropTypes.string.isRequired
 }
 
-export function sendDeliveryAddress({ merchant, address, listing_id }) {
+export function sendDeliveryAddress({ seller, address, listing_id }) {
     return new Promise(function (resolve, reject) {
         const data = {
             "type": "add_delivery_address",
             "address": address,
             "listing_id": listing_id
         }
-        send(data, merchant).then(e => {
+        send(data, seller).then(e => {
             console.log(`sent delivery address to seller: ${address}`);
             resolve(true);
         }).catch(reject());
     })
 }
 sendDeliveryAddress.proptypes = {
-    merchant: PropTypes.string.isRequired,
+    seller: PropTypes.string.isRequired,
     address: PropTypes.string.isRequired
 }
 
-//sends availablity check to the merchant node then checks the databse for an updated response
+//sends availablity check to the seller node then checks the databse for an updated response
 export function checkAvailability({
-    merchant,
-    customerPk,
+    seller,
+    buyerPk,
     listingId
 }) {
     const data = {
         "type": "availability_check",
         "listing_id": listingId,
-        "customer_pk": customerPk,
+        "buyer_pk": buyerPk,
     };
-    console.log(`checking availability ${listingId} for customer: ${customerPk}`);
+    console.log(`checking availability ${listingId} for buyer: ${buyerPk}`);
     return new Promise(function (resolve, reject) {
-        send(data, merchant).catch(e => reject(e));
+        send(data, seller).catch(e => reject(e));
         const time = Date.now();
         let interval = setInterval(() => {
             getStatus(listingId).then((response) => {
@@ -256,8 +256,8 @@ export function checkAvailability({
     });
 }
 checkAvailability.propTypes = {
-    merchant: PropTypes.string.isRequired,
-    customerPk: PropTypes.string.isRequired,
+    seller: PropTypes.string.isRequired,
+    buyerPk: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired
 }
 
@@ -276,7 +276,7 @@ export function processNewBlock(data) {
             //check the amount is the same
             if (listing.price === txnAmount) {
                 console.log(`A buyer has paid for your item: ${listing.name}`);
-                updateListing(listing.listing_id, 'status','sold')
+                updateListing(listing.listing_id, 'status', 'sold')
             }
         }).catch((e) => console.error(`Check purchase code failed: ${e}`))
     } catch {

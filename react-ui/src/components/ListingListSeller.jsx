@@ -8,8 +8,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import filter from 'lodash/filter';
-import Skeleton from '@mui/material/Skeleton';
-
+import ListingListSkeleton from "./ListingListSkeleton";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -44,9 +43,8 @@ function a11yProps(index) {
   };
 }
 
-function SellerListingList() {
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(false);
+function ListingListSeller() {
+  const [listings, setListings] = useState(null);
   const [host, setHost] = useState({
     name: '',
     pk: ''
@@ -60,13 +58,11 @@ function SellerListingList() {
 
 
   useEffect(() => {
-    setLoading(true);
     getHost().then((host) => {
       setHost({
         name: host.name,
         pk: host.pk,
       });
-      setLoading(false);
     });
   }, []);
 
@@ -97,21 +93,24 @@ function SellerListingList() {
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
-        {loading ? <Skeleton animation="wave" variant="circular" mtmv my  ={6} width={40} height={40} /> :
-          <ListingList link='/listing' listings={filter(listings, o => o.status === 'available')} />
+        {!listings
+          ? <ListingListSkeleton />
+          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'available')} />
         }
       </TabPanel>
       <TabPanel value={value} index={1}>
-        {loading ? <Skeleton animation="wave" variant="circular" width={40} height={40} /> :
-          <ListingList link='/listing' listings={filter(listings, o => o.status === 'sold')} />
+        {!listings
+          ? <ListingListSkeleton />
+          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'sold')} />
         }
       </TabPanel>
       <TabPanel value={value} index={2}>
-        {loading ? <Skeleton animation="wave" variant="circular" width={40} height={40} /> :
-          <ListingList link='/listing' listings={filter(listings, o => filterSent(o))} />
+        {!listings
+          ? <ListingListSkeleton />
+          : <ListingList link='/seller/listing' listings={filter(listings, o => filterSent(o))} />
         }
       </TabPanel>
     </Box>
   );
 }
-export default SellerListingList;
+export default ListingListSeller;

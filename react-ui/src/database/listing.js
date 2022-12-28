@@ -20,9 +20,9 @@ export function createListingTable() {
         "created_at" int not null,
         "wallet_address" varchar(80) not null,
         "status" char(12) not null default 'available',
-        "customer_message" varchar(1000),
-        "customer_name" char(50),
-        "customer_pk" varchar(330),
+        "buyer_message" varchar(1000),
+        "buyer_name" char(50),
+        "buyer_pk" varchar(330),
         "purchase_code" varchar(30),
         "sent" boolean default false,
         constraint UQ_listing_id unique("listing_id")
@@ -177,9 +177,9 @@ export function updateStatus(listing_id, status) {
     });
 }
 
-export function updateCustomerMessage(listing_id, message) {
+export function updateBuyerMessage(listing_id, message) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "customer_message"='${message}' WHERE "listing_id"='${listing_id}';`, function (res) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "buyer_message"='${message}' WHERE "listing_id"='${listing_id}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {
@@ -292,7 +292,7 @@ export async function processAvailabilityCheck(entity) {
         }
         const purchaseCode = generatePurchaseCode();
         data.purchase_code = purchaseCode;
-        send(data, entity.customer_pk).then(e => {
+        send(data, entity.buyer_pk).then(e => {
             console.error(e);
             updateListing(entity.listing_id, "purchase_code", purchaseCode)
                 .catch((e) => console.error(e));

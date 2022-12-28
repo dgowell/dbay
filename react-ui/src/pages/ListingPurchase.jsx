@@ -36,8 +36,8 @@ function ListingPurchase(props) {
   const handleSend = () => {
     setLoading(true);
     setError(false);
-    //send address to to merchant
-    sendDeliveryAddress({ merchant: listing.created_by_pk, address: message }).then(
+    //send address to to seller
+    sendDeliveryAddress({ seller: listing.created_by_pk, address: message }).then(
       sendMoney({
         walletAddress: listing.wallet_address,
         amount: listing.price,

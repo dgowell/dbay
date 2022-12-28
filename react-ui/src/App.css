@@ -1,3 +1,14 @@
+@font-face {
+  font-family: 'Karla', sans-serif;
+  src: url('./assets/fonts/Karla-Regular.ttf');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Karla', sans-serif;
+  src: url('./assets/fonts/Karla-Bold.ttf');
+  font-weight: 700;
+}
+
 .App {
   text-align: center;
 }
