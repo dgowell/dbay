@@ -1,4 +1,3 @@
-import { Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import ListingList from "../components/ListingList";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -29,11 +28,11 @@ export default function Marketplace() {
     setLoading(true);
     getListings()
       .then((data) => {
-        setListings(data);
         console.log(`results: ${data}`);
+        return setListings(data);
       })
       .catch((e) => {
-        console.error(e);
+        console.error(`Couldn't get listings: ${e}`);
       });
     return;
   }, []);
@@ -42,14 +41,15 @@ export default function Marketplace() {
     getHost()
       .then((data) => {
         setHost(data);
+        console.log(`Retrieved host successfully ${data}`);
         setLoading(false);
       }).catch((e) => {
-        console.error(e);
+        console.error(`Couldn't get host: ${e}`);
       });
   }, []);
 
   function marketplaceFilter(o) {
-    return o.created_by_pk !== host.pk && o.status === 'unknown'
+    return o.created_by_pk !== host.pk && (o.status === 'unchecked' || o.status === 'available');
   }
 
   function categoryChips() {
@@ -70,11 +70,7 @@ export default function Marketplace() {
             options={listings.map((option) => option.name)}
             renderInput={(params) => <TextField {...params} label="Search" />}
           />
-
-          <Stack
-            component="ul"
-            direction="row"
-            spacing={1}
+          <Stack component="ul" direction="row" spacing={1}
             sx={{
               display: "flex",
               justifyContent: "left",
@@ -88,13 +84,12 @@ export default function Marketplace() {
           >
             {categoryChips()}
           </Stack>
-          {loading ? <><Skeleton animation="wave" variant="circular" width={40} height={40} /><Skeleton
-              animation="wave"
-              height={8}
-              width="80%"
-              style={{ marginBottom: 6 }}
-          /></> :
-            <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o))} />
+          {loading
+          ? <>
+              <Skeleton animation="wave" variant="circular" width={40} height={40} />
+              <Skeleton animation="wave" height={8} width="80%" style={{ marginBottom: 6 }} />
+            </>
+          : <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o))} />
           }
         </Stack>
       </div>

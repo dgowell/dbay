@@ -1,12 +1,10 @@
-import { getHost } from "./settings";
-import { send } from "../comms";
 import PropTypes from "prop-types";
 import { generate } from '@wcj/generate-password';
-
+import { getHost } from "./settings";
+import { send } from "../maxima";
 
 const LISTINGSTABLE = 'LISTING';
 
-//there are 3 states 1.unknown 2.available 3.unavailable
 
 export function createListingTable() {
     const Q = `create table if not exists ${LISTINGSTABLE} (
@@ -24,7 +22,6 @@ export function createListingTable() {
         "buyer_name" char(50),
         "buyer_pk" varchar(330),
         "purchase_code" varchar(30),
-        "sent" boolean default false,
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -35,7 +32,7 @@ export function createListingTable() {
             if (res.status) {
                 resolve(true)
             } else {
-                reject(`${res.error}`);
+                reject(Error(`Creating listing tables ${res.error}`));
             }
         })
     })
@@ -58,7 +55,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             ${sentByName ? '"sent_by_name",' : ''}
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
-             ${sentByPk ? '"status",' : ''} 
+             ${sentByPk ? '"status",' : ''}
             "created_at"
         )
 
@@ -71,7 +68,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             ${sentByName ? `'${sentByName}',` : ''}
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
-            ${sentByPk ? `'unknown',` : ''}
+            ${sentByPk ? `'unchecked',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
 
         );`;
@@ -82,7 +79,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             if (res.status) {
                 resolve(listingId ? listingId : id);
             } else {
-                reject(res.error);
+                reject(Error(res.error));
                 window.MDS.log(`MDS.SQL ERROR, could not create listing ${res.error}}`);
                 console.error(`MDS.SQL ERROR, could not create listing ${res.error}}`);
             }
@@ -101,20 +98,10 @@ createListing.propTypes = {
     createdAt: PropTypes.number
 }
 
-/* retrieves all listings */
-export function getAllListings() {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`select "listing_id", "name", "price" from ${LISTINGSTABLE};`, (res) => {
-            if (res.status) {
-                resolve(res.rows);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
-/* retrieves all listings */
+/**
+* Fetches all listings listings using a particular Id
+* @param {string} storeId - The Id of the store/creator
+*/
 export function getListings(storeId) {
     const store = `where "created_by_pk"='${storeId}'`;
     const Q = `select * from ${LISTINGSTABLE} ${storeId ? `${store}` : ''};`
@@ -123,12 +110,20 @@ export function getListings(storeId) {
             if (res.status) {
                 resolve(res.rows);
             } else {
-                reject(res.error);
+                reject(Error(`MDS.SQL ERROR, could get listings ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get listings ${res.error}`);
             }
         });
     });
 }
+getListings.propTypes = {
+    storeId: PropTypes.string,
+}
 
+/**
+* Fetches all listings that are not available
+* @param {string} storeId - The Id of the store/creator
+*/
 export function getUnavailableListings(storeId) {
     let Q;
     if (storeId) {
@@ -147,7 +142,11 @@ export function getUnavailableListings(storeId) {
     });
 }
 
-/* returns listing by id has to be passed store id too*/
+
+/**
+* Fetches a listing with a particular Id
+* @param {string} id - The id of the listing
+*/
 export function getListingById(id) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
@@ -158,91 +157,21 @@ export function getListingById(id) {
                     resolve(res.rows[0]);
                 }
             } else {
-                reject(res.error);
+                reject(Error(`MDS.SQL ERROR, could get listing by Id ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`);
             }
         });
     });
 }
-
-/* Updates the listing as instatus so that it can be taken off the listings page */
-export function updateStatus(listing_id, status) {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='${status}' WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res.status) {
-                resolve(res);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
+getListingById.propTypes = {
+    id: PropTypes.string.isRequired,
 }
 
-export function updateBuyerMessage(listing_id, message) {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "buyer_message"='${message}' WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res.status) {
-                resolve(res);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
 
-export function updateListing(listing_id, key, value) {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res.status) {
-                resolve(res);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
-export function resetListingState(listing_id) {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='unknown' WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res.status) {
-                resolve(res);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
-function isAvailable(listing_id) {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res.count === 1) {
-                const listing = res.rows[0];
-                if (listing.status === "unknown" || listing.status === "available") {
-                    resolve(true);
-                } else if (listing.status === "unavailable") {
-                    reject(false);
-                }
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
-export function getStatus(listing_id) {
-    return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listing_id}';`, function (res) {
-            if (res) {
-                resolve(res);
-            }
-            else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
+/**
+* Fetches a listing using a pourchase code
+* @param {string} purchaseCode - Code created by selller and given to buyer to confirm transaction
+*/
 export function getListingByPurchaseCode(purchaseCode) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "purchase_code"='${purchaseCode}';`, function (res) {
@@ -250,9 +179,95 @@ export function getListingByPurchaseCode(purchaseCode) {
                 resolve(res.rows[0]);
             }
             else {
+                reject(Error(`MDS.SQL ERROR, could get listings ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get listings ${res.error}`);
+            }
+        });
+    });
+}
+getListingByPurchaseCode.propTypes = {
+    purchaseCode: PropTypes.string.isRequired
+}
+
+/**
+* Updates a listing with given key and value
+* @param {string} listingId - The id of the listing
+* @param {string} key - The key in the database
+* @param {string} value - The value that's being updated
+*/
+export function updateListing(listingId, key, value) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listingId}';`, function (res) {
+            if (res.status) {
+                resolve(res);
+            } else {
+                reject(Error(`MDS.SQL ERROR, could get update listing ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`);
+            }
+        });
+    });
+}
+updateListing.PropTypes = {
+    listingId: PropTypes.string.isRequired,
+    key: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+}
+
+/**
+* Sets a listing to unchecked
+* @param {string} listingId - The id of the listing
+*/
+export function resetListingState(listingId) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "status"='unchecked' WHERE "listing_id"='${listingId}';`, function (res) {
+            if (res.status) {
+                resolve(res);
+            } else {
+                reject(Error(`MDS.SQL ERROR, could get reset listing state ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get reset listing state ${res.error}`);
+            }
+        });
+    });
+}
+resetListingState.proptypes = {
+    listingId: PropTypes.string.isRequired
+}
+
+
+/**
+* Returns the stratus of a a listing
+* @param {string} listingId - The id of the listing
+*/
+export function getStatus(listingId) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
+            if (res) {
+                resolve(res);
+            }
+            else {
+                reject(`MDS.SQL ERROR, could get status of listing ${res.error}`);
+                window.MDSlog(`MDS.SQL ERROR, could get status of listing ${res.error}`);
+            }
+        });
+    });
+}
+getStatus.proptypes = {
+    listingId: PropTypes.string.isRequired
+}
+
+
+export function removeListing(listingId) {
+    return new Promise(function (resolve, reject) {
+        /*
+        window.MDS.sql(`DROP * FROM ${LISTINGSTABLE} WHERE "purchase_code"='${purchaseCode}';`, function (res) {
+            if (res.status && res.count === 1) {
+                resolve(res.rows[0]);
+            }
+            else {
                 reject(res.error);
             }
         });
+        */
     });
 }
 
@@ -286,7 +301,7 @@ export async function processAvailabilityCheck(entity) {
         "listing_id": entity.listing_id
     }
     try {
-        const available = await isAvailable(entity.listing_id);
+        const available = await getStatus(entity.listing_id);
         if (available) {
             data.status = "available";
         }
@@ -328,7 +343,7 @@ function resetListingStatusTimeout(listingId) {
     async function resetListing(listingId) {
         const status = await getStatus(listingId);
         if (status === 'unavailble') {
-            updateListing(listingId, "status", "available")
+            updateListing(listingId, "status", "available").then(console.log('listing reset to availble'))
         }
     }
     setTimeout(resetListing(listingId), 600000);

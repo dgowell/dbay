@@ -80,9 +80,6 @@ function ListingListSeller() {
     }
   }, [host.pk]);
 
-  function filterSent(o) {
-    return o.status === 'unavailabkle' && o.sent === 'true';
-  }
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -101,13 +98,13 @@ function ListingListSeller() {
       <TabPanel value={value} index={1}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'sold')} />
+          : <ListingList link='/seller/listing/delivery' listings={filter(listings, o => o.status === 'sold')} />
         }
       </TabPanel>
       <TabPanel value={value} index={2}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link='/seller/listing' listings={filter(listings, o => filterSent(o))} />
+          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'completed')} />
         }
       </TabPanel>
     </Box>

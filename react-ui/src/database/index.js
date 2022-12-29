@@ -8,7 +8,7 @@ import {
 import {
     getPublicKey,
     getMaximaContactName
-} from "../comms";
+} from "../maxima";
 
 export async function setup() {
     //register the store name and public key

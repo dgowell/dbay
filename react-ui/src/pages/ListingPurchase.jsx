@@ -1,5 +1,4 @@
-import react, { useEffect, useState } from 'react';
-import PropTypes from "prop-types";
+import { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -7,7 +6,8 @@ import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { getListingById, resetListingState } from '../database/listing';
 import { useNavigate } from "react-router";
-import { sendMoney, sendDeliveryAddress } from "../comms";
+import { sendMoney } from "../maxima";
+import { sendDeliveryAddress } from '../maxima/buyer-processes';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';

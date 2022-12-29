@@ -17,7 +17,7 @@ import ListingCreate from "./components/ListingCreate";
 import ListingPurchase from "./pages/ListingPurchase";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentError from "./pages/PaymentError";
-import { processMaximaEvent, processNewBlock } from "./comms";
+import { processMaximaEvent } from "./maxima";
 import { getHost } from "./database/settings";
 import { setup } from "./database/index";
 import Purchases from "./pages/Purchases";
@@ -30,6 +30,7 @@ import Profile from "./pages/Profile";
 import WelcomePage from "./pages/WelcomePage";
 import ListingDetailSeller from "./components/ListingDetailSeller";
 import ListingListSeller from "./components/ListingListSeller";
+import ListingDeliverySeller from "./components/ListingDeliverySeller";
 
 const theme = createTheme({
   typography: {
@@ -95,7 +96,7 @@ function App() {
           processMaximaEvent(msg);
           break;
         case "NEWBLOCK":
-          processNewBlock(msg.data);
+          //processNewBlock(msg.data);
           break;
         default:
           //console.log(msg.event);
@@ -117,6 +118,7 @@ function App() {
               <Route path="listing/:id/purchase" element={<ListingPurchase />} />
               <Route path="seller/listings/" element={<ListingListSeller />} />
               <Route path="seller/listing/:id" element={<ListingDetailSeller />} />
+              <Route path="seller/listing/delivery/:id" element={<ListingDeliverySeller />} />
               <Route path="purchases/" element={<Purchases />} />
               <Route path="payment-success/" element={<PaymentSuccess />} />
               <Route path="payment-error/" element={<PaymentError />} />

@@ -10,34 +10,23 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { createListing } from "../database/listing";
-import Autocomplete from "@mui/material/Autocomplete";
-import { getAddress } from "../mds-helpers";
 import { getHost } from "../database/settings";
-import { sendListingToContacts } from '../comms';
+import { sendListingToContacts, getMiniAddress } from '../maxima';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 
 
-const categories = [
-  { category_id: 1, name: "Cat One" },
-  { category_id: 2, name: "Cat Two" },
-  { category_id: 3, name: "Cat Three" },
-  { category_id: 4, name: "Cat Four" },
-  { category_id: 5, name: "Cat Five" },
-];
 
 export default function ListingCreate() {
   const [loading, setLoading] = useState(false);
-  const [inputValue, setInputValue] = useState("");
   const [host, setHost] = useState();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
-    category: categories[0],
   });
   const [walletAddress, setWalletAddress] = useState("");
 
@@ -51,9 +40,9 @@ export default function ListingCreate() {
 
   useEffect(() => {
     async function getWalletAddress() {
-      setWalletAddress(await getAddress());
+      setWalletAddress(await getMiniAddress().catch((e)=>console.error(`Get Mini address failed: ${e}`)));
     }
-    getWalletAddress();
+    getWalletAddress().catch((e)=>console.error(`Get wallet address failed: ${e}`));
   }, []);
 
   // These methods will update the state properties.
@@ -79,23 +68,30 @@ export default function ListingCreate() {
       createdByName: host.name,
       walletAddress: walletAddress,
     })
-      .then((listingId) => {
+    .then(function(listingId) {
         console.log(`Listing successfully added: ${listingId}`);
-        sendListingToContacts(listingId).then((res) => {
+        console.log(`Attempting to send listing to contacts...`);
+        return sendListingToContacts(listingId);
+      }).then((result) => {
+        if (result.message){
+          setError(`Could not send listing to contacts`);
+          console.error(result.message);
           setLoading(false);
-          setForm({ name: "", asking_price: "", category: categories[0] });
+        } else {
+          console.log('Successfully sent listing to contacts');
+          setLoading(false);
+          setForm({ name: "", asking_price: "" });
           setSuccess(true);
-        });
-
-      })
-      .catch((e) => {
-        setError('Could not create listing');
+        }
+      }).catch((e) => {
+        setError(`Could not create listing`);
+        console.error(`Could not create listing ${e}`);
         setLoading(false);
       });
   }
 
   const handleGoHome = () => {
-    navigate('/');
+    navigate(-1);
   }
 
   if (walletAddress && host) {
@@ -135,32 +131,12 @@ export default function ListingCreate() {
               />
             </Grid>
             <Grid item xs={12}>
-              <Autocomplete
-                value={categories[form.category]}
-                getOptionLabel={(option) => option.name ?? null}
-                onChange={(e, newValue) => {
-                  updateForm({ category: newValue });
-                }}
-                inputValue={inputValue}
-                onInputChange={(e, newInputValue) => {
-                  setInputValue(newInputValue);
-                }}
-                disablePortal
-                required
-                id="listing-category"
-                options={categories}
-                renderInput={(params) => (
-                  <TextField {...params} label="Category" />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel htmlFor="asking-price">Asking Price</InputLabel>
+                <InputLabel htmlFor="asking-price">Asking Price *</InputLabel>
                 <OutlinedInput
                   id="asking-price"
                   value={form.asking_price}
-                  required
+                  required="true"
                   onChange={(e) => updateForm({ asking_price: e.target.value })}
                   startAdornment={
                     <InputAdornment position="start">MIN</InputAdornment>

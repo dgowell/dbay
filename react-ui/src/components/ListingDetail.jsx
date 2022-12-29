@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
-import { getListingById } from "../database/listing";
+import { getListingById, updateListing, removeListing } from "../database/listing";
 import CardHeader from "@mui/material/CardHeader";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -15,9 +15,9 @@ import TestImage from "../assets/images/test.jpg";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
-import { sendListingToContacts, checkAvailability } from "../comms";
+import { sendListingToContacts, getPublicKey } from "../maxima";
+import { checkAvailability } from '../maxima/seller-processes';
 import { useNavigate } from "react-router";
-import { getContactAddress } from "../mds-helpers";
 import Divider from "@mui/material/Divider";
 import { Stack } from "@mui/system";
 import List from "@mui/material/List";
@@ -70,7 +70,7 @@ function ListingDetail() {
   }, [params.id]);
 
   useEffect(() => {
-    getContactAddress().then((address) => {
+    getPublicKey().then((address) => {
       setBuyerAddress(address);
     });
   }, []);
@@ -85,6 +85,8 @@ function ListingDetail() {
 
   function handleBuy() {
     setCheckingAvailability(true);
+    updateListing(listing.listing_id,"status","unchecked")
+      .catch((e)=>console.error(`Error resetting listing status to unchecked: ${e}`));
     checkAvailability({
       seller: listing.created_by_pk,
       buyerPk: buyerAddress,
@@ -93,9 +95,11 @@ function ListingDetail() {
       if (res === true) {
         navigate(`/listing/${listing.listing_id}/purchase`);
       } else {
-        console.log("unavailable");
+        console.log("Listing is unavailable");
+        removeListing(listing.listing_id);
+        navigate(`/listing/${listing.listing_id}/unavailable`);
       }
-    });
+    }).catch((e) => console.error(e));
   }
 
   function handleShare() {
@@ -174,7 +178,7 @@ function ListingDetail() {
               </List>
             </Card>
             <Stack spacing={2} mt={4}>
-              {listing.status === "unknown" ? (
+              {listing.status === "unchecked" ? (
                 <Button
                   variant="contained"
                   onClick={handleBuy}
