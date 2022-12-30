@@ -231,13 +231,15 @@ export function sendMoney({
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
         window.MDS.cmd(Q, function (res) {
-            if (res.status) {
+            if (res.status === true) {
                 console.log(`sent ${amount} to ${walletAddress} with state code ${purchaseCode} succesfully!`);
-                resolve(res);
+                resolve(true);
             } else if (res.message) {
-                reject(res.message);
+                reject(Error(`Problem sending money: ${res.message}`));
+                window.MDS.log(`Problem sending money: ${res}`);
             } else {
-                reject(JSON.stringify(res));
+                reject(Error(`Problem sending money: ${res}`));
+                window.MDS.log(`Problem sending money: ${res}`);
             }
         })
     })

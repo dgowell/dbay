@@ -18,7 +18,7 @@ export function sendDeliveryAddress({ seller, address, listing_id }) {
         send(data, seller).then(e => {
             console.log(`sent delivery address to seller: ${address}`);
             resolve(true);
-        }).catch(reject());
+        }).catch((e)=>reject(Error(`Could not send delivery address to seller ${e}`)));
     })
 }
 sendDeliveryAddress.proptypes = {
@@ -32,10 +32,10 @@ sendDeliveryAddress.proptypes = {
 */
 export function processAvailabilityResponse(entity) {
     console.log("processing availability response...");
-    Promise.all(
-        updateListing(entity.listing_id, "status", entity.status),
-        updateListing(entity.listing_id, "purchase_code", entity.purchase_code)
-    ).catch((e)=> console.error(e));
+    updateListing(entity.listing_id, "status", entity.status)
+        .catch((e)=> console.error(`Couldn't update listing status ${e}`))
+    updateListing(entity.listing_id, "purchase_code", entity.purchase_code)
+        .catch((e) => console.error(`Couldn't update listing purchase code ${e}`))
 }
 processAvailabilityResponse.proptypes = {
     entity: PropTypes.object.isRequired

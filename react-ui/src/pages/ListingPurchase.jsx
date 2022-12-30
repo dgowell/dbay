@@ -17,7 +17,7 @@ import Avatar from '@mui/material/Avatar';
 import ImageIcon from '@mui/icons-material/Image';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import BackButton from '../components/BackButton';
-import Alert from '@mui/material/Alert';
+import PaymentError from '../pages/PaymentError';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
@@ -36,25 +36,38 @@ function ListingPurchase(props) {
   const handleSend = () => {
     setLoading(true);
     setError(false);
+
     //send address to to seller
-    sendDeliveryAddress({ seller: listing.created_by_pk, address: message }).then(
-      sendMoney({
-        walletAddress: listing.wallet_address,
-        amount: listing.price,
-        purchaseCode: listing.purchase_code
-      }).then((res) => {
-        if (res) {
-          navigate("/payment-success");
-        }
-      }).catch((error) => {
+    sendDeliveryAddress({ seller: listing.created_by_pk, address: message })
+      .catch((e) => console.error(e));
+
+    sendMoney({
+      walletAddress: listing.wallet_address,
+      amount: listing.price,
+      purchaseCode: listing.purchase_code
+    }).then((res) => {
+      if (res === true) {
+        navigate('/payment-success');
+      } else {
+        console.error(`Error sending money ${JSON.stringify(res)}`);
+        setError(`There was a problem with the payment`);
+        setLoading(false);
+      }
+    }).catch((error) => {
+      if (error.message.includes('Insufficient funds')) {
+        setError(`Insufficient funds`);
+        resetListingState(listing.listing_id)
+          .then(() => console.log('listing state reset because of error'))
+          .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
+        setLoading(false);
+      } else {
         setError(error);
         resetListingState(listing.listing_id)
-          .then(console.log('listing state reset because of error'))
-          .catch((e)=>console.error(`Couldn't reset listing state: ${e}`));
-        navigate("/payment-error");
-        console.error(error)
-      })
-    );
+          .then(() => console.log('listing state reset because of error'))
+          .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
+        console.error(error);
+      }
+    });
     setLoading(false);
   }
   const handleMessageChange = (event) => {
@@ -62,61 +75,65 @@ function ListingPurchase(props) {
   };
 
   if (listing) {
-    return (
-      <Box sx={{
-        pt: 2,
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
-        <Box mb={4} >
-          <BackButton route={`/listing/${listing.listing_id}`} />
-        </Box>
-        {error ? <Alert severity="error">{error}</Alert> : null}
-        <List>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="success" />
-            </ListItemIcon>
-            <ListItemText primary="Item is available" />
-          </ListItem>
-          <ListItem>
-            <ListItemAvatar>
-              <Avatar>
-                <ImageIcon />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={`$M ${listing.price}`} secondary={listing.name} />
-          </ListItem>
-        </List>
+    if (!error) {
+      return (
         <Box sx={{
-          p: 2,
+          pt: 2,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
-          <Typography mb={2}>Enter your address in this box:</Typography>
-          <TextField
-            id="outlined-multiline-static"
-            label="Delivery address"
-            multiline
-            rows={4}
-            value={message}
-            onChange={handleMessageChange}
-            sx={{width:'100%'}}
-          />
+          <Box mb={4} >
+            <BackButton />
+          </Box>
+          <List>
+            <ListItem>
+              <ListItemIcon>
+                <CheckCircleIcon color="success" />
+              </ListItemIcon>
+              <ListItemText primary="Item is available" />
+            </ListItem>
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar>
+                  <ImageIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary={`$M ${listing.price}`} secondary={listing.name} />
+            </ListItem>
+          </List>
+          <Box sx={{
+            p: 2,
+          }}>
+            <Typography mb={2}>Enter your address in this box:</Typography>
+            <TextField
+              id="outlined-multiline-static"
+              label="Delivery address"
+              multiline
+              rows={4}
+              value={message}
+              onChange={handleMessageChange}
+              sx={{ width: '100%' }}
+            />
+          </Box>
+          <Box
+            m={1}
+            display="flex"
+            justifyContent="center"
+          >
+            <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
+              Pay & Confirm
+            </LoadingButton>
+          </Box>
         </Box>
-        <Box
-          m={1}
-          display="flex"
-          justifyContent="center"
-        >
-          <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
-            Pay & Confirm
-          </LoadingButton>
-        </Box>
-      </Box>
-    );
-  }
-  else {
-    return <p>No listing</p>
+      );
+    } else {
+      return (
+          <PaymentError error={error} />
+      );
+    }
+  } else {
+    return null;
   }
 }
 export default ListingPurchase;

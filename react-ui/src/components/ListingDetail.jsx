@@ -66,25 +66,27 @@ function ListingDetail() {
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
-    });
+    }).catch((e)=> console.error(e));
   }, [params.id]);
 
   useEffect(() => {
     getPublicKey().then((address) => {
       setBuyerAddress(address);
-    });
+    }).catch((e)=>console.error(e))
   }, []);
 
+  //get the host name and pk
   useEffect(() => {
     if (listing) {
       getHost().then((host) => {
         setBuyerName(host.name);
-      });
+      }).catch((e)=>console.error(e));
     }
   }, [listing]);
 
   function handleBuy() {
     setCheckingAvailability(true);
+    //reset the listing in order to check the availability
     updateListing(listing.listing_id,"status","unchecked")
       .catch((e)=>console.error(`Error resetting listing status to unchecked: ${e}`));
     checkAvailability({
@@ -121,7 +123,7 @@ function ListingDetail() {
             <Card sx={{ maxWidth: '100%', marginTop: 2 }}>
               <CardHeader
                 avatar={
-                  <BackButton route={-1} />
+                  <BackButton />
                 }
                 action={
                   <Tooltip title="Share to all your contacts" placement="top">
@@ -177,8 +179,7 @@ function ListingDetail() {
                 </ListItem>
               </List>
             </Card>
-            <Stack spacing={2} mt={4}>
-              {listing.status === "unchecked" ? (
+            <Stack spacing={2} mt={4} mb={8}>
                 <Button
                   variant="contained"
                   onClick={handleBuy}
@@ -186,7 +187,6 @@ function ListingDetail() {
                 >
                   I want it
                 </Button>
-              ) : null}
               <Button variant="outlined" onClick={handleContact} endIcon={<SendIcon />}>
                 Contact Seller
               </Button>

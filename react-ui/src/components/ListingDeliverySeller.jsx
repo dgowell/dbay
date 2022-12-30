@@ -32,7 +32,7 @@ function ListingDeliverySeller() {
                     <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8 }}>
                         <CardHeader
                             avatar={
-                                <BackButton route={-1} />
+                                <BackButton />
                             }
                         />
                         <CardContent>

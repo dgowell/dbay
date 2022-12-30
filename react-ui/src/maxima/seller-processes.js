@@ -19,20 +19,27 @@ export function checkAvailability({
         "listing_id": listingId,
         "buyer_pk": buyerPk,
     };
-    console.log(`checking availability ${listingId} for buyer: ${buyerPk}`);
+    console.log(`checking availability`);
 
     return new Promise(function (resolve, reject) {
         //send request to seller
         send(data, seller)
-            .then(success => console.log(`successfully sent check request ${success}`))
+            .then(() => console.log(`successfully sent check request to seller`))
             .catch(error => reject(Error(error)));
 
         const time = Date.now();
+        let i = 0;
         let interval = setInterval(() => {
+            i++;
+            console.log(`Listing status check ${i}`);
             getStatus(listingId).then((response) => {
                 if (response) {
                     const listing = response.rows[0];
+                    console.log(listing);
                     switch(listing.status) {
+                        case "unchecked":
+                            console.log("Still waiting for response from seller...");
+                            break;
                         case "available":
                             clearInterval(interval);
                             resolve(true);

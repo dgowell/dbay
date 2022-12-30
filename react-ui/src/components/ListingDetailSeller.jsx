@@ -36,7 +36,7 @@ function ListingDetailSeller() {
                     <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8 }}>
                         <CardHeader
                             avatar={
-                                <BackButton route={-1} />
+                                <BackButton />
                             }
                             action={
                                 <Tooltip title="Share to all your contacts" placement="top">
