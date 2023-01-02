@@ -1,6 +1,6 @@
-Stampd is a ma
+# dbay - the world's first completely decentralised exchange for stuff.
 
-# Using the App
+## Using the App
 
 Use the bottom menu to navigate between the pages.
 - Home = A list of listings that have been shared with you
