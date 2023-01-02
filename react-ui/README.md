@@ -30,7 +30,7 @@ You can browse listings that have been shared with you. If you select a listing 
 # How to run dbay locally
 
 ## Setup 2 running nodes on a test network
-- Clone the repo to a folder on your computer called `dbay`
+- Clone the repo to a folder on your computer
 - Open a Terminal window and navigate to `dbay/` and create a folder called `/minidapp` move the minima.jar file, downloaded in the prerequisites, into the `dbay/minidapp/` folder. The structure should now look like this `dbay/minidapp/minima.jar`
 - From within the `minidapp` folder run `java -jar minima.jar -data minidata1 -test -nop2p -genesis -mdsenable -clean`
 - In a second terminal window navigate to the same folder `/minidapp` and run `java -jar minima.jar -data minidata2 -test -nop2p -clean -port 10001 -mdsenable -connect 127.0.0.1:9001`
@@ -69,8 +69,7 @@ No, we have a solution that allows you to get around the issue to take advantage
 - Your url will look something like: `https://localhost:9003/{APP_ID}/index.html?uid=YOUR_UID`
 - Copy the value at the end where YOUR_UID is in the URL e.g. `0xD497A626EF65C24417D4F7AE0CC48289BCB1062FB9763D47A20326984E099299`
 - Replace `REACT_APP_DEBUG_UID` in the env file with the uid you copied
+- Copy the IP `https://10.10.10.66:9003"` the 10.10.10.66 part
+- Replace the `REACT_APP_DEBUG_HOST` in the evn file with the IP you[ve just copied
 - Run `npm run start`
 - Edit `/src/App.jsx` and the browser window will automatically reload and should be connected to Minima
-
-
-
