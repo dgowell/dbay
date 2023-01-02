@@ -84,8 +84,8 @@ export default function ListingCreate() {
           setSuccess(true);
         }
       }).catch((e) => {
-        setError(`Could not create listing`);
-        console.error(`Could not create listing ${e}`);
+        setError(`There was an error creating or sending your listing`);
+        console.error(`Could not create or send listing ${e}`);
         setLoading(false);
       });
   }

@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import { generate } from '@wcj/generate-password';
 import { getHost } from "./settings";
 import { send } from "../maxima";
 
@@ -258,16 +257,14 @@ getStatus.proptypes = {
 
 export function removeListing(listingId) {
     return new Promise(function (resolve, reject) {
-        /*
-        window.MDS.sql(`DROP * FROM ${LISTINGSTABLE} WHERE "purchase_code"='${purchaseCode}';`, function (res) {
-            if (res.status && res.count === 1) {
-                resolve(res.rows[0]);
+        window.MDS.sql(`DELETE FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
+            if (res.status === true) {
+                resolve(true);
             }
             else {
                 reject(res.error);
             }
         });
-        */
     });
 }
 
@@ -293,32 +290,6 @@ export async function processListing(entity) {
         console.log(`Listing ${entity.name} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
 }
-export async function processAvailabilityCheck(entity) {
-    console.log(`received availability check for listing: ${entity.listing_id}`)
-    const data = {
-        "type": "availability_response",
-        "status": "unavailable",
-        "listing_id": entity.listing_id
-    }
-    try {
-        const available = await getStatus(entity.listing_id);
-        if (available) {
-            data.status = "available";
-        }
-        const purchaseCode = generatePurchaseCode();
-        data.purchase_code = purchaseCode;
-        send(data, entity.buyer_pk).then(e => {
-            console.error(e);
-            updateListing(entity.listing_id, "purchase_code", purchaseCode)
-                .catch((e) => console.error(e));
-            updateListing(entity.listing_id, "status", "unavailable")
-                .catch((e) => console.error(e));
-            resetListingStatusTimeout(entity.listing_id);
-        });
-    } catch (error) {
-        console.error(error);
-    };
-}
 
 /* This function hadles what happens when you purchase a listing */
 export function handlePurchase(listingId) {
@@ -332,19 +303,4 @@ export function handlePurchase(listingId) {
     //    console.log(r);
     //})
 
-}
-
-function generatePurchaseCode() {
-    return generate({ length: 20, special: false });
-}
-
-function resetListingStatusTimeout(listingId) {
-    //after timeout time check that the listing has been sold if not reset it to available
-    async function resetListing(listingId) {
-        const status = await getStatus(listingId);
-        if (status === 'unavailble') {
-            updateListing(listingId, "status", "available").then(console.log('listing reset to availble'))
-        }
-    }
-    setTimeout(resetListing(listingId), 600000);
 }

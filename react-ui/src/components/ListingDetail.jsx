@@ -16,7 +16,7 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
 import { sendListingToContacts, getPublicKey } from "../maxima";
-import { checkAvailability } from '../maxima/seller-processes';
+import { checkAvailability } from '../maxima/buyer-processes';
 import { useNavigate } from "react-router";
 import Divider from "@mui/material/Divider";
 import { Stack } from "@mui/system";
@@ -97,9 +97,9 @@ function ListingDetail() {
       if (res === true) {
         navigate(`/listing/${listing.listing_id}/purchase`);
       } else {
-        console.log("Listing is unavailable");
-        removeListing(listing.listing_id);
-        navigate(`/listing/${listing.listing_id}/unavailable`);
+        console.log(res);
+        //TODO display to user the res state
+        //navigate(`/listing/${listing.listing_id}/unavailable`);
       }
     }).catch((e) => console.error(e));
   }
@@ -152,7 +152,7 @@ function ListingDetail() {
                 <Typography gutterBottom component="div">
                   {listing.description
                     ? listing.description
-                    : "This is a fake description while there is no description available. The item for sale is perfect, you should definetly buy it right now before it is too late. In fact fuck it i'm gonna buy it."}
+                    : "This is a temporary description."}
                 </Typography>
               </CardContent>
               <Divider />

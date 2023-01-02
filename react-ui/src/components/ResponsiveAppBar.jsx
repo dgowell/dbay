@@ -16,7 +16,7 @@ const ResponsiveAppBar = () => {
                         href=""
                         sx={{
                             mr: 2,
-                            display: { xs: 'flex', md: 'none' },
+                            display: 'flex',
                             flexGrow: 1,
                             fontWeight: 700,
                             color: '#FFFFFF',

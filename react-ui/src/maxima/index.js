@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import {
     processListing,
-    processAvailabilityCheck,
     updateListing,
     getListingById,
 } from '../database/listing';
@@ -10,6 +9,7 @@ import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
 import { processAvailabilityResponse } from './buyer-processes';
+import { processAvailabilityCheck } from './seller-processes';
 
 
 /**
@@ -152,6 +152,9 @@ export async function sendListingToContacts(listingId) {
     listing.sent_by_pk = host.pk;
 
     return new Promise(function (resolve, reject) {
+        if (contacts.length === 0){
+            reject(Error('No contacts to send to'));
+        }
         //send the listing to each contact
         contacts.forEach(function (contact, key, arr) {
             send(listing, contact)
