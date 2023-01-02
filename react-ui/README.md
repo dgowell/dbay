@@ -3,43 +3,49 @@ Stampd is a ma
 # Using the App
 
 Use the bottom menu to navigate between the pages.
-- Marketplace = Lists all the items on the chain that have been created over the last 24 hours
-- My Items = Lists all the items that you've created on the chain
-- Add Item = Allows you to add a item to the chain
+- Home = A list of listings that have been shared with you
+- Favourites = A list of listings that have been favourited by you **
+- Sell = You can create a listing and share it with your contacts
+- Inbox = Incoming messages from other users of dbay **
+- Me - A navigation menu to help you navigate to pages of your user
+
+** denotes features yet to be developed
+
 ## How do I sell an item?
-You're able to put an item up for sale by using the "Add Item" page.
+You're able to create a listing by using the "Sell" link in the bottom navbar menu.
 
 ## How do I buy an item?
-You can browse items that have been added to the chain in the last 24 hours. If you select one and the item is not one of your own you will be able to click "Buy Now" to begin a transaction.
+You can browse listings that have been shared with you. If you select a listing in the menu and click "I want it" the application will check if the oitem is available with the seller and if so you will have the option to purchase it as long as you have sufficient funds.
 
 ## How does the transaction work?
-1. The buyer begins the transacion by clicking buy now on a product
-2. The selller must view the same product and wait for the approive purchase request (this will sign the transaction)
-3. The buyer then reloads the item page and clicks approve payment (this will sign the transaction and post it to chain)
-4. The product has now been sold to the buyer. Please check your wallet for confirmation.
 
-## Pre-requisites
+# ----------------------------------------------------------------------------------------------------------------------------
+# Development
+
+## Prerequisites
 - node.js https://nodejs.org/en/download/
 - Code Editor, we recommend Visual Studio code https://code.visualstudio.com/
-- A running Minima node
-# How to run the Stampd application locally
-## Run 2 nodes
-- Clone the guthub repo to a folder on your computer
-- Open a Terminal window and navigate to `/create-minima-app/minidapp` (where the minima.jar file is located) and run `java -jar minima.jar -data minidata1 -test -nop2p -genesis -mdsenable -clean`
-- Do the same in second terminal window but run `java -jar minima.jar -data minidata2 -test -nop2p -clean -port 10001 -mdsenable -connect 127.0.0.1:9001`
-- Now you have two nodes running on a network
-- On node 1 (terminal 1) run `mds` to get the connection URL, it should look like -> `https://10.64.25.151:9003`
-- Below is the password you'll need, something like `CAHC-RRGY-C0PU`
+- Download the latest minima.jar file from `https://github.com/minima-global/Minima/tree/master/jar`;
+
+# How to run dbay locally
+
+## Setup 2 running nodes on a test network
+- Clone the repo to a folder on your computer called `dbay`
+- Open a Terminal window and navigate to `dbay/` and create a folder called `/minidapp` move the minima.jar file, downloaded in the prerequisites, into the `dbay/minidapp/` folder. The structure should now look like this `dbay/minidapp/minima.jar`
+- From within the `minidapp` folder run `java -jar minima.jar -data minidata1 -test -nop2p -genesis -mdsenable -clean`
+- In a second terminal window navigate to the same folder `/minidapp` and run `java -jar minima.jar -data minidata2 -test -nop2p -clean -port 10001 -mdsenable -connect 127.0.0.1:9001`
+- Now you have two nodes connected on a network
+- On node 1 (terminal 1) run `mds` to get the connection URL, it should have a similar form as -> `https://10.64.25.151:9003` but with a different IP
+- Below the URL is the password you'll need to access the MDS, something like `CAHC-RRGY-C0PU`
 - Open the Url in a browser (if chrome doesn't let you access it type in `thisisunsafe` and it should let you pass through)
 - Enter the password
 - Do the same for node 2 (terminal 2)
 
-## How to build and install the stampd app
+## How to build and install the dbay app
 - Using terminal in visual studio code (or other terminal)
-- Run the following command in the `/create-minima-app` directory: `npm i` and then run `npm run build`.
+- Run the following command in the `/react-ui` directory: `npm i` and then run `npm run build`.
 - Once the app has been built, run `npm run zip` to create an MiniDapp .mds.zip file in the `/minidapp` folder.
-- Then in each node (terminal window) run `mds action:install file:<minidapp zip file>`, where <minidapp zip file> is replaced by the actual destination of the zip file you just created in the step before.
-- Copy the UID of the minidapp installation and then in each node run `mds action:permission trust:write uid:<uid of minidapp>`
+- Then in each node (terminal window) run `mds action:install file:<minidapp zip file> trust:write`, where <minidapp zip file> is replaced by the actual destination of the zip file you just created in the step before.
 - Once run on both nodes you can now go to both of your browser tabs and refresh and the apps should appear.
 - Click on each app to open in another browser tab.
 - You're now running 2 nodes on one network.
