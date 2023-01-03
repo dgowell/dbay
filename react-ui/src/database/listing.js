@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { getHost } from "./settings";
-import { send } from "../maxima";
+import { send } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
 

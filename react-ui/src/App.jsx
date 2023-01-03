@@ -17,7 +17,7 @@ import ListingCreate from "./components/ListingCreate";
 import ListingPurchase from "./pages/ListingPurchase";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentError from "./pages/PaymentError";
-import { processMaximaEvent } from "./maxima";
+import { processMaximaEvent } from "./minima";
 import { getHost } from "./database/settings";
 import { setup } from "./database/index";
 import Purchases from "./pages/Purchases";
