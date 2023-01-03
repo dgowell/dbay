@@ -94,6 +94,12 @@ function ListingPurchase(props) {
               <ListItemText primary="Item is available" />
             </ListItem>
             <ListItem>
+              <ListItemIcon>
+                <CheckCircleIcon color="success" />
+              </ListItemIcon>
+              <ListItemText primary="You have sufficient funds" />
+            </ListItem>
+            <ListItem>
               <ListItemAvatar>
                 <Avatar>
                   <ImageIcon />
