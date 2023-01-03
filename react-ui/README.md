@@ -7,7 +7,7 @@ Use the bottom menu to navigate between the pages.
 - Favourites = A list of listings that have been favourited by you **
 - Sell = You can create a listing and share it with your contacts
 - Inbox = Incoming messages from other users of dbay **
-- Me - A navigation menu to help you navigate to pages of your user
+- Me = A navigation menu to help you navigate to pages of your user
 
 ** denotes features yet to be developed
 
