@@ -131,13 +131,16 @@ export function hasSufficientFunds(price) {
                 if (bal.gte(new Decimal(price))) {
                     resolve(true);
                 }
-                reject(Error('Insufficient funds'));
-                console.log('Insufficient funds');
-                window.MDS.log('Insufficient funds');
+                else {
+                    reject(Error('Insufficient funds'));
+                    console.log('Insufficient funds');
+                    window.MDS.log('Insufficient funds');
+                }
+            } else {
+                reject(Error('Problem checking balance'));
+                console.log('Problem checking balance');
+                window.MDS.log('Problem checking balance');
             }
-            reject(Error('Problem checking balance'));
-            console.log('Problem checking balance');
-            window.MDS.log('Problem checking balance');
         });
     });
 }
