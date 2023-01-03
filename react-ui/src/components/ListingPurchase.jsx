@@ -17,7 +17,7 @@ import Avatar from '@mui/material/Avatar';
 import ImageIcon from '@mui/icons-material/Image';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import BackButton from '../components/BackButton';
-import PaymentError from '../pages/PaymentError';
+import PaymentError from '../components/PaymentError';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
