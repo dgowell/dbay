@@ -96,18 +96,13 @@ async function handleBuy() {
 
 
     //check there is money to pay for the item first
-    const hasFunds = hasSufficientFunds(listing.price).catch(error => {
+    const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
       setError('Insufficient Funds');
       setLoading(false);
       console.log(`Insufficient funds: ${error}`);
     });
 
-    if (!hasFunds) {
-      setError(`Insufficient Funds`);
-      setLoading(false);
-      console.log('Insufficient Funds');
-    }
-    else {
+    if (hasFunds) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,
         buyerPk: buyerAddress,

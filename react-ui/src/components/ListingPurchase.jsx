@@ -33,7 +33,7 @@ function ListingPurchase(props) {
     });
   }, [params.id]);
 
-  const handleSend = () => {
+  function handleSend() {
     setLoading(true);
     setError(false);
 
@@ -68,7 +68,6 @@ function ListingPurchase(props) {
         console.error(error);
       }
     });
-    setLoading(false);
   }
   const handleMessageChange = (event) => {
     setMessage(event.target.value);

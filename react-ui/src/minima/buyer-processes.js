@@ -128,13 +128,16 @@ export function hasSufficientFunds(price) {
             if (balance.response) {
                 const minimaToken = balance.response.find(token => token.token === 'Minima');
                 const bal = new Decimal(minimaToken.sendable);
-                if (bal.lte(new Decimal(price))) {
+                if (bal.gte(new Decimal(price))) {
                     resolve(true);
                 }
                 reject(Error('Insufficient funds'));
-                
+                console.log('Insufficient funds');
+                window.MDS.log('Insufficient funds');
             }
             reject(Error('Problem checking balance'));
+            console.log('Problem checking balance');
+            window.MDS.log('Problem checking balance');
         });
     });
 }
