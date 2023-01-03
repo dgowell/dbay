@@ -239,7 +239,10 @@ export function sendMoney({
                 resolve(true);
             } else if (res.message) {
                 reject(Error(`Problem sending money: ${res.message}`));
-                window.MDS.log(`Problem sending money: ${res}`);
+                window.MDS.log(`Problem sending money: ${res.message}`);
+            } else if (res.error) {
+                reject(Error(`Problem sending money: ${res.error}`));
+                window.MDS.log(`Problem sending money: ${res.eror}`);
             } else {
                 reject(Error(`Problem sending money: ${res}`));
                 window.MDS.log(`Problem sending money: ${res}`);

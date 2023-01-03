@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { send } from './index';
 import { updateListing, getStatus, removeListing } from '../database/listing';
 import { buyerConstants } from '../constants';
+import { Decimal } from 'decimal.js';
 
 /**
 * Send's buyers delivery address to seller
@@ -19,7 +20,7 @@ export function sendDeliveryAddress({ seller, address, listing_id }) {
         send(data, seller).then(e => {
             console.log(`sent delivery address to seller: ${address}`);
             resolve(true);
-        }).catch((e)=>reject(Error(`Could not send delivery address to seller ${e}`)));
+        }).catch((e) => reject(Error(`Could not send delivery address to seller ${e}`)));
     })
 }
 sendDeliveryAddress.proptypes = {
@@ -34,7 +35,7 @@ sendDeliveryAddress.proptypes = {
 export function processAvailabilityResponse(entity) {
     console.log("processing availability response...");
     updateListing(entity.listing_id, "status", entity.status)
-        .catch((e)=> console.error(`Couldn't update listing status ${e}`))
+        .catch((e) => console.error(`Couldn't update listing status ${e}`))
     updateListing(entity.listing_id, "purchase_code", entity.purchase_code)
         .catch((e) => console.error(`Couldn't update listing purchase code ${e}`))
 }
@@ -86,14 +87,14 @@ export function checkAvailability({
                         case "unavailable":
                             clearInterval(interval);
                             removeListing(listingId)
-                                .then(()=>console.log('Sucessfully removed listing'))
-                                .catch((e)=>console.error(e));
+                                .then(() => console.log('Sucessfully removed listing'))
+                                .catch((e) => console.error(e));
                             resolve('This item is unavailable');
                             break;
                         case "pending":
                             clearInterval(interval);
-                            updateListing(listingId, 'status','unchecked')
-                                .catch((e)=>console.error(`Couldn't update listing status to unchecked ${e}`))
+                            updateListing(listingId, 'status', 'unchecked')
+                                .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
                             resolve('Item not currently available, please try again later')
                             break;
                         default:
@@ -116,3 +117,27 @@ checkAvailability.propTypes = {
     listingId: PropTypes.string.isRequired
 }
 
+
+/**
+* Checks the buyers balance and returns true if it's more than the price give
+* @param {int} price - Price of item to compare balance to
+*/
+export function hasSufficientFunds(price) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('balance', function (balance) {
+            if (balance.response) {
+                const minimaToken = balance.response.find(token => token.token === 'Minima');
+                const bal = new Decimal(minimaToken.sendable);
+                if (bal.lte(new Decimal(price))) {
+                    resolve(true);
+                }
+                reject(Error('Insufficient funds'));
+                
+            }
+            reject(Error('Problem checking balance'));
+        });
+    });
+}
+hasSufficientFunds.PropTypes = {
+    price: PropTypes.number.isRequired
+}
