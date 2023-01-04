@@ -198,13 +198,15 @@ return (
             </List>
           </Card>
           <Stack spacing={2} mt={4} mb={8}>
-            <Button
+            {listing.status === "purchased"
+            ? null
+            : <Button
               variant="contained"
               onClick={handleBuy}
               startIcon={<PaymentIcon />}
             >
               I want it
-            </Button>
+            </Button>}
             <LoadingButton loading={loading} variant="outlined" onClick={handleContact} endIcon={<SendIcon />} >
               Contact Seller
             </LoadingButton>

@@ -121,16 +121,10 @@ getListings.propTypes = {
 }
 
 /**
-* Fetches all listings that are not available
-* @param {string} storeId - The Id of the store/creator
+* Fetches all listings that are the user has purchased
 */
-export function getUnavailableListings(storeId) {
-    let Q;
-    if (storeId) {
-        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "created_by_pk"='${storeId}' and "status"='unavailable';`
-    } else {
-        Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "status"='unavailable';`
-    }
+export function getMyPurchases() {
+    const Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "status"='purchased';`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
