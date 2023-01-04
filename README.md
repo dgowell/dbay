@@ -1,4 +1,4 @@
-# dbay# dbay - the world's first completely decentralised exchange for stuff.
+# dbay - the world's first completely decentralised exchange for stuff.
 
 ## Using the App
 
