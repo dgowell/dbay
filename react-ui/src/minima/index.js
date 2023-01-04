@@ -50,7 +50,11 @@ export function processMaximaEvent(msg) {
             break;
         case 'add_delivery_address':
             //buyer sends seller their address
-            updateListing(entity.listing_id, 'buyer_message', entity.address)
+            console.log(`Address received for purchased listing, updating address..`)
+            updateListing(entity.listing_id, 'buyer_message', entity.address).then(
+                () => console.log('address updated succesfully'),
+                error => console.error(`Couldn't update address ${error}`)
+            );
             break;
         default:
             console.log(entity);
@@ -239,7 +243,10 @@ export function sendMoney({
                 resolve(true);
             } else if (res.message) {
                 reject(Error(`Problem sending money: ${res.message}`));
-                window.MDS.log(`Problem sending money: ${res}`);
+                window.MDS.log(`Problem sending money: ${res.message}`);
+            } else if (res.error) {
+                reject(Error(`Problem sending money: ${res.error}`));
+                window.MDS.log(`Problem sending money: ${res.eror}`);
             } else {
                 reject(Error(`Problem sending money: ${res}`));
                 window.MDS.log(`Problem sending money: ${res}`);

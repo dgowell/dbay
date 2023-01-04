@@ -11,7 +11,7 @@ import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { createListing } from "../database/listing";
 import { getHost } from "../database/settings";
-import { sendListingToContacts, getMiniAddress } from '../maxima';
+import { sendListingToContacts, getMiniAddress } from '../minima';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';

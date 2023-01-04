@@ -4,10 +4,10 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
-import { getListingById, resetListingState } from '../database/listing';
+import { getListingById, resetListingState, updateListing } from '../database/listing';
 import { useNavigate } from "react-router";
-import { sendMoney } from "../maxima";
-import { sendDeliveryAddress } from '../maxima/buyer-processes';
+import { sendMoney } from "../minima";
+import { sendDeliveryAddress } from '../minima/buyer-processes';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -17,7 +17,7 @@ import Avatar from '@mui/material/Avatar';
 import ImageIcon from '@mui/icons-material/Image';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import BackButton from '../components/BackButton';
-import PaymentError from '../pages/PaymentError';
+import PaymentError from '../components/PaymentError';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
@@ -33,7 +33,7 @@ function ListingPurchase(props) {
     });
   }, [params.id]);
 
-  const handleSend = () => {
+  function handleSend() {
     setLoading(true);
     setError(false);
 
@@ -47,9 +47,11 @@ function ListingPurchase(props) {
       purchaseCode: listing.purchase_code
     }).then((res) => {
       if (res === true) {
+        updateListing(listing.listing_id,'status','purchased');
         navigate('/payment-success');
       } else {
         console.error(`Error sending money ${JSON.stringify(res)}`);
+        resetListingState(listing.listing_id);
         setError(`There was a problem with the payment`);
         setLoading(false);
       }
@@ -68,7 +70,6 @@ function ListingPurchase(props) {
         console.error(error);
       }
     });
-    setLoading(false);
   }
   const handleMessageChange = (event) => {
     setMessage(event.target.value);
@@ -92,6 +93,12 @@ function ListingPurchase(props) {
                 <CheckCircleIcon color="success" />
               </ListItemIcon>
               <ListItemText primary="Item is available" />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <CheckCircleIcon color="success" />
+              </ListItemIcon>
+              <ListItemText primary="You have sufficient funds" />
             </ListItem>
             <ListItem>
               <ListItemAvatar>

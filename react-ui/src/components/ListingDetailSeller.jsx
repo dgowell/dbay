@@ -10,7 +10,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
 import TestImage from "../assets/images/test.jpg";
 import Tooltip from "@mui/material/Tooltip";
-import { sendListingToContacts } from "../maxima";
+import { sendListingToContacts } from "../minima";
 import BackButton from "./BackButton";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
 
