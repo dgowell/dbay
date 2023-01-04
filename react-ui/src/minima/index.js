@@ -48,12 +48,16 @@ export function processMaximaEvent(msg) {
             //a contact has shared a listing with you
             processListing(entity);
             break;
-        case 'add_delivery_address':
-            //buyer sends seller their address
+        case 'purchase_receipt':
+            //buyer sends seller their address and coin id
             console.log(`Address received for purchased listing, updating address..`)
             updateListing(entity.listing_id, 'buyer_message', entity.address).then(
-                () => console.log('address updated succesfully'),
-                error => console.error(`Couldn't update address ${error}`)
+                () => console.log('address added succesfully'),
+                error => console.error(`Couldn't add address to listing ${error}`)
+            );
+            updateListing(entity.listing_id, 'coin_id', entity.coin_id).then(
+                () => console.log('coin id added to listing'),
+                error => console.error(`Couldn't add coin id to listing ${error}`)
             );
             break;
         default:
@@ -240,7 +244,8 @@ export function sendMoney({
         window.MDS.cmd(Q, function (res) {
             if (res.status === true) {
                 console.log(`sent ${amount} to ${walletAddress} with state code ${purchaseCode} succesfully!`);
-                resolve(true);
+                const coinId = res.response.body.txn.outputs[0].coinid;
+                coinId ? resolve(coinId) : reject(Error(`No coin attached to purchase`));
             } else if (res.message) {
                 reject(Error(`Problem sending money: ${res.message}`));
                 window.MDS.log(`Problem sending money: ${res.message}`);

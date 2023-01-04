@@ -1,8 +1,26 @@
 import PropTypes from 'prop-types';
-import { send } from './index';
-import { updateListing, getStatus, removeListing } from '../database/listing';
+import { send, sendMoney } from './index';
+import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
+
+
+
+function sendPurchaseReceipt({ address, listingId, coinId, seller }) {
+    const data = {
+        "type": "purchase_receipt",
+        "address": address,
+        "listing_id": listingId,
+        "coin_id": coinId
+    }
+    return new Promise(function (resolve, reject) {
+        send(data, seller).then(
+            () => {
+                console.log(`sent delivery address to seller: ${address}`);
+                resolve(true);
+            }).catch((e) => reject(Error(`Could not send delivery address to seller ${e}`)));
+    });
+}
 
 /**
 * Send's buyers delivery address to seller
@@ -10,20 +28,38 @@ import { Decimal } from 'decimal.js';
 * @param {string} address - Buyers physical address to send item to
 * @param {string} listingId - The id of the listing that is being purchased
 */
-export function sendDeliveryAddress({ seller, address, listing_id }) {
+export function purchaseListing({ seller, address, listingId, walletAddress, purchaseCode, amount }) {
     return new Promise(function (resolve, reject) {
-        const data = {
-            "type": "add_delivery_address",
-            "address": address,
-            "listing_id": listing_id
-        }
-        send(data, seller).then(e => {
-            console.log(`sent delivery address to seller: ${address}`);
-            resolve(true);
-        }).catch((e) => reject(Error(`Could not send delivery address to seller ${e}`)));
+        sendMoney({ walletAddress, amount, purchaseCode })
+            .then((coinId) => {
+                if (coinId.includes('0x')) {
+                    updateListing(listingId, 'status', 'purchased');
+                    console.log(`Money sent, coin id: ${coinId}`);
+                    console.log(`Sending purchase receipt to seller..`);
+                    return sendPurchaseReceipt({ address, listingId, coinId, seller })
+                        .catch(Error(`Couldn't send purchase receipt`));
+                } else {
+                    console.error(`Error sending money ${JSON.stringify(coinId)}`);
+                    resetListingState(listingId);
+                    reject(Error(`There was a problem with the payment`));
+                }
+            }).catch((error) => {
+                if (error.message.includes('Insufficient funds')) {
+                    resetListingState(listingId)
+                        .then(() => console.log('listing state reset because of error'))
+                        .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
+                    reject(Error(`Insufficient funds`));
+                } else {
+                    resetListingState(listingId)
+                        .then(() => console.log('listing state reset because of error'))
+                        .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
+                    console.error(error);
+                    reject(Error(error));
+                }
+            }).then(resolve(true));
     })
 }
-sendDeliveryAddress.proptypes = {
+purchaseListing.proptypes = {
     seller: PropTypes.string.isRequired,
     address: PropTypes.string.isRequired
 }
@@ -147,3 +183,4 @@ export function hasSufficientFunds(price) {
 hasSufficientFunds.PropTypes = {
     price: PropTypes.number.isRequired
 }
+
