@@ -33,7 +33,7 @@ Because dbay is built on top of a commodity based blockchain which has its own c
 dbay is a protocol (minidapp) which runs on the Minima blockchain. Minima is currently in testnet and will launch in Q1 2023. To run any minidapp, you must first be running a full Minima node. You can learn more about this on the Minima website. In order to play with and test the Minidapp that we are building, we must first set up and run two Minima nodes. If you have an android phone and would like to get a very quick understanding of Minima, you can search 'minima global' on the google play store and download the app. This is not a requirement for this task. 
 
 ## Setup 2 nodes on a test network
-- Open a Terminal window and navigate to `dbay/` (your cloned repo) and create a folder called `/minidapp`. Move the minima.jar file which was downloaded in the prerequisites, into the `dbay/minidapp/` folder. The structure should now look like this `dbay/minidapp/minima.jar`
+- Open a Terminal window and navigate to `dbay/react-ui/` (your cloned repo) and create a folder called `/minidapp`. Move the minima.jar file which was downloaded in the prerequisites, into the `dbay/react-ui/minidapp/` folder. The structure should now look like this `dbay/react-ui/minidapp/minima.jar`
 - From within the `minidapp` folder run `java -jar minima.jar -data minidata1 -test -nop2p -genesis -mdsenable -clean`
 - In a second terminal window navigate to the same folder `/minidapp` and run `java -jar minima.jar -data minidata2 -test -nop2p -clean -port 10001 -mdsenable -connect 127.0.0.1:9001`
 - Now you have two nodes connected on a private test network (this is quicker than being on the public network and means you start with lots of test tokens to play with).
