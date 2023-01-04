@@ -57,7 +57,7 @@ export async function processAvailabilityCheck(entity) {
 
         await send(data, entity.buyer_pk);
         await updateListing(entity.listing_id, "purchase_code", purchaseCode);
-        await updateListing(entity.listing_id, "status", "unavailable");
+        await updateListing(entity.listing_id, "status", "pending");
         resetListingStatusTimeout(entity.listing_id);
     } catch (error) {
         console.error(`There was an error processing availability check: ${error}`);
@@ -73,11 +73,28 @@ function resetListingStatusTimeout(listingId) {
     //after timeout time check that the listing has been sold if not reset it to available
     async function resetListing(listingId) {
         const status = await getStatus(listingId);
-        if (status === 'unavailble') {
+        if (status === 'unavailble' || status === 'pending') {
             updateListing(listingId, "status", "available")
                 .then(console.log('listing reset to availble'))
                 .catch((e)=> console.error(e));
         }
     }
     setTimeout(resetListing(listingId), 600000);
+}
+
+export function processPurchaseReceipt(entity){
+    //TODO: rewrite function that updates the listing all at once instead of hitting database 3 times
+    console.log(`Address received for purchased listing, updating address..`)
+    updateListing(entity.listing_id, 'buyer_message', entity.address).then(
+        () => console.log('address added succesfully'),
+        error => console.error(`Couldn't add address to listing ${error}`)
+    );
+    updateListing(entity.listing_id, 'coin_id', entity.coin_id).then(
+        () => console.log('coin id added to listing'),
+        error => console.error(`Couldn't add coin id to listing ${error}`)
+    );
+    updateListing(entity.listing_id, 'status', 'sold').then(
+        () => console.log('listing sold'),
+        error => console.error(`Couldn't update listing status to sold ${error}`)
+    );
 }

@@ -9,7 +9,7 @@ import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
 import { processAvailabilityResponse } from './buyer-processes';
-import { processAvailabilityCheck } from './seller-processes';
+import { processAvailabilityCheck, processPurchaseReceipt } from './seller-processes';
 
 
 /**
@@ -50,15 +50,7 @@ export function processMaximaEvent(msg) {
             break;
         case 'purchase_receipt':
             //buyer sends seller their address and coin id
-            console.log(`Address received for purchased listing, updating address..`)
-            updateListing(entity.listing_id, 'buyer_message', entity.address).then(
-                () => console.log('address added succesfully'),
-                error => console.error(`Couldn't add address to listing ${error}`)
-            );
-            updateListing(entity.listing_id, 'coin_id', entity.coin_id).then(
-                () => console.log('coin id added to listing'),
-                error => console.error(`Couldn't add coin id to listing ${error}`)
-            );
+            processPurchaseReceipt(entity);
             break;
         default:
             console.log(entity);
