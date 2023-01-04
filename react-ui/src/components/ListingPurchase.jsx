@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
-import { getListingById, resetListingState } from '../database/listing';
+import { getListingById, resetListingState, updateListing } from '../database/listing';
 import { useNavigate } from "react-router";
 import { sendMoney } from "../minima";
 import { sendDeliveryAddress } from '../minima/buyer-processes';
@@ -47,9 +47,11 @@ function ListingPurchase(props) {
       purchaseCode: listing.purchase_code
     }).then((res) => {
       if (res === true) {
+        updateListing(listing.listing_id,'status','purchased');
         navigate('/payment-success');
       } else {
         console.error(`Error sending money ${JSON.stringify(res)}`);
+        resetListingState(listing.listing_id);
         setError(`There was a problem with the payment`);
         setLoading(false);
       }

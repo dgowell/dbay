@@ -50,7 +50,11 @@ export function processMaximaEvent(msg) {
             break;
         case 'add_delivery_address':
             //buyer sends seller their address
-            updateListing(entity.listing_id, 'buyer_message', entity.address)
+            console.log(`Address received for purchased listing, updating address..`)
+            updateListing(entity.listing_id, 'buyer_message', entity.address).then(
+                () => console.log('address updated succesfully'),
+                error => console.error(`Couldn't update address ${error}`)
+            );
             break;
         default:
             console.log(entity);
