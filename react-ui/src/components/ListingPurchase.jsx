@@ -6,8 +6,7 @@ import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { getListingById, resetListingState, updateListing } from '../database/listing';
 import { useNavigate } from "react-router";
-import { sendMoney } from "../minima";
-import { sendDeliveryAddress } from '../minima/buyer-processes';
+import { purchaseListing } from '../minima/buyer-processes';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -37,39 +36,17 @@ function ListingPurchase(props) {
     setLoading(true);
     setError(false);
 
-    //send address to to seller
-    sendDeliveryAddress({ seller: listing.created_by_pk, address: message })
-      .catch((e) => console.error(e));
-
-    sendMoney({
+    purchaseListing({
+      listingId: listing.listing_id,
+      seller: listing.created_by_pk,
       walletAddress: listing.wallet_address,
+      purchaseCode: listing.purchase_code,
+      address: message,
       amount: listing.price,
-      purchaseCode: listing.purchase_code
-    }).then((res) => {
-      if (res === true) {
-        updateListing(listing.listing_id,'status','purchased');
-        navigate('/payment-success');
-      } else {
-        console.error(`Error sending money ${JSON.stringify(res)}`);
-        resetListingState(listing.listing_id);
-        setError(`There was a problem with the payment`);
-        setLoading(false);
-      }
-    }).catch((error) => {
-      if (error.message.includes('Insufficient funds')) {
-        setError(`Insufficient funds`);
-        resetListingState(listing.listing_id)
-          .then(() => console.log('listing state reset because of error'))
-          .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
-        setLoading(false);
-      } else {
-        setError(error);
-        resetListingState(listing.listing_id)
-          .then(() => console.log('listing state reset because of error'))
-          .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
-        console.error(error);
-      }
-    });
+    }).then(
+      () => navigate('/payment-success'),
+      error => setError(error)
+    )
   }
   const handleMessageChange = (event) => {
     setMessage(event.target.value);

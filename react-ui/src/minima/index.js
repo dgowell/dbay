@@ -9,7 +9,7 @@ import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
 import { processAvailabilityResponse } from './buyer-processes';
-import { processAvailabilityCheck } from './seller-processes';
+import { processAvailabilityCheck, processPurchaseReceipt } from './seller-processes';
 
 
 /**
@@ -48,13 +48,9 @@ export function processMaximaEvent(msg) {
             //a contact has shared a listing with you
             processListing(entity);
             break;
-        case 'add_delivery_address':
-            //buyer sends seller their address
-            console.log(`Address received for purchased listing, updating address..`)
-            updateListing(entity.listing_id, 'buyer_message', entity.address).then(
-                () => console.log('address updated succesfully'),
-                error => console.error(`Couldn't update address ${error}`)
-            );
+        case 'purchase_receipt':
+            //buyer sends seller their address and coin id
+            processPurchaseReceipt(entity);
             break;
         default:
             console.log(entity);
@@ -240,7 +236,8 @@ export function sendMoney({
         window.MDS.cmd(Q, function (res) {
             if (res.status === true) {
                 console.log(`sent ${amount} to ${walletAddress} with state code ${purchaseCode} succesfully!`);
-                resolve(true);
+                const coinId = res.response.body.txn.outputs[0].coinid;
+                coinId ? resolve(coinId) : reject(Error(`No coin attached to purchase`));
             } else if (res.message) {
                 reject(Error(`Problem sending money: ${res.message}`));
                 window.MDS.log(`Problem sending money: ${res.message}`);

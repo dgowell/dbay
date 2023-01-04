@@ -21,6 +21,7 @@ export function createListingTable() {
         "buyer_name" char(50),
         "buyer_pk" varchar(330),
         "purchase_code" varchar(30),
+        "coin_id" varchar(80),
         constraint UQ_listing_id unique("listing_id")
         )`;
 

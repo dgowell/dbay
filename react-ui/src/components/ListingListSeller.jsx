@@ -92,7 +92,7 @@ function ListingListSeller() {
       <TabPanel value={value} index={0}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'available')} />
+          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'available' || o.status === 'pending')} />
         }
       </TabPanel>
       <TabPanel value={value} index={1}>
