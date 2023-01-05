@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
-import { getListingById } from "../database/listing";
+import { getListingById, deleteListing } from "../database/listing";
 import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
@@ -13,9 +13,14 @@ import Tooltip from "@mui/material/Tooltip";
 import { sendListingToContacts } from "../minima";
 import BackButton from "./BackButton";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CardActions from "@mui/material/CardActions";
+import Alert from '@mui/material/Alert';
 
 function ListingDetailSeller() {
     const [listing, setListing] = useState();
+    const [deleted, setDeleted] = useState(false);
+    const [error, setError] = useState(false);
     const params = useParams();
 
     useEffect(() => {
@@ -27,6 +32,19 @@ function ListingDetailSeller() {
     function handleShare() {
         sendListingToContacts(listing.listing_id);
         //TODO:show to user that the listing has been shared
+    }
+
+    function handleDelete() {
+        deleteListing(listing.listing_id).then(
+            () => setDeleted(true),
+            error => setError(`Couldn't delete listing`)
+        );
+    }
+
+    if (deleted) {
+        return (
+            <Typography>Item has been deleted</Typography>
+        )
     }
 
     return (
@@ -68,6 +86,12 @@ function ListingDetailSeller() {
                                     : "This is a fake description while there is no description available. The item for sale is perfect, you should definetly buy it right now before it is too late. In fact fuck it i'm gonna buy it."}
                             </Typography>
                         </CardContent>
+                        <CardActions disableSpacing>
+                            <IconButton aria-label="add to favorites" onClick={()=> handleDelete()}>
+                                <DeleteIcon />
+                                {error && <Alert severity="error">{error}</Alert>}
+                            </IconButton>
+                        </CardActions>
                     </Card>
                 </div>
             ) : <ListingDetailSkeleton/>}

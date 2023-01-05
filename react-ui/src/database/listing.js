@@ -207,6 +207,29 @@ updateListing.PropTypes = {
     value: PropTypes.string.isRequired,
 }
 
+
+/**
+* Deletes a listing with given id
+* @param {string} listingId - The id of the listing
+*/
+export function deleteListing(listingId) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`DELETE FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
+            if (res.status) {
+                resolve(res);
+            } else {
+                reject(Error(`MDS.SQL ERROR, could not delete listing ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could not delete listing ${res.error}`);
+            }
+        });
+    });
+}
+updateListing.PropTypes = {
+    listingId: PropTypes.string.isRequired,
+    key: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+}
+
 /**
 * Sets a listing to unchecked
 * @param {string} listingId - The id of the listing
