@@ -18,7 +18,7 @@ function Profile() {
             status => setInvisible(status),
             error => console.error(`couldn't get notification status ${error}`)
         )
-    });
+    },[]);
 
     return (<>
         <Box sx={{

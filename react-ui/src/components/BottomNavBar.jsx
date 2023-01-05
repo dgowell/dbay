@@ -13,15 +13,15 @@ import Badge from '@mui/material/Badge';
 
 function BottomNavBar() {
     const [activePage, setActivePage] = useState();
-    const [invisible, setInvisible] = useState(false);
+    const [notification, setNotifcation] = useState(false);
 
 
     useEffect(() => {
         getNotificationStatus().then(
-            status => setInvisible(status),
+            status => setNotifcation(status),
             error => console.error(`couldn't get notification status`)
         )
-    });
+    },[]);
     return (
         <Paper
             sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
@@ -63,7 +63,7 @@ function BottomNavBar() {
                     to="/profile"
                     label="Me"
                     icon={
-                        <Badge color="secondary" variant="dot" invisible={invisible}>
+                        <Badge color="secondary" variant="dot" invisible={!notification}>
                             <AccountCircleIcon />
                         </Badge>
                     }

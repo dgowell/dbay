@@ -7,11 +7,13 @@ import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import { ListItemButton, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import Badge from '@mui/material/Badge';
 
 function Listing(props) {
   const navigate = useNavigate();
   return (
     <ListItem disablePadding>
+
       <ListItemButton
         edge="end"
         aria-label="view listing"
@@ -23,17 +25,25 @@ function Listing(props) {
           {props.listing.image ? (
             <Avatar alt={props.listing.name} src={props.listing.image} />
           ) : (
-            <Avatar>
-              <BungalowIcon />
-            </Avatar>
+            <Badge anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+              }} color="secondary" variant="dot" invisible={!(props.listing.notification === 'true')}>
+              <Avatar>
+                <BungalowIcon />
+              </Avatar>
+            </Badge>
           )}
         </ListItemAvatar>
+
         <ListItemText
           primary={props.listing.name}
           secondary={props.listing.price ? `£${props.listing.price}` : null}
         />
+
       </ListItemButton>
-    </ListItem>
+
+    </ListItem >
   );
 }
 

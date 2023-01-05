@@ -21,7 +21,7 @@ export function createListingTable() {
         "buyer_pk" varchar(330),
         "purchase_code" varchar(30),
         "coin_id" varchar(80),
-        "notification" boolean default true,
+        "notification" boolean default false,
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -329,9 +329,9 @@ export function handlePurchase(listingId) {
 */
 export function getNotificationStatus(listingId) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`SELECT "notification" FROM ${LISTINGSTABLE}';`, function (res) {
+        window.MDS.sql(`SELECT "notification" FROM ${LISTINGSTABLE};`, function (res) {
             if (res) {
-                const isTrue = (element) => element === true;
+                const isTrue = (element) => element.notification === 'true';
                 const results = res.rows.some(isTrue);
                 //get all notification statuses
                 //if at least one if true

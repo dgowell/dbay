@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
-import { getListingById, updateListing } from "../database/listing";
+import { getListingById, updateListing, resetNotification } from "../database/listing";
 import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import Card from "@mui/material/Card";
@@ -24,6 +24,12 @@ function ListingDeliverySeller() {
             .then(console.log('updated listing as completed!'))
             .catch((e)=>console.error(`Could not update listing as completed: ${e}`));
     }
+
+    useEffect(() => {
+        if (listing) {
+            updateListing(listing.listing_id, 'notification', 'false').catch(e => console.error(`Couldn't reset notification ${e}`));
+        }
+    },[listing]);
 
     return (
         <div>

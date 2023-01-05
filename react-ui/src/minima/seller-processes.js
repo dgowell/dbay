@@ -97,4 +97,8 @@ export function processPurchaseReceipt(entity){
         () => console.log('listing sold'),
         error => console.error(`Couldn't update listing status to sold ${error}`)
     );
+    updateListing(entity.listing_id, 'notification', 'true').then(
+        () => console.log('notification triggered'),
+        error => console.error(`Couldn't update listing notification status: ${error}`)
+    );
 }
