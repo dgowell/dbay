@@ -4,10 +4,7 @@ import "./App.css";
 import * as React from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
-import BottomNavigation from "@mui/material/BottomNavigation";
-import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import ResponsiveAppBar from "./components/ResponsiveAppBar";
@@ -17,15 +14,11 @@ import ListingCreate from "./components/ListingCreate";
 import ListingPurchase from "./components/ListingPurchase";
 import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentError from "./components/PaymentError";
+import BottomNavBar from "./components/BottomNavBar";
 import { processMaximaEvent } from "./minima";
 import { getHost } from "./database/settings";
 import { setup } from "./database/index";
 import Purchases from "./components/Purchases";
-import HomeIcon from "@mui/icons-material/Home";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import MailIcon from "@mui/icons-material/Mail";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Profile from "./components/Profile";
 import WelcomePage from "./components/WelcomePage";
 import ListingDetailSeller from "./components/ListingDetailSeller";
@@ -58,7 +51,7 @@ theme.typography.h3 = {
 };
 
 function App() {
-  const [activePage, setActivePage] = useState();
+
   const [loading, setLoading] = useState();
   const [host, setHost] = useState({
     "name": '',
@@ -127,49 +120,7 @@ function App() {
               <Route path="name/" element={<Profile />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
-            <Paper
-              sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
-              elevation={3}
-            >
-              <BottomNavigation
-                showLabels
-                value={activePage}
-                onChange={(event, page) => {
-                  setActivePage(page);
-                }}
-              >
-                <BottomNavigationAction
-                  component={Link}
-                  to="/"
-                  label="Home"
-                  icon={<HomeIcon />}
-                />
-                <BottomNavigationAction
-                  component={Link}
-                  to="/"
-                  label="Favourites"
-                  icon={<FavoriteIcon />}
-                />
-                <BottomNavigationAction
-                  component={Link}
-                  to="/listing/create"
-                  label="Sell"
-                  icon={<AddCircleIcon />}
-                />
-                <BottomNavigationAction
-                  component={Link}
-                  to="/"
-                  label="Inbox"
-                  icon={<MailIcon />}
-                />
-                <BottomNavigationAction
-                  component={Link}
-                  to="/profile"
-                  label="Me"
-                  icon={<AccountCircleIcon />}
-                />
-              </BottomNavigation>
-            </Paper>
+            <BottomNavBar />
           </Box>
         </Container>
       </ThemeProvider>

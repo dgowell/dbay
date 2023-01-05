@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import { getHost } from "./settings";
-import { send } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
 
@@ -22,6 +21,7 @@ export function createListingTable() {
         "buyer_pk" varchar(330),
         "purchase_code" varchar(30),
         "coin_id" varchar(80),
+        "notification" boolean default true,
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -321,4 +321,31 @@ export function handlePurchase(listingId) {
     //    console.log(r);
     //})
 
+}
+
+/**
+* Returns the status of notification on a a listing
+* @param {string} listingId - The id of the listing
+*/
+export function getNotificationStatus(listingId) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT "notification" FROM ${LISTINGSTABLE}';`, function (res) {
+            if (res) {
+                const isTrue = (element) => element === true;
+                const results = res.rows.some(isTrue);
+                //get all notification statuses
+                //if at least one if true
+                console.log(results);
+                //return true
+                return results ? resolve(true) : resolve(false);
+            }
+            else {
+                reject(`MDS.SQL ERROR, could get status of listing ${res.error}`);
+                window.MDSlog(`MDS.SQL ERROR, could get status of listing ${res.error}`);
+            }
+        });
+    });
+}
+getNotificationStatus.proptypes = {
+    listingId: PropTypes.string.isRequired
 }
