@@ -11,14 +11,14 @@ import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from '../database/listing';
 
 function Profile() {
-    const [invisible, setInvisible] = useState(false);
+    const [hasNotification, setHasNotification] = useState(false);
     const navigate = useNavigate();
     useEffect(() => {
         getNotificationStatus().then(
-            status => setInvisible(status),
+            status => setHasNotification(status),
             error => console.error(`couldn't get notification status ${error}`)
         )
-    },[]);
+    });
 
     return (<>
         <Box sx={{
@@ -30,7 +30,7 @@ function Profile() {
             mb: 6
         }}>
             <AccountCircleIcon />
-            <Typography variant="h6" mt={1}>Monthrie</Typography>
+            <Typography variant="h6" mt={1}></Typography>
         </Box>
         <Box sx={{
             m: 2,
@@ -49,7 +49,7 @@ function Profile() {
                             <Badge anchorOrigin={{
                                 vertical: 'top',
                                 horizontal: 'left',
-                            }} color="secondary" variant="dot" invisible={invisible}>
+                            }} color="secondary" variant="dot" invisible={!hasNotification}>
                                 <ListItemText primary="My Listings" />
                             </Badge>
                         </ListItemButton>

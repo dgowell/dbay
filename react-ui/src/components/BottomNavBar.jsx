@@ -8,8 +8,8 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import MailIcon from "@mui/icons-material/Mail";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Paper from "@mui/material/Paper";
-import { getNotificationStatus } from '../database/listing';
 import Badge from '@mui/material/Badge';
+import { getNotificationStatus } from "../database/listing";
 
 function BottomNavBar() {
     const [activePage, setActivePage] = useState();
@@ -21,7 +21,8 @@ function BottomNavBar() {
             status => setNotifcation(status),
             error => console.error(`couldn't get notification status`)
         )
-    },[]);
+    });
+
     return (
         <Paper
             sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
