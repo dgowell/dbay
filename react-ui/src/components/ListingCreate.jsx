@@ -16,6 +16,11 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
+import FormLabel from '@mui/material/FormLabel';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import FormHelperText from '@mui/material/FormHelperText';
 
 
 
@@ -24,10 +29,28 @@ export default function ListingCreate() {
   const [host, setHost] = useState();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [location, setLocation] = useState(null);
   const [form, setForm] = useState({
     name: "",
     asking_price: "",
   });
+
+  const [checked, setChecked] = useState({
+    collection: true,
+    delivery: false,
+  });
+
+  const handleChange = (event) => {
+    setChecked({
+      ...checked,
+      [event.target.name]: event.target.checked,
+    });
+  };
+
+  const { collection, delivery } = checked;
+
+  const checkError = [collection, delivery].filter((v) => v).length < 1;
+
   const [walletAddress, setWalletAddress] = useState("");
 
   const navigate = useNavigate();
@@ -36,13 +59,13 @@ export default function ListingCreate() {
     getHost().then((host) => {
       setHost(host);
     });
-  },[]);
+  }, []);
 
   useEffect(() => {
     async function getWalletAddress() {
-      setWalletAddress(await getMiniAddress().catch((e)=>console.error(`Get Mini address failed: ${e}`)));
+      setWalletAddress(await getMiniAddress().catch((e) => console.error(`Get Mini address failed: ${e}`)));
     }
-    getWalletAddress().catch((e)=>console.error(`Get wallet address failed: ${e}`));
+    getWalletAddress().catch((e) => console.error(`Get wallet address failed: ${e}`));
   }, []);
 
   // These methods will update the state properties.
@@ -68,12 +91,12 @@ export default function ListingCreate() {
       createdByName: host.name,
       walletAddress: walletAddress,
     })
-    .then(function(listingId) {
+      .then(function (listingId) {
         console.log(`Listing successfully added: ${listingId}`);
         console.log(`Attempting to send listing to contacts...`);
         return sendListingToContacts(listingId);
       }).then((result) => {
-        if (result.message){
+        if (result.message) {
           setError(`Could not send listing to contacts`);
           console.error(result.message);
           setLoading(false);
@@ -92,6 +115,19 @@ export default function ListingCreate() {
 
   const handleGoHome = () => {
     navigate(-1);
+  }
+
+  function handleLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+
+    function showPosition(position) {
+      setLocation("Latitude: " + position.coords.latitude +
+        " Longitude: " + position.coords.longitude);
+    }
   }
 
   if (walletAddress && host) {
@@ -145,6 +181,30 @@ export default function ListingCreate() {
                 />
               </FormControl>
             </Grid>
+            <Grid item xs={12}>
+              <FormControl required
+                error={checkError}
+                component="fieldset"
+                sx={{ m: 3 }}
+                variant="standard">
+                <FormLabel component="legend">Collection & Delivery</FormLabel>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={collection} onChange={handleChange} name="collection" />
+                    }
+                    label="Collection"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={delivery} onChange={handleChange} name="delivery" />
+                    }
+                    label="Delivery"
+                  />
+                  </FormGroup>
+                <FormHelperText>You must choose at least one</FormHelperText>
+                </FormControl>
+            </Grid>
           </Grid>
           <LoadingButton
             fullWidth
@@ -164,6 +224,8 @@ export default function ListingCreate() {
             </Button>
           } severity="success">Listing created and shared!</Alert> : null}
         </Box>
+        <Button onClick={handleLocation}>Get Location</Button>
+        {location ? location : null}
       </Box>
     );
   }
