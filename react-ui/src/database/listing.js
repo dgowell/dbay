@@ -22,6 +22,8 @@ export function createListingTable() {
         "purchase_code" varchar(30),
         "coin_id" varchar(80),
         "notification" boolean default false,
+        "collection" boolean default false,
+        "delivery" boolean default false,
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -39,7 +41,7 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({ name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt }) {
+export function createListing({ name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt, collection, delivery}) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
     const id = `${randomId}${createdByPk}`;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -50,6 +52,8 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             "listing_id",
             "name",
             "price",
+            "collection",
+            "delivery",
             "created_by_pk",
             "created_by_name",
             ${sentByName ? '"sent_by_name",' : ''}
@@ -63,6 +67,8 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             ${listingId ? `'${listingId}',` : `'${id}',`}
             '${name}',
             '${price}',
+            '${collection}',
+            '${delivery}',
             '${createdByPk}',
             '${createdByName}',
             ${sentByName ? `'${sentByName}',` : ''}
