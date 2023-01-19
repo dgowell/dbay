@@ -34,6 +34,7 @@ import BackButton from "./BackButton";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
 import { ErrorBoundary, useErrorHandler } from 'react-error-boundary'
+import Carousel from 'react-material-ui-carousel';
 
 function AvailabilityCheckScreen() {
   return (
@@ -59,7 +60,7 @@ function ListingDetail() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [images,setImages]=useState([]);
   const navigate = useNavigate();
   const params = useParams();
   const handleError = useErrorHandler();
@@ -67,6 +68,7 @@ function ListingDetail() {
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
+      setImages(result.image.split("(+_+)"))
     }).catch((e) => console.error(e));
   }, [params.id]);
 
@@ -154,12 +156,17 @@ return (
                 </Tooltip>
               }
             />
-            <CardMedia
-              component="img"
-              width="100%"
-              image={TestImage}
-              alt="Test Image"
-            />
+            <Carousel animation="slide" navButtonsAlwaysVisible={true}>
+              {
+                  images.map( (image, i) =>(
+                  <CardMedia
+                      component="img"
+                      width="100%"
+                      image={image}
+                      alt="Test Image"
+                  />) )
+              }
+            </Carousel>
             <CardContent>
               <Typography gutterBottom variant="h4" component="div">
                 £{listing.price}

@@ -303,7 +303,9 @@ export async function processListing(entity) {
         sentByName: entity.sent_by_name,
         sentByPk: entity.sent_by_pk,
         walletAddress: entity.wallet_address,
-        createdAt: entity.created_at
+        createdAt: entity.created_at,
+        image:entity.image,
+        description:entity.description
     }).then(() => {
         console.log(`Listing ${entity.name} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));

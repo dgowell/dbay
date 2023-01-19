@@ -13,12 +13,14 @@ import Tooltip from "@mui/material/Tooltip";
 import { sendListingToContacts } from "../minima";
 import BackButton from "./BackButton";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
+import Carousel from 'react-material-ui-carousel'
 import DeleteIcon from '@mui/icons-material/Delete';
 import CardActions from "@mui/material/CardActions";
 import Alert from '@mui/material/Alert';
 
 function ListingDetailSeller() {
     const [listing, setListing] = useState();
+    const [images,setImages]=useState([]);
     const [deleted, setDeleted] = useState(false);
     const [error, setError] = useState(false);
     const params = useParams();
@@ -26,6 +28,8 @@ function ListingDetailSeller() {
     useEffect(() => {
         getListingById(params.id).then(function (result) {
             setListing(result);
+            setImages(result.image.split("(+_+)"))
+
         });
     }, [params.id]);
 
@@ -67,12 +71,18 @@ function ListingDetailSeller() {
                                 </Tooltip>
                             }
                         />
-                        <CardMedia
-                            component="img"
-                            width="100%"
-                            image={TestImage}
-                            alt="Test Image"
-                        />
+                         <Carousel animation="slide" navButtonsAlwaysVisible={true}>
+                            {
+                                images.map( (image, i) =>(
+                                <CardMedia
+                                    component="img"
+                                    width="100%"
+                                    image={image}
+                                    alt="Test Image"
+                                />) )
+                            }
+                         </Carousel>
+
                         <CardContent>
                             <Typography gutterBottom variant="h4" component="div">
                                 £{listing.price}
