@@ -21,39 +21,46 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import FormHelperText from '@mui/material/FormHelperText';
+import { FormErrors } from './FormErrors';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 
-
+const validationSchema = yup.object({
+  title: yup
+    .string('Enter listing title')
+    .max(50, 'Title is too long')
+    .required('Title is required'),
+  askingPrice: yup
+    .number('Enter the price')
+    .positive('Price must be at least 1 minima')
+    .min(1, 'Price should be at least 1 minima')
+    .max(100000000000, 'Price should be below 100000000000 minima')
+    .required('Price is required'),
+  aftersaleOptions: yup
+    .array()
+    .min(1, 'At least one option be selected')
+});
 
 export default function ListingCreate() {
   const [loading, setLoading] = useState(false);
   const [host, setHost] = useState();
   const [error, setError] = useState(null);
+  const [walletAddress, setWalletAddress] = useState("");
   const [success, setSuccess] = useState(null);
   const [location, setLocation] = useState(null);
-  const [form, setForm] = useState({
-    name: "",
-    asking_price: "",
-  });
-
-  const [checked, setChecked] = useState({
-    collection: true,
-    delivery: false,
-  });
-
-  const handleChange = (event) => {
-    setChecked({
-      ...checked,
-      [event.target.name]: event.target.checked,
-    });
-  };
-
-  const { collection, delivery } = checked;
-
-  const checkError = [collection, delivery].filter((v) => v).length < 1;
-
-  const [walletAddress, setWalletAddress] = useState("");
-
   const navigate = useNavigate();
+
+  const formik = useFormik({
+    initialValues: {
+      title: '',
+      askingPrice: 0,
+      aftersaleOptions: []
+    },
+    validationSchema: validationSchema,
+    onSubmit: (values) => {
+      onSubmit(values);
+    },
+  });
 
   useEffect(() => {
     getHost().then((host) => {
@@ -68,13 +75,6 @@ export default function ListingCreate() {
     getWalletAddress().catch((e) => console.error(`Get wallet address failed: ${e}`));
   }, []);
 
-  // These methods will update the state properties.
-  function updateForm(value) {
-    return setForm((prev) => {
-      return { ...prev, ...value };
-    });
-  }
-
   // This function will handle the submission.
   async function onSubmit(e) {
     e.preventDefault();
@@ -82,14 +82,16 @@ export default function ListingCreate() {
     setError(null);
 
     // When a post request is sent to the create url, we'll add a new record to the database.
-    const newListing = { ...form };
+    const newListing = { ...formik };
 
     createListing({
-      name: newListing.name,
-      price: newListing.asking_price,
+      title: newListing.title,
+      price: newListing.askingPrice,
       createdByPk: host.pk,
       createdByName: host.name,
       walletAddress: walletAddress,
+      collection: newListing.collection,
+      delivery: newListing.delivery
     })
       .then(function (listingId) {
         console.log(`Listing successfully added: ${listingId}`);
@@ -103,7 +105,6 @@ export default function ListingCreate() {
         } else {
           console.log('Successfully sent listing to contacts');
           setLoading(false);
-          setForm({ name: "", asking_price: "" });
           setSuccess(true);
         }
       }).catch((e) => {
@@ -149,60 +150,67 @@ export default function ListingCreate() {
           sx={{ mt: 3 }}
           noValidate
           autoComplete="off"
-          onSubmit={onSubmit}
+          onSubmit={formik.handleSubmit}
         >
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
                 label="Listing Title"
-                id="listing-name"
+                id="title"
+                name="title"
                 className="form-field"
                 type="text"
                 required
                 fullWidth
-                name="title"
-                value={form.name}
-                onChange={(e) => updateForm({ name: e.target.value })}
+                value={formik.values.title}
+                onChange={formik.handleChange}
                 variant="outlined"
+                error={formik.touched.title && Boolean(formik.errors.title)}
+                helperText={formik.touched.title && formik.errors.title}
               />
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
                 <InputLabel htmlFor="asking-price">Asking Price *</InputLabel>
                 <OutlinedInput
-                  id="asking-price"
-                  value={form.asking_price}
-                  required="true"
-                  onChange={(e) => updateForm({ asking_price: e.target.value })}
+                  label="Asking Price"
+                  id="askingPrice"
+                  name="askingPrice"
+                  value={formik.values.askingPrice}
+                  required
+                  onChange={formik.handleChange}
                   startAdornment={
                     <InputAdornment position="start">MIN</InputAdornment>
                   }
-                  label="Asking Price"
+                  error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}
                 />
+                <FormHelperText error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}>
+                  {formik.touched.askingPrice && formik.errors.askingPrice}
+                </FormHelperText>
               </FormControl>
             </Grid>
             <Grid item xs={12}>
               <FormControl required
-                error={checkError}
+                fullwidth
                 component="fieldset"
+                error={formik.touched.aftersaleOptions.delivery && Boolean(formik.errors.aftersaleOptions.delivery)}
                 sx={{ m: 3 }}
                 variant="standard">
-                <FormLabel component="legend">Collection & Delivery</FormLabel>
                 <FormGroup>
                   <FormControlLabel
                     control={
-                      <Checkbox checked={collection} onChange={handleChange} name="collection" />
+                      <Checkbox checked={formik.values.aftersaleOptions.collection} onChange={formik.handleChange} name="aftersaleOptions.collection" />
                     }
                     label="Collection"
                   />
                   <FormControlLabel
                     control={
-                      <Checkbox checked={delivery} onChange={handleChange} name="delivery" />
+                      <Checkbox checked={formik.values.aftersaleOptions.delivery} onChange={formik.handleChange} name="delivery" />
                     }
                     label="Delivery"
                   />
                   </FormGroup>
-                <FormHelperText>You must choose at least one</FormHelperText>
+                <FormHelperText>{formik.touched.aftersaleOptions.delivery & Boolean(formik.errors.aftersaleOptions.delivery)}</FormHelperText>
                 </FormControl>
             </Grid>
           </Grid>

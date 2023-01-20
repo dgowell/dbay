@@ -7,7 +7,7 @@ const LISTINGSTABLE = 'LISTING';
 export function createListingTable() {
     const Q = `create table if not exists ${LISTINGSTABLE} (
         "listing_id" varchar(343) primary key,
-        "name" varchar(50) NOT NULL,
+        "title" varchar(50) NOT NULL,
         "price" INT NOT NULL,
         "created_by_pk" varchar(330) NOT NULL,
         "created_by_name" char(50),
@@ -41,7 +41,7 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({ name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt, collection, delivery}) {
+export function createListing({ title, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt, collection, delivery}) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
     const id = `${randomId}${createdByPk}`;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -50,7 +50,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
         let fullsql = `insert into ${LISTINGSTABLE}
         (
             "listing_id",
-            "name",
+            "title",
             "price",
             "collection",
             "delivery",
@@ -65,7 +65,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
 
         values(
             ${listingId ? `'${listingId}',` : `'${id}',`}
-            '${name}',
+            '${title}',
             '${price}',
             '${collection}',
             '${delivery}',
@@ -79,7 +79,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
 
         );`;
 
-        console.log(`name: ${name}, price: ${price}`);
+        console.log(`title: ${title}, price: ${price}`);
         window.MDS.sql(fullsql, (res) => {
             window.MDS.log(`MDS.SQL, ${fullsql}`);
             if (res.status) {
@@ -93,7 +93,7 @@ export function createListing({ name, price, createdByPk, createdByName, listing
     });
 }
 createListing.propTypes = {
-    name: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
     price: PropTypes.number.isRequired,
     createdByPk: PropTypes.string.isRequired,
     createdByName: PropTypes.string.isRequired,
@@ -130,7 +130,7 @@ getListings.propTypes = {
 * Fetches all listings that are the user has purchased
 */
 export function getMyPurchases() {
-    const Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "status"='purchased';`
+    const Q = `select "listing_id", "title", "price" from ${LISTINGSTABLE} where "status"='purchased';`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
@@ -302,7 +302,7 @@ export async function processListing(entity) {
 
     createListing({
         listingId: entity.listing_id,
-        name: entity.name,
+        title: entity.title,
         price: entity.price,
         createdByPk: entity.created_by_pk,
         createdByName: entity.created_by_name,
@@ -311,7 +311,7 @@ export async function processListing(entity) {
         walletAddress: entity.wallet_address,
         createdAt: entity.created_at
     }).then(() => {
-        console.log(`Listing ${entity.name} added!`);
+        console.log(`Listing ${entity.title} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
 }
 

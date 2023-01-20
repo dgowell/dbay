@@ -22,7 +22,7 @@ export function processNewBlock(data) {
         getListingByPurchaseCode(purchaseCode).then((listing) => {
             //check the amount is the same
             if (listing.price === txnAmount) {
-                console.log(`A buyer has paid for your item: ${listing.name}`);
+                console.log(`A buyer has paid for your item: ${listing.title}`);
                 return updateListing(listing.listing_id, 'status', 'sold');
             }
         }).catch((e) => console.error(`Couldn't find listing with this pruchase code: ${e}`))

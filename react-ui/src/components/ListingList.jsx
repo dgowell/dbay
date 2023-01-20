@@ -23,7 +23,7 @@ function Listing(props) {
       >
         <ListItemAvatar>
           {props.listing.image ? (
-            <Avatar alt={props.listing.name} src={props.listing.image} />
+            <Avatar alt={props.listing.title} src={props.listing.image} />
           ) : (
             <Badge anchorOrigin={{
               vertical: 'top',
@@ -37,7 +37,7 @@ function Listing(props) {
         </ListItemAvatar>
 
         <ListItemText
-          primary={props.listing.name}
+          primary={props.listing.title}
           secondary={props.listing.price ? `£${props.listing.price}` : null}
         />
 

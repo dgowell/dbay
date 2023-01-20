@@ -11,7 +11,7 @@ import CardMedia from "@mui/material/CardMedia";
 import IconButton from "@mui/material/IconButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
-import TestImage from "../assets/images/test.jpg";
+import TestImage from "../assets/images/test.webp";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
@@ -165,7 +165,7 @@ return (
                 £{listing.price}
               </Typography>
               <Typography gutterBottom variant="h6" component="div">
-                {listing.name}
+                {listing.title}
               </Typography>
               <Typography gutterBottom component="div">
                 {listing.description

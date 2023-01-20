@@ -78,7 +78,7 @@ function ListingDetailSeller() {
                                 £{listing.price}
                             </Typography>
                             <Typography gutterBottom variant="h6" component="div">
-                                {listing.name}
+                                {listing.title}
                             </Typography>
                             <Typography gutterBottom component="div">
                                 {listing.description

@@ -83,7 +83,7 @@ function ListingPurchase(props) {
                   <ImageIcon />
                 </Avatar>
               </ListItemAvatar>
-              <ListItemText primary={`$M ${listing.price}`} secondary={listing.name} />
+              <ListItemText primary={`$M ${listing.price}`} secondary={listing.title} />
             </ListItem>
           </List>
           <Box sx={{

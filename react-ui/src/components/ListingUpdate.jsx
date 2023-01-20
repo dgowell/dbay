@@ -12,7 +12,7 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 
 export default function ListingUpdate() {
     const [form, setForm] = useState({
-        name: "",
+        title: "",
         asking_price: "",
         records: [],
     });
@@ -55,7 +55,7 @@ export default function ListingUpdate() {
     async function onSubmit(e) {
         e.preventDefault();
         const editedPerson = {
-            name: form.name,
+            title: form.title,
             asking_price: form.asking_price
         };
 
