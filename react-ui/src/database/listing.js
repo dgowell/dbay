@@ -22,6 +22,8 @@ export function createListingTable() {
         "purchase_code" varchar(30),
         "coin_id" varchar(80),
         "notification" boolean default false,
+        "image"  varchar(max),
+        "description" varchar(1500),
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -39,7 +41,7 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({ name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt }) {
+export function createListing({ name, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt,image,description }) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
     const id = `${randomId}${createdByPk}`;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -56,7 +58,9 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
              ${sentByPk ? '"status",' : ''}
-            "created_at"
+            "created_at",
+            "image",
+            "description"
         )
 
         values(
@@ -69,7 +73,9 @@ export function createListing({ name, price, createdByPk, createdByName, listing
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
             ${sentByPk ? `'unchecked',` : ''}
-            ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
+            ${createdAt ? `'${createdAt}'` : `'${timestamp}'`},
+            '${image}',
+            '${description}'
 
         );`;
 
@@ -95,7 +101,9 @@ createListing.propTypes = {
     sentByName: PropTypes.string,
     sentByPk: PropTypes.string,
     walletAddress: PropTypes.string.isRequired,
-    createdAt: PropTypes.number
+    createdAt: PropTypes.number,
+    image:PropTypes.string,
+    description:PropTypes.string
 }
 
 /**

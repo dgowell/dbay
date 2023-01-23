@@ -106,7 +106,7 @@ export default function ListingCreate() {
       createdByName: host.name,
       walletAddress: walletAddress,
       image:images.join("(+_+)"),
-      description:newListing.description
+      description:newListing.description ?? ''
     }).then(function(listingId) {
         l_id=listingId;
         console.log(`Listing successfully added: ${listingId}`);
