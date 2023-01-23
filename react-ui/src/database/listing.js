@@ -132,7 +132,7 @@ getListings.propTypes = {
 * Fetches all listings that are the user has purchased
 */
 export function getMyPurchases() {
-    const Q = `select "listing_id", "name", "price" from ${LISTINGSTABLE} where "status"='purchased';`
+    const Q = `select * from ${LISTINGSTABLE} where "status"='purchased';`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
