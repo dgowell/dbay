@@ -327,6 +327,16 @@ export default function ListingCreate() {
           } severity="success">Listing created and shared!</Alert> : null}
           </Grid>
         </Box>
+        <Dialog
+        fullScreen={fullScreen}
+        open={openModal}
+        onClose={handleModalClose}
+        aria-labelledby="responsive-dialog-title"
+      >
+        <Box alignContent="center">
+          <UserWebCam handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} /> 
+        </Box>
+      </Dialog>
       </Box>
     );
   }
