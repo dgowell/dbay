@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
@@ -37,6 +37,7 @@ import { ErrorBoundary, useErrorHandler } from 'react-error-boundary'
 import Carousel from 'react-material-ui-carousel';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import haversine from 'haversine-distance';
 
 function AvailabilityCheckScreen() {
   return (
@@ -62,10 +63,38 @@ function ListingDetail() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [images,setImages]=useState([]);
+  const [images, setImages] = useState([]);
+  const [distance, setDistance] = useState(0);
   const navigate = useNavigate();
   const params = useParams();
   const handleError = useErrorHandler();
+  const [coordinates, setCoordinates] = useState({
+    latitude: '',
+    longitude: ''
+  })
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+
+    function showPosition(position) {
+      setCoordinates({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      });
+    };
+  }, []);
+
+
+  useEffect(() => {
+    if ((coordinates.latitude !== '') && listing) {
+      const location = JSON.parse(listing.location);
+      setDistance(Math.round(haversine(coordinates, location)));
+    }
+  },[coordinates, listing])
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
@@ -89,7 +118,7 @@ function ListingDetail() {
     }
   }, [listing]);
 
-async function handleBuy() {
+  async function handleBuy() {
     //ensure user knows it's doing something
     setCheckingAvailability(true);
     setLoading(true);
@@ -122,134 +151,134 @@ async function handleBuy() {
         navigate(`/listing/${listing.listing_id}/purchase`)
       }
     }
-}
+  }
 
-function handleShare() {
-  sendListingToContacts(listing.listing_id);
-  //TODO:show to user that the listing has been shared
-}
+  function handleShare() {
+    sendListingToContacts(listing.listing_id);
+    //TODO:show to user that the listing has been shared
+  }
 
-function handleContact() {
-  console.log('contact seller clicked!');
-}
+  function handleContact() {
+    console.log('contact seller clicked!');
+  }
 
+  checkingAvailability && <AvailabilityCheckScreen />
 
-checkingAvailability && <AvailabilityCheckScreen />
-
-return (
-  error
-    ? <PaymentError error={error} />
-    : <div>
-      {listing && buyerAddress && buyerName ? (
-        <div>
-          <Card sx={{ maxWidth: '100%', marginTop: 2 }}>
-            <CardHeader
-              avatar={
-                <BackButton />
-              }
-              action={
-                <Tooltip title="Share to all your contacts" placement="top">
-                  <IconButton
-                    onClick={() => handleShare()}
-                    aria-label="share"
-                  >
-                    <ShareIcon />
-                  </IconButton>
-                </Tooltip>
-              }
-            />
-            <Carousel animation="slide" navButtonsAlwaysVisible={true}>
-              {
-                  images.map( (image, i) =>(
-                  <CardMedia
+  return (
+    error
+      ? <PaymentError error={error} />
+      : <div>
+        {listing && buyerAddress && buyerName ? (
+          <div>
+            <Card sx={{ maxWidth: '100%', marginTop: 2 }}>
+              <CardHeader
+                avatar={
+                  <BackButton />
+                }
+                action={
+                  <Tooltip title="Share to all your contacts" placement="top">
+                    <IconButton
+                      onClick={() => handleShare()}
+                      aria-label="share"
+                    >
+                      <ShareIcon />
+                    </IconButton>
+                  </Tooltip>
+                }
+              />
+              <Carousel animation="slide" navButtonsAlwaysVisible={true}>
+                {
+                  images.map((image, i) => (
+                    <CardMedia
                       component="img"
                       width="100%"
                       image={image}
                       alt="Test Image"
-                  />) )
-              }
-            </Carousel>
-            <CardContent>
-              <Typography gutterBottom variant="h4" component="div">
-                £{listing.price}
-              </Typography>
-              <Typography gutterBottom variant="h6" component="div">
-                {listing.title}
-              </Typography>
-              <Typography gutterBottom component="div">
-                {listing.description
-                  ? listing.description
-                  : "This is a temporary description."}
-              </Typography>
-            </CardContent>
-            <Divider />
-            <List>
-              {listing.collection === "true" 
-              ?
-              <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <LocationOnIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Collection"
-                  />
-                </ListItemButton>
-              </ListItem>
-              : null}
-              { listing.delivery === "true"
-              ?
-              <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <LocalShippingIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={`Shipping £${listing.shipping_cost}`}
-                    secondary={listing.shipping_countries}
-                  />
-                </ListItemButton>
-              </ListItem>
-              : null}
-              <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <StorefrontIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={`Sold by: ${listing.created_by_name}`}
-                  />
-                </ListItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <ForwardIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={`Sent by: ${listing.sent_by_name}`}
-                  />
-                </ListItemButton>
-              </ListItem>
-            </List>
-          </Card>
-          <Stack spacing={2} mt={4} mb={8}>
-            {listing.status === "purchased"
-            ? null
-            : <Button
-              variant="contained"
-              onClick={handleBuy}
-              startIcon={<PaymentIcon />}
-            >
-              I want it
-            </Button>}
-            <LoadingButton loading={loading} variant="outlined" onClick={handleContact} endIcon={<SendIcon />} >
-              Contact Seller
-            </LoadingButton>
-          </Stack>
-        </div>
-      ) : <ListingDetailSkeleton />}
-    </div>
-);
-  }
+                    />))
+                }
+              </Carousel>
+              <CardContent>
+                <Typography gutterBottom variant="h4" component="div">
+                  £{listing.price}
+                </Typography>
+                <Typography gutterBottom variant="h6" component="div">
+                  {listing.title}
+                </Typography>
+                <Typography gutterBottom component="div">
+                  {listing.description
+                    ? listing.description
+                    : "This is a temporary description."}
+                </Typography>
+              </CardContent>
+              <Divider />
+              <List>
+                {listing.collection === "true"
+                  ?
+                  <ListItem disablePadding>
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <LocationOnIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Collection"
+                        secondary={distance ? `${distance} km from me` : null}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                  : null}
+                {listing.delivery === "true"
+                  ?
+                  <ListItem disablePadding>
+                    <ListItemButton>
+                      <ListItemIcon>
+                        <LocalShippingIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={`Shipping £${listing.shipping_cost}`}
+                        secondary={listing.shipping_countries}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                  : null}
+                <ListItem disablePadding>
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <StorefrontIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`Sold by: ${listing.created_by_name}`}
+                    />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <ForwardIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`Sent by: ${listing.sent_by_name}`}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Card>
+            <Stack spacing={2} mt={4} mb={8}>
+              {listing.status === "purchased"
+                ? null
+                : <Button
+                  variant="contained"
+                  onClick={handleBuy}
+                  startIcon={<PaymentIcon />}
+                >
+                  I want it
+                </Button>}
+              <LoadingButton loading={loading} variant="outlined" onClick={handleContact} endIcon={<SendIcon />} >
+                Contact Seller
+              </LoadingButton>
+            </Stack>
+          </div>
+        ) : <ListingDetailSkeleton />}
+      </div>
+  );
+}
 export default ListingDetail;
