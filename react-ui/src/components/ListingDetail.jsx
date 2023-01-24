@@ -35,6 +35,8 @@ import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
 import { ErrorBoundary, useErrorHandler } from 'react-error-boundary'
 import Carousel from 'react-material-ui-carousel';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 function AvailabilityCheckScreen() {
   return (
@@ -182,6 +184,33 @@ return (
             </CardContent>
             <Divider />
             <List>
+              {listing.collection === "true" 
+              ?
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <LocationOnIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Collection"
+                  />
+                </ListItemButton>
+              </ListItem>
+              : null}
+              { listing.delivery === "true"
+              ?
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <LocalShippingIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={`Shipping £${listing.shipping_cost}`}
+                    secondary={listing.shipping_countries}
+                  />
+                </ListItemButton>
+              </ListItem>
+              : null}
               <ListItem disablePadding>
                 <ListItemButton>
                   <ListItemIcon>

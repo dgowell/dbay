@@ -465,7 +465,7 @@ export default function ListingCreate() {
                           {options.map((country) => (
                           <MenuItem
                             key={country.value}
-                            value={country.value}
+                            value={country.label}
                           >
                             {country.label}
                           </MenuItem>
