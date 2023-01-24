@@ -92,7 +92,7 @@ function ListingDetail() {
   useEffect(() => {
     if ((coordinates.latitude !== '') && listing) {
       const location = JSON.parse(listing.location);
-      setDistance(Math.round(haversine(coordinates, location)));
+      setDistance(Math.round(haversine(coordinates, location)/1000));
     }
   },[coordinates, listing])
 
