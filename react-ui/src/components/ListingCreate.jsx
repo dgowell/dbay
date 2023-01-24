@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -28,7 +28,10 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import UserWebCam from "./UserWebCam";
 import Switch from '@mui/material/Switch';
 import Paper from '@mui/material/Paper';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
+import countryList from 'react-select-country-list'
 
 import FormLabel from '@mui/material/FormLabel';
 import FormGroup from '@mui/material/FormGroup';
@@ -59,7 +62,28 @@ const validationSchema = yup.object({
 });
 
 export default function ListingCreate() {
+  const [countries, setCountries] = useState([]);
+  const options = useMemo(() => countryList().getData(), []);
 
+  const handleChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setCountries(
+      // On autofill we get a stringified value.
+      typeof value === 'string' ? value.split(',') : value,
+    );
+  };
+  const ITEM_HEIGHT = 48;
+  const ITEM_PADDING_TOP = 8;
+  const MenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+        width: 250,
+      },
+    },
+  };
   const [loading, setLoading] = useState(false);
   const [loadingCoordinates, setLoadingCoorindates] = useState(false);
   const [host, setHost] = useState();
@@ -70,7 +94,6 @@ export default function ListingCreate() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
-  console.log("screen:", fullScreen);
   const handleModalOpen = (i) => {
     if (i === 0 || images[i - 1] !== undefined) {
       setCurrentIndex(i);
@@ -221,7 +244,7 @@ export default function ListingCreate() {
         console.log(error);
         setError('File is not Image');
       }
-      //handleModalClose(-1)
+      //handleModalClose(-1)console
     }
   }
 
@@ -416,7 +439,8 @@ export default function ListingCreate() {
                       p: 2,
                       gap: 2,
                       mt: 3,
-                      mb: 3
+                      mb: 3,
+                      maxWidth: 367
                     }} elevation={2}>
                     <FormControl fullWidth>
                       <InputLabel htmlFor="delivery-cost">Delivery Cost</InputLabel>
@@ -434,6 +458,26 @@ export default function ListingCreate() {
                       <FormHelperText error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}>
                         {formik.touched.deliveryCost && formik.errors.deliveryCost}
                       </FormHelperText>
+                    </FormControl>
+                      <FormControl fullWidth>
+                        <Select 
+                          labelId="shipping-countries"
+                          id="shippingCountries"
+                          multiple
+                          value={countries}
+                          onChange={handleChange}
+                          input={<OutlinedInput label="Name" />}
+                          MenuProps={MenuProps}
+                        > 
+                          {options.map((country) => (
+                          <MenuItem
+                            key={country.value}
+                            value={country.value}
+                          >
+                            {country.label}
+                          </MenuItem>
+                        ))} 
+                        </Select>
                     </FormControl>
                     </Paper>
                   : null }
