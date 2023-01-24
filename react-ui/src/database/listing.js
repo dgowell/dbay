@@ -24,6 +24,8 @@ export function createListingTable() {
         "notification" boolean default false,
         "collection" boolean default false,
         "delivery" boolean default false,
+        "image"  varchar(max),
+        "description" varchar(1500),
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -41,7 +43,7 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({ title, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt, collection, delivery}) {
+export function createListing({ title, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt,image,description, collection, delivery}) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
     const id = `${randomId}${createdByPk}`;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -60,7 +62,9 @@ export function createListing({ title, price, createdByPk, createdByName, listin
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
              ${sentByPk ? '"status",' : ''}
-            "created_at"
+            "created_at",
+            "image",
+            "description"
         )
 
         values(
@@ -75,7 +79,9 @@ export function createListing({ title, price, createdByPk, createdByName, listin
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
             ${sentByPk ? `'unchecked',` : ''}
-            ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
+            ${createdAt ? `'${createdAt}'` : `'${timestamp}'`},
+            '${image}',
+            '${description}'
 
         );`;
 
@@ -101,7 +107,9 @@ createListing.propTypes = {
     sentByName: PropTypes.string,
     sentByPk: PropTypes.string,
     walletAddress: PropTypes.string.isRequired,
-    createdAt: PropTypes.number
+    createdAt: PropTypes.number,
+    image:PropTypes.string,
+    description:PropTypes.string
 }
 
 /**
@@ -130,7 +138,7 @@ getListings.propTypes = {
 * Fetches all listings that are the user has purchased
 */
 export function getMyPurchases() {
-    const Q = `select "listing_id", "title", "price" from ${LISTINGSTABLE} where "status"='purchased';`
+    const Q = `select * from ${LISTINGSTABLE} where "status"='purchased';`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
@@ -309,7 +317,9 @@ export async function processListing(entity) {
         sentByName: entity.sent_by_name,
         sentByPk: entity.sent_by_pk,
         walletAddress: entity.wallet_address,
-        createdAt: entity.created_at
+        createdAt: entity.created_at,
+        image:entity.image,
+        description:entity.description
     }).then(() => {
         console.log(`Listing ${entity.title} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));

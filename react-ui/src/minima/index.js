@@ -145,7 +145,7 @@ export async function sendListingToContacts(listingId) {
     let listing = await getListingById(listingId);
     const contacts = await getContacts();
     const host = await getHost();
-
+    console.log("contacts",contacts);
     listing.version = '0.1';
     listing.type = 'listing';
     listing.sent_by_name = host.name;
