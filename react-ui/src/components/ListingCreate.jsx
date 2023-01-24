@@ -26,6 +26,8 @@ import Dialog from '@mui/material/Dialog';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import UserWebCam from "./UserWebCam";
+import Switch from '@mui/material/Switch';
+import Paper from '@mui/material/Paper';
 
 
 import FormLabel from '@mui/material/FormLabel';
@@ -48,56 +50,56 @@ const validationSchema = yup.object({
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
     .required('Price is required'),
-  aftersaleOptions: yup
-    .array()
-    .min(1, 'At least one option be selected')
 });
 
 export default function ListingCreate() {
 
   const [loading, setLoading] = useState(false);
+  const [loadingCoordinates, setLoadingCoorindates] = useState(false);
   const [host, setHost] = useState();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [form, setForm] = useState({
-    name: "",
+    title: "",
     asking_price: "",
+    delivery: false,
+    collection: true
   });
   const [openModal, setOpenModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
-  console.log("screen:",fullScreen);
+  console.log("screen:", fullScreen);
   const handleModalOpen = (i) => {
-    if(i===0 || images[i-1]!==undefined){
-    setCurrentIndex(i);
-    setOpenModal(true);
+    if (i === 0 || images[i - 1] !== undefined) {
+      setCurrentIndex(i);
+      setOpenModal(true);
     }
   };
 
   const handleModalClose = (i) => {
-    if(i===-1){
+    if (i === -1) {
       setOpenModal(false);
       return false;
     }
     console.log(i);
-    let temp=[...images];
-    temp.splice(i,1);
+    let temp = [...images];
+    temp.splice(i, 1);
     setImages(temp);
     setOpenModal(false);
   };
 
-  const [images,setImages]=useState([]);
+  const [images, setImages] = useState([]);
   const [walletAddress, setWalletAddress] = useState("");
-  const [success, setSuccess] = useState(null);
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState({ latitude: '', longitude: '' });
   const navigate = useNavigate();
 
   const formik = useFormik({
     initialValues: {
       title: '',
       askingPrice: 0,
-      aftersaleOptions: []
+      delivery: false,
+      collection: true,
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -118,7 +120,7 @@ export default function ListingCreate() {
     getWalletAddress().catch((e) => console.error(`Get wallet address failed: ${e}`));
   }, []);
 
-  // This function will handle the submission.
+  //create the listing in the db
   async function onSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -133,16 +135,16 @@ export default function ListingCreate() {
       createdByPk: host.pk,
       createdByName: host.name,
       walletAddress: walletAddress,
-      image:images.join("(+_+)"),
-      description:newListing.description ?? ''
-    }).then(function(listingId) {
-        l_id=listingId;
+      image: images.join("(+_+)"),
+      description: newListing.description ?? '',
       collection: newListing.collection,
-      delivery: newListing.delivery
+      delivery: newListing.delivery,
+      location: location.latitude !== '' ? location : ''
+    }).then(function (listingId) {
+      l_id = listingId;
     })
       .then(function (listingId) {
         console.log(`Listing successfully added: ${listingId}`);
-        console.log('Successfully sent listing to contacts');
         console.log(`Attempting to send listing to contacts...`);
         return sendListingToContacts(listingId);
       }).then((result) => {
@@ -153,12 +155,12 @@ export default function ListingCreate() {
         } else {
           console.log('Successfully sent listing to contacts');
           setLoading(false);
-          setForm({ name: "", asking_price: "",description:"" });
+          setForm({ name: "", asking_price: "", description: "" });
           setSuccess(true);
-          console.log('/seller/listing/${l_id}');
+          console.log(`/seller/listing/${l_id}`);
           setTimeout(() => {
             navigate(`/seller/listing/${l_id}`);
-          }, 500); 
+          }, 500);
         }
       }).catch((e) => {
         setError(`There was an error creating or sending your listing`);
@@ -172,15 +174,20 @@ export default function ListingCreate() {
   }
 
   function handleLocation() {
+    setLoadingCoorindates(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(showPosition);
     } else {
       console.error("Geolocation is not supported by this browser.");
+      setLoadingCoorindates(false);
     }
 
     function showPosition(position) {
-      setLocation("Latitude: " + position.coords.latitude +
-        " Longitude: " + position.coords.longitude);
+      setLocation({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      });
+      setLoadingCoorindates(false);
     }
   }
   const fileToDataUri = (file) => new Promise((resolve, reject) => {
@@ -188,9 +195,9 @@ export default function ListingCreate() {
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
-    })
-  const handleUpload=async (e,i)=>{
-    let temp =[...images];
+  })
+  const handleUpload = async (e, i) => {
+    let temp = [...images];
     if (e.target.files) {
       const imageFile = e.target.files[0];
       console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
@@ -205,8 +212,8 @@ export default function ListingCreate() {
         console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
         console.log(`compressedFile size ${compressedFile.size / 1024} KB`); // smaller than maxSizeMB
         const smp = await fileToDataUri(compressedFile);
-          temp[i] =smp;
-         setImages(temp);
+        temp[i] = smp;
+        setImages(temp);
       } catch (error) {
         console.log(error);
         setError('File is not Image');
@@ -239,87 +246,90 @@ export default function ListingCreate() {
         >
 
 
-          <Grid container maxWidth={"sm"} rowGap={4} style={{width: "100%",justifyContent: "space-between", padding:"1rem 0",textAlign:"center"}}>
-          <Grid xs={5.5} component="label" color="primary" style={{color:"black", position: "relative",height:"140px"}}>
-            { images[0] ? <img src={images[0]} alt="" style={{
-              width:"100%",
-              height:"100%",
-              borderRadius:"15px",
-              left: "0",
-              right: "0",
-              top: "0",
-              bottom: "0",
-              objectFit: "cover"
-              }} /> :  <Box style={{textAlign: "center",padding: "2rem 2rem 0.5rem", borderRadius: "15px", background:"rgba(30, 51, 238, 0.47)", border: "0.25px solid rgba(30, 51, 238, 0.47)",height:"100%" }}>
-                  <Box ><PhotoCamera /></Box>
-                  <Box>
-                    <span>Image Upload</span>
-                    <p style={{margin: "0",color:"#4B4949", fontSize: "12px"}}>Primary Photo</p>
-                  </Box>
+          <Grid container maxWidth={"sm"} rowGap={4} style={{ width: "100%", justifyContent: "space-between", padding: "1rem 0", textAlign: "center" }}>
+            <Grid xs={5.5} component="label" color="primary" style={{ color: "black", position: "relative", height: "140px" }}>
+              {images[0] ? <img src={images[0]} alt="" style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "15px",
+                left: "0",
+                right: "0",
+                top: "0",
+                bottom: "0",
+                objectFit: "cover"
+              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", background: "rgba(30, 51, 238, 0.47)", border: "0.25px solid rgba(30, 51, 238, 0.47)", height: "100%" }}>
+                <Box ><PhotoCamera /></Box>
+                <Box>
+                  <span>Image Upload</span>
+                  <p style={{ margin: "0", color: "#4B4949", fontSize: "12px" }}>Primary Photo</p>
+                </Box>
               </Box>}
-            {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,0)}} hidden/> */}
-            <button type="Button" onClick={()=>{handleModalOpen(0)}} hidden/>
-          </Grid>
-          <Grid xs={5.5} component="label" color="primary" style={{color:"black", position: "relative",height:"140px"}}>
-             {images[1] ? <img src={images[1]} alt="" style={{
-              width:"100%",
-              height:"100%",
-              borderRadius:"15px",
-              left: "0",
-              right: "0",
-              top: "0",
-              bottom: "0",
-              objectFit: "cover"}} /> : <Box style={{textAlign: "center",padding: "2rem 2rem 0.5rem", borderRadius: "15px", background:"#EFEEEE", border: "0.25px solid #EEEEEE", height: "100%"}}>
-                  <Box style={{border: "0.25px dashed #000000", width: "75px", margin: "auto", marginBottom: "15px", display:"flex", justifyContent: "center"}}>
-                    <img src={ConeSvg2} alt={'cone'} style={{margin:"5%"}}/>
-                  </Box>
-                  <Box>
-                    <p style={{margin: "0",color:"#888787", fontSize: "12px"}}>Secound Photo</p>
-                  </Box>
+              {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,0)}} hidden/> */}
+              <button type="Button" onClick={() => { handleModalOpen(0) }} hidden />
+            </Grid>
+            <Grid xs={5.5} component="label" color="primary" style={{ color: "black", position: "relative", height: "140px" }}>
+              {images[1] ? <img src={images[1]} alt="" style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "15px",
+                left: "0",
+                right: "0",
+                top: "0",
+                bottom: "0",
+                objectFit: "cover"
+              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE", height: "100%" }}>
+                <Box style={{ border: "0.25px dashed #000000", width: "75px", margin: "auto", marginBottom: "15px", display: "flex", justifyContent: "center" }}>
+                  <img src={ConeSvg2} alt={'cone'} style={{ margin: "5%" }} />
+                </Box>
+                <Box>
+                  <p style={{ margin: "0", color: "#888787", fontSize: "12px" }}>Second Photo</p>
+                </Box>
               </Box>}
-            {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,1)}} hidden/> */}
-            <button type="Button" onClick={()=>handleModalOpen(1)} hidden/>
-          </Grid>
-          <Grid xs={5.5} component="label" color="primary" style={{color:"black", position: "relative",height:"140px"}}>
-           {images[2] ? <img src={images[2]} alt="" style={{
-              width:"100%",
-              height:"100%",
-              borderRadius:"15px",
-              left: "0",
-              right: "0",
-              top: "0",
-              bottom: "0",
-              objectFit: "cover"}} /> :   <Box style={{textAlign: "center",padding: "2rem 2rem 0.5rem", borderRadius: "15px", background:"#EFEEEE", border: "0.25px solid #EEEEEE ",height:"100%"}}>
-                  <Box style={{border: "0.25px dashed #000000", width: "75px", margin: "auto", marginBottom: "15px", display:"flex", justifyContent: "center"}}>
-                    <img src={ConeSvg3} alt={'cone'}  style={{margin:"5%"}}/>
-                  </Box>
-                  <Box>
-                    <p style={{margin: "0",color:"#888787", fontSize: "12px"}}>Third Photo</p>
-                  </Box>
+              {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,1)}} hidden/> */}
+              <button type="Button" onClick={() => handleModalOpen(1)} hidden />
+            </Grid>
+            <Grid xs={5.5} component="label" color="primary" style={{ color: "black", position: "relative", height: "140px" }}>
+              {images[2] ? <img src={images[2]} alt="" style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "15px",
+                left: "0",
+                right: "0",
+                top: "0",
+                bottom: "0",
+                objectFit: "cover"
+              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE ", height: "100%" }}>
+                <Box style={{ border: "0.25px dashed #000000", width: "75px", margin: "auto", marginBottom: "15px", display: "flex", justifyContent: "center" }}>
+                  <img src={ConeSvg3} alt={'cone'} style={{ margin: "5%" }} />
+                </Box>
+                <Box>
+                  <p style={{ margin: "0", color: "#888787", fontSize: "12px" }}>Third Photo</p>
+                </Box>
               </Box>}
-            {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,2)}} hidden/> */}
-            <button type="Button" onClick={()=>handleModalOpen(2)} hidden/>
-          </Grid>
-          <Grid xs={5.5} component="label" color="primary" style={{color:"black", position: "relative",height:"140px"}}>
-            {images[3] ? <img src={images[3]} alt="" style={{
-              width:"100%",
-              height:"100%",
-              borderRadius:"15px",
-              left: "0",
-              right: "0",
-              top: "0",
-              bottom: "0",
-              objectFit: "cover"}} /> :  <Box style={{textAlign: "center",padding: "2rem 2rem 0.5rem", borderRadius: "15px", background:"#EFEEEE", border: "0.25px solid #EEEEEE ",height:"100%"}}>
-                  <Box style={{border: "0.25px dashed #000000", width: "75px", margin: "auto", marginBottom: "15px", display:"flex", justifyContent: "center"}}>
-                    <img src={ConeSvg} alt={'cone'} style={{margin:"5%"}} />
-                  </Box>
-                  <Box>
-                    <p style={{margin: "0",color:"#888787", fontSize: "12px"}}>Fourth Photo</p>
-                  </Box>
+              {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,2)}} hidden/> */}
+              <button type="Button" onClick={() => handleModalOpen(2)} hidden />
+            </Grid>
+            <Grid xs={5.5} component="label" color="primary" style={{ color: "black", position: "relative", height: "140px" }}>
+              {images[3] ? <img src={images[3]} alt="" style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "15px",
+                left: "0",
+                right: "0",
+                top: "0",
+                bottom: "0",
+                objectFit: "cover"
+              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE ", height: "100%" }}>
+                <Box style={{ border: "0.25px dashed #000000", width: "75px", margin: "auto", marginBottom: "15px", display: "flex", justifyContent: "center" }}>
+                  <img src={ConeSvg} alt={'cone'} style={{ margin: "5%" }} />
+                </Box>
+                <Box>
+                  <p style={{ margin: "0", color: "#888787", fontSize: "12px" }}>Fourth Photo</p>
+                </Box>
               </Box>}
-            {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,3)}} hidden/> */}
-            <button type="Button" onClick={()=>handleModalOpen(3)} hidden/>
-          </Grid>
+              {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,3)}} hidden/> */}
+              <button type="Button" onClick={() => handleModalOpen(3)} hidden />
+            </Grid>
           </Grid>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -362,59 +372,74 @@ export default function ListingCreate() {
               <FormControl required
                 fullwidth
                 component="fieldset"
-                error={formik.touched.aftersaleOptions.delivery && Boolean(formik.errors.aftersaleOptions.delivery)}
+                error={formik.touched.delivery && Boolean(formik.errors.delivery)}
                 sx={{ m: 3 }}
                 variant="standard">
                 <FormGroup>
                   <FormControlLabel
                     control={
-                      <Checkbox checked={formik.values.aftersaleOptions.collection} onChange={formik.handleChange} name="aftersaleOptions.collection" />
+                      <Switch checked={formik.values.collection} onChange={formik.handleChange} name="collection" />
                     }
                     label="Collection"
                   />
+                  {formik.values.collection ?
+
+                      <Paper sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p:2,
+                        gap:2,
+                        mt:3,
+                        mb:3
+                      }}elevation={2}>
+                        <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
+                        <LoadingButton mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
+                        {location.latitude !== ''
+                          ?  <Alert variant="success">Coorindates added!</Alert>
+                          : null}
+                      </Paper>
+
+                    : null}
                   <FormControlLabel
                     control={
-                      <Checkbox checked={formik.values.aftersaleOptions.delivery} onChange={formik.handleChange} name="delivery" />
+                      <Switch checked={formik.values.delivery} onChange={formik.handleChange} name="delivery" />
                     }
                     label="Delivery"
                   />
-                  </FormGroup>
-                <FormHelperText>{formik.touched.aftersaleOptions.delivery & Boolean(formik.errors.aftersaleOptions.delivery)}</FormHelperText>
-                </FormControl>
+                </FormGroup>
+              </FormControl>
             </Grid>
           </Grid>
-          <Grid style={{marginBottom:"20%"}}>
-          <LoadingButton
-            fullWidth
-            variant="contained"
-            type="submit"
-            value="Create Token"
-            loading={loading}
-            loadingPosition="end"
-            sx={{ mt: 3, mb: 2 }}
-          >
-            Publish
-          </LoadingButton>
-          {error ? <Alert severity="error">{error}</Alert> : null}
-          {success ? <Alert action={
-            <Button color="inherit" size="small" onClick={handleGoHome}>
-              OK
-            </Button>
-          } severity="success">Listing created and shared!</Alert> : null}
+          <Grid style={{ marginBottom: "20%" }}>
+            <LoadingButton
+              fullWidth
+              variant="contained"
+              type="submit"
+              value="Create Token"
+              loading={loading}
+              loadingPosition="end"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Publish
+            </LoadingButton>
+            {error ? <Alert severity="error">{error}</Alert> : null}
+            {success ? <Alert action={
+              <Button color="inherit" size="small" onClick={handleGoHome}>
+                OK
+              </Button>
+            } severity="success">Listing created and shared!</Alert> : null}
           </Grid>
         </Box>
         <Dialog
-        fullScreen={fullScreen}
-        open={openModal}
-        onClose={handleModalClose}
-        aria-labelledby="responsive-dialog-title"
-      >
-        <Box alignContent="center">
-          <UserWebCam handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} /> 
-        </Box>
-      </Dialog>
-        <Button onClick={handleLocation}>Get Location</Button>
-        {location ? location : null}
+          fullScreen={fullScreen}
+          open={openModal}
+          onClose={handleModalClose}
+          aria-labelledby="responsive-dialog-title"
+        >
+          <Box alignContent="center">
+            <UserWebCam handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} />
+          </Box>
+        </Dialog>
       </Box>
     );
   }
