@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import {
     processListing,
-    updateListing,
     getListingById,
 } from '../database/listing';
 import { utf8ToHex, hexToUtf8 } from '../utils';

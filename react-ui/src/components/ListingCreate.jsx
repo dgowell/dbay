@@ -146,7 +146,7 @@ export default function ListingCreate() {
 
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...formik.values };
-    var l_id = "test";
+    let id = "";
     createListing({
       title: newListing.title,
       price: newListing.askingPrice,
@@ -161,9 +161,7 @@ export default function ListingCreate() {
       shippingCost: newListing.deliveryCost,
       shippingCountries: countries.toString()
     }).then(function (listingId) {
-      l_id = listingId;
-    })
-      .then(function (listingId) {
+        id = listingId;
         console.log(`Listing successfully added: ${listingId}`);
         console.log(`Attempting to send listing to contacts...`);
         return sendListingToContacts(listingId);
@@ -176,9 +174,9 @@ export default function ListingCreate() {
           console.log('Successfully sent listing to contacts');
           setLoading(false);
           setSuccess(true);
-          console.log(`/seller/listing/${l_id}`);
+          console.log(`/seller/listing/${id}`);
           setTimeout(() => {
-            navigate(`/seller/listing/${l_id}`);
+            navigate(`/seller/listing/${id}`);
           }, 500);
         }
       }).catch((e) => {
