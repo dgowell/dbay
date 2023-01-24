@@ -50,6 +50,12 @@ const validationSchema = yup.object({
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
     .required('Price is required'),
+  deliveryCost: yup
+    .number('Enter the price')
+    .positive('Price must be at least 1 minima')
+    .min(1, 'Price should be at least 1 minima')
+    .max(100000000000, 'Price should be below 100000000000 minima')
+    .required('Price is required') 
 });
 
 export default function ListingCreate() {
@@ -59,12 +65,7 @@ export default function ListingCreate() {
   const [host, setHost] = useState();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [form, setForm] = useState({
-    title: "",
-    asking_price: "",
-    delivery: false,
-    collection: true
-  });
+
   const [openModal, setOpenModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const theme = useTheme();
@@ -100,6 +101,8 @@ export default function ListingCreate() {
       askingPrice: 0,
       delivery: false,
       collection: true,
+      deliveryCost: 0,
+      deliveryCountries: []
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -127,7 +130,7 @@ export default function ListingCreate() {
     setError(null);
 
     // When a post request is sent to the create url, we'll add a new record to the database.
-    const newListing = { ...form };
+    const newListing = { ...formik.values };
     var l_id = "test";
     createListing({
       title: newListing.title,
@@ -139,7 +142,8 @@ export default function ListingCreate() {
       description: newListing.description ?? '',
       collection: newListing.collection,
       delivery: newListing.delivery,
-      location: location.latitude !== '' ? location : ''
+      location: location,
+      deliveryCost: newListing.deliveryCost
     }).then(function (listingId) {
       l_id = listingId;
     })
@@ -155,7 +159,6 @@ export default function ListingCreate() {
         } else {
           console.log('Successfully sent listing to contacts');
           setLoading(false);
-          setForm({ name: "", asking_price: "", description: "" });
           setSuccess(true);
           console.log(`/seller/listing/${l_id}`);
           setTimeout(() => {
@@ -406,6 +409,34 @@ export default function ListingCreate() {
                     }
                     label="Delivery"
                   />
+                  {formik.values.delivery ?
+                    <Paper sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      p: 2,
+                      gap: 2,
+                      mt: 3,
+                      mb: 3
+                    }} elevation={2}>
+                    <FormControl fullWidth>
+                      <InputLabel htmlFor="delivery-cost">Delivery Cost</InputLabel>
+                      <OutlinedInput
+                        label="Delivery Cost"
+                        id="deliveryCost"
+                        name="deliveryCost"
+                        value={formik.values.deliveryCost}
+                        onChange={formik.handleChange}
+                        startAdornment={
+                          <InputAdornment position="start">MIN</InputAdornment>
+                        }
+                        error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}
+                      />
+                      <FormHelperText error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}>
+                        {formik.touched.deliveryCost && formik.errors.deliveryCost}
+                      </FormHelperText>
+                    </FormControl>
+                    </Paper>
+                  : null }
                 </FormGroup>
               </FormControl>
             </Grid>
