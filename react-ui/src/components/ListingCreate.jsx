@@ -16,7 +16,6 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
-import TextareaAutosize from '@mui/base/TextareaAutosize';
 import { PhotoCamera } from "@mui/icons-material";
 import ConeSvg from "../assets/images/cone.svg"
 import ConeSvg2 from "../assets/images/cone2.svg"
@@ -30,15 +29,10 @@ import Switch from '@mui/material/Switch';
 import Paper from '@mui/material/Paper';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-
 import countryList from 'react-select-country-list'
-
-import FormLabel from '@mui/material/FormLabel';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import FormHelperText from '@mui/material/FormHelperText';
-import { FormErrors } from './FormErrors';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
@@ -58,42 +52,26 @@ const validationSchema = yup.object({
     .positive('Price must be at least 1 minima')
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
-    .required('Price is required') 
+    .required('Price is required')
 });
 
 export default function ListingCreate() {
+  const navigate = useNavigate();
+  const theme = useTheme();
   const [countries, setCountries] = useState([]);
-  const options = useMemo(() => countryList().getData(), []);
-
-  const handleChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setCountries(
-      // On autofill we get a stringified value.
-      typeof value === 'string' ? value.split(',') : value,
-    );
-  };
-  const ITEM_HEIGHT = 48;
-  const ITEM_PADDING_TOP = 8;
-  const MenuProps = {
-    PaperProps: {
-      style: {
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-        width: 250,
-      },
-    },
-  };
   const [loading, setLoading] = useState(false);
   const [loadingCoordinates, setLoadingCoorindates] = useState(false);
   const [host, setHost] = useState();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-
   const [openModal, setOpenModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const theme = useTheme();
+  const [images, setImages] = useState([]);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [location, setLocation] = useState({ latitude: '', longitude: '' });
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const options = useMemo(() => countryList().getData(), []);
+
   const handleModalOpen = (i) => {
     if (i === 0 || images[i - 1] !== undefined) {
       setCurrentIndex(i);
@@ -106,17 +84,32 @@ export default function ListingCreate() {
       setOpenModal(false);
       return false;
     }
-    console.log(i);
     let temp = [...images];
     temp.splice(i, 1);
     setImages(temp);
     setOpenModal(false);
   };
 
-  const [images, setImages] = useState([]);
-  const [walletAddress, setWalletAddress] = useState("");
-  const [location, setLocation] = useState({ latitude: '', longitude: '' });
-  const navigate = useNavigate();
+  const handleChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setCountries(
+      // On autofill we get a stringified value.
+      typeof value === 'string' ? value.split(',') : value,
+    );
+  };
+
+  const ITEM_HEIGHT = 48;
+  const ITEM_PADDING_TOP = 8;
+  const MenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+        width: 250,
+      },
+    },
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -148,7 +141,6 @@ export default function ListingCreate() {
 
   //create the listing in the db
   async function onSubmit(e) {
-    e.preventDefault();
     setLoading(true);
     setError(null);
 
@@ -165,8 +157,9 @@ export default function ListingCreate() {
       description: newListing.description ?? '',
       collection: newListing.collection,
       delivery: newListing.delivery,
-      location: location,
-      deliveryCost: newListing.deliveryCost
+      location: JSON.stringify(location),
+      shippingCost: newListing.deliveryCost,
+      shippingCountries: countries.toString()
     }).then(function (listingId) {
       l_id = listingId;
     })
@@ -222,6 +215,7 @@ export default function ListingCreate() {
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
   })
+
   const handleUpload = async (e, i) => {
     let temp = [...images];
     if (e.target.files) {
@@ -460,13 +454,14 @@ export default function ListingCreate() {
                       </FormHelperText>
                     </FormControl>
                       <FormControl fullWidth>
+                        <InputLabel htmlFor="delivery-countries">Which Countries?</InputLabel>
                         <Select 
-                          labelId="shipping-countries"
+                          labelId="Deliverable countries"
                           id="shippingCountries"
                           multiple
                           value={countries}
                           onChange={handleChange}
-                          input={<OutlinedInput label="Name" />}
+                          input={<OutlinedInput label="Which countries?" />}
                           MenuProps={MenuProps}
                         > 
                           {options.map((country) => (

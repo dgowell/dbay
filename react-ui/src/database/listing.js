@@ -26,6 +26,9 @@ export function createListingTable() {
         "delivery" boolean default false,
         "image"  varchar(max),
         "description" varchar(1500),
+        "location" varchar(50),
+        "shipping_cost" int,
+        "shipping_countries" varchar(150),
         constraint UQ_listing_id unique("listing_id")
         )`;
 
@@ -43,7 +46,24 @@ export function createListingTable() {
 }
 
 /* adds a listing to the database */
-export function createListing({ title, price, createdByPk, createdByName, listingId, sentByName, sentByPk, walletAddress, createdAt,image,description, collection, delivery}) {
+export function createListing({
+    title,
+    price,
+    createdByPk,
+    createdByName,
+    listingId,
+    sentByName,
+    sentByPk,
+    walletAddress,
+    createdAt,
+    image,
+    description,
+    collection,
+    delivery,
+    location,
+    shippingCost,
+    shippingCountries
+}) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
     const id = `${randomId}${createdByPk}`;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -64,7 +84,10 @@ export function createListing({ title, price, createdByPk, createdByName, listin
              ${sentByPk ? '"status",' : ''}
             "created_at",
             "image",
-            "description"
+            "description",
+            ${location ? '"location",' : ''}
+            ${shippingCost ? '"shipping_cost",' : ''}
+            ${shippingCountries ? '"shipping_countries"' : ''}
         )
 
         values(
@@ -81,8 +104,10 @@ export function createListing({ title, price, createdByPk, createdByName, listin
             ${sentByPk ? `'unchecked',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`},
             '${image}',
-            '${description}'
-
+            '${description}',
+            ${location ? `'${location}',` : ''}
+            ${shippingCost ? `'${shippingCost}',` : ''}
+            ${shippingCountries ? `'${shippingCountries}'` : ''}
         );`;
 
         console.log(`title: ${title}, price: ${price}`);
@@ -109,7 +134,10 @@ createListing.propTypes = {
     walletAddress: PropTypes.string.isRequired,
     createdAt: PropTypes.number,
     image:PropTypes.string,
-    description:PropTypes.string
+    description:PropTypes.string,
+    location:PropTypes.string,
+    shippingCost:PropTypes.number,
+    shippingCountries:PropTypes.string
 }
 
 /**
