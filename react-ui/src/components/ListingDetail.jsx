@@ -246,7 +246,8 @@ function ListingDetail() {
                       <StorefrontIcon />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`Sold by: ${listing.created_by_name}`}
+                      primary={`${listing.created_by_name}`}
+                      secondary={'Seller of item'}
                     />
                   </ListItemButton>
                 </ListItem>
@@ -256,7 +257,8 @@ function ListingDetail() {
                       <ForwardIcon />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`Sent by: ${listing.sent_by_name}`}
+                      primary={`${listing.sent_by_name}`}
+                      secondary={'Sender of item'}
                     />
                   </ListItemButton>
                 </ListItem>
