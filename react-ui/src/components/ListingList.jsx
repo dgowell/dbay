@@ -8,9 +8,12 @@ import BungalowIcon from "@mui/icons-material/Bungalow";
 import { ListItemButton, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Badge from '@mui/material/Badge';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
 
 function Listing(props) {
   const navigate = useNavigate();
+  const { link, listing } = props;
   return (
     <ListItem disablePadding>
 
@@ -18,17 +21,17 @@ function Listing(props) {
         edge="end"
         aria-label="view listing"
         onClick={() => {
-          navigate(`${props.link}/${props.listing.listing_id}`);
+          navigate(`${link}/${listing.listing_id}`);
         }}
       >
         <ListItemAvatar>
-          {props.listing?.image ? (
-            <Avatar alt={props.listing.title} src={props.listing.image.split("(+_+)")[0]} style={{borderRadius:"5px"}} />
+          {listing?.image ? (
+            <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{borderRadius:"5px"}} />
           ) : (
             <Badge anchorOrigin={{
               vertical: 'top',
               horizontal: 'right',
-              }} color="secondary" variant="dot" invisible={!(props.listing.notification === 'true')}>
+              }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
               <Avatar>
                 <BungalowIcon />
               </Avatar>
@@ -37,10 +40,25 @@ function Listing(props) {
         </ListItemAvatar>
 
         <ListItemText
-          primary={props.listing.title}
-          secondary={props.listing.price ? `M$${props.listing.price}` : null}
+          primary={listing.title}
+          secondary={listing.price ? `M$${listing.price}` : null}
         />
+        <Stack direction="row" spacing={1}>
 
+          {listing.collection && (listing.status === 'available' || listing.status === 'pending')
+            ? <Chip label="Collection" color="primary" />
+            : null}
+          {listing.delivery && (listing.status === 'available' || listing.status === 'pending')
+            ? <Chip label="Delivery" color="secondary" />
+            : null}
+          {listing.transmission_type === "collection" && listing.status === 'sold'
+            ? <Chip label="Collection" color="primary" />
+            : null}
+          {listing.transmission_type === "delivery" && listing.status === 'sold'
+            ? <Chip label="Delivery" color="secondary" />
+            : null}
+
+          </Stack>
       </ListItemButton>
 
     </ListItem >
@@ -49,10 +67,11 @@ function Listing(props) {
 
 export default function ListingList(props) {
   // This method will map out the listings on the table
+  const {link, listings} = props;
   function listingList(props) {
-    if (props.listings.length > 0) {
-      return props.listings.map((listing) => {
-        return <Listing listing={listing} key={listing.listing_id} link={props.link} />;
+    if (listings.length > 0) {
+      return listings.map((listing) => {
+        return <Listing listing={listing} key={listing.listing_id} link={link} />;
       });
     } else return <Typography m={3}>No listings found.</Typography>;
   }
