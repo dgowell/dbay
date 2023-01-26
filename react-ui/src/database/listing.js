@@ -29,6 +29,7 @@ export function createListingTable() {
         "location" varchar(50),
         "shipping_cost" int,
         "shipping_countries" varchar(150),
+        "transmission_type" varchar(10),
         constraint UQ_listing_id unique("listing_id")
         )`;
 

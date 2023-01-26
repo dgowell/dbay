@@ -27,6 +27,7 @@ import FormLabel from '@mui/material/FormLabel';
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
   const [message, setMessage] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -49,6 +50,7 @@ function ListingPurchase(props) {
     }
   };
 
+
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
@@ -64,7 +66,7 @@ function ListingPurchase(props) {
       seller: listing.created_by_pk,
       walletAddress: listing.wallet_address,
       purchaseCode: listing.purchase_code,
-      address: message,
+      message: message !== '' ? message : phone,
       amount: listing.price,
       transmissionType: transmissionType,
     }).then(
@@ -75,8 +77,14 @@ function ListingPurchase(props) {
   const handleMessageChange = (event) => {
     setMessage(event.target.value);
   };
+  const handlePhoneChange = (event) => {
+    setPhone(event.target.value);
+  };
 
   if (listing) {
+
+    const {latitude, longitude} = JSON.parse(listing.location);
+
     if (!error) {
       return (
         <Box sx={{
@@ -137,18 +145,33 @@ function ListingPurchase(props) {
                 <FormControlLabel value="delivery" control={<Radio />} label={`Delivery - M$${listing.shipping_cost}`} />
               </RadioGroup>
             </FormControl>
-            <FormControl sx={{gap:1}}>
-            <FormLabel>Enter your address in this box:</FormLabel>
-            <TextField
-              id="outlined-multiline-static"
-              label="Delivery address"
-              multiline
-              rows={4}
-              value={message}
-              onChange={handleMessageChange}
-              sx={{ width: '100%' }}
-            />
-            </FormControl>
+            {transmissionType === 'collection'
+              ? <FormControl sx={{ gap: 1 }}>
+                <Typography>Item is available from <a href={`https://www.google.com/maps/@${latitude},${longitude},17z`}>this location</a></Typography>
+                <FormLabel>Share your phone number with the seller to arrange collection:</FormLabel>
+                <TextField
+                  id="outlined-multiline-static"
+                  label="Delivery address"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  sx={{ width: '100%' }}
+                />
+              </FormControl>
+              : null}
+            {transmissionType === 'delivery'
+              ? <FormControl sx={{gap:1}}>
+                  <FormLabel>Enter your address in this box:</FormLabel>
+                  <TextField
+                    id="outlined-multiline-static"
+                    label="Delivery address"
+                    multiline
+                    rows={4}
+                    value={message}
+                    onChange={handleMessageChange}
+                    sx={{ width: '100%' }}
+                  />
+                </FormControl>
+            : null}
           </Box>
           <Box
             m={1}

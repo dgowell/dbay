@@ -6,19 +6,19 @@ import { Decimal } from 'decimal.js';
 
 
 
-function sendPurchaseReceipt({ address, listingId, coinId, seller }) {
+function sendPurchaseReceipt({ message, listingId, coinId, seller }) {
     const data = {
         "type": "purchase_receipt",
-        "address": address,
+        "message": message,
         "listing_id": listingId,
         "coin_id": coinId
     }
     return new Promise(function (resolve, reject) {
         send(data, seller).then(
             () => {
-                console.log(`sent delivery address to seller: ${address}`);
+                console.log(`sent customer message to seller: ${message}`);
                 resolve(true);
-            }).catch((e) => reject(Error(`Could not send delivery address to seller ${e}`)));
+            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
     });
 }
 
@@ -28,15 +28,16 @@ function sendPurchaseReceipt({ address, listingId, coinId, seller }) {
 * @param {string} address - Buyers physical address to send item to
 * @param {string} listingId - The id of the listing that is being purchased
 */
-export function purchaseListing({ seller, address, listingId, walletAddress, purchaseCode, amount }) {
+export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType }) {
     return new Promise(function (resolve, reject) {
         sendMoney({ walletAddress, amount, purchaseCode })
             .then((coinId) => {
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, 'status', 'purchased');
+                    updateListing(listingId, 'status', 'purchased').catch((e) => console.error(e));
+                    updateListing(listingId, 'transmission_type', transmissionType).catch((e)=>console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
                     console.log(`Sending purchase receipt to seller..`);
-                    return sendPurchaseReceipt({ address, listingId, coinId, seller })
+                    return sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
                         .catch(Error(`Couldn't send purchase receipt`));
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
@@ -61,7 +62,12 @@ export function purchaseListing({ seller, address, listingId, walletAddress, pur
 }
 purchaseListing.proptypes = {
     seller: PropTypes.string.isRequired,
-    address: PropTypes.string.isRequired
+    address: PropTypes.string.isRequired,
+    listingId: PropTypes.string.isRequired,
+    walletAddress: PropTypes.string.isRequired,
+    purchaseListing: PropTypes.string.isRequired,
+    amount: PropTypes.number.isRequired,
+    transmissionType: PropTypes.string.isRequired,
 }
 
 /**
