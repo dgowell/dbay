@@ -83,11 +83,11 @@ function resetListingStatusTimeout(listingId) {
 }
 
 export function processPurchaseReceipt(entity){
-    //TODO: rewrite function that updates the listing all at once instead of hitting database 3 times
-    console.log(`Address received for purchased listing, updating address..`)
-    updateListing(entity.listing_id, 'buyer_message', entity.address).then(
-        () => console.log('address added succesfully'),
-        error => console.error(`Couldn't add address to listing ${error}`)
+    //TODO: rewrite function that updates the listing all at once instead of hitting database x times
+    console.log(`Message received for purchased listing, updating..`)
+    updateListing(entity.listing_id, 'buyer_message', entity.message).then(
+        () => console.log('customer message added succesfully'),
+        error => console.error(`Couldn't add message to listing ${error}`)
     );
     updateListing(entity.listing_id, 'coin_id', entity.coin_id).then(
         () => console.log('coin id added to listing'),
@@ -100,5 +100,9 @@ export function processPurchaseReceipt(entity){
     updateListing(entity.listing_id, 'notification', 'true').then(
         () => console.log('notification triggered'),
         error => console.error(`Couldn't update listing notification status: ${error}`)
+    );
+    updateListing(entity.listing_id, 'transmission_type', entity.transmissionType).then(
+        () => console.log(`update transmission type to ${entity.transmissionType}`),
+        error => console.error(`Couldn't update transmission type: ${error}`)
     );
 }

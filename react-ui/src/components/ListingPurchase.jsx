@@ -23,6 +23,8 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
+import Button from '@mui/material/Button';
+import MapIcon from '@mui/icons-material/Map';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
@@ -31,15 +33,21 @@ function ListingPurchase(props) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
-  const [transmissionType, setTransmissionType] = useState('collection');
+  const [transmissionType, setTransmissionType] = useState('');
   const params = useParams();
   const navigate = useNavigate();
 
-  useEffect(()=> {
+  useEffect(() => {
     if (listing) {
       setTotal(listing.price);
+      if (listing.collection === "true") {
+        setTransmissionType('collection');
+      } else {
+        setTotal(parseInt(listing.price) + parseInt(listing.shipping_cost));
+        setTransmissionType('delivery');
+      }
     }
-  },[listing]);
+  }, [listing]);
 
   const handleChange = (event) => {
     setTransmissionType(event.target.value);
@@ -83,12 +91,13 @@ function ListingPurchase(props) {
 
   if (listing) {
 
-    const {latitude, longitude} = JSON.parse(listing.location);
+    const { latitude, longitude } = JSON.parse(listing.location);
 
     if (!error) {
       return (
         <Box sx={{
           pt: 2,
+          pb:10,
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -128,50 +137,61 @@ function ListingPurchase(props) {
             </ListItem>
           </List>
           <Box sx={{
-            display:"flex",
+            display: "flex",
             flexDirection: "column",
             p: 2,
             gap: 3,
           }}>
-            <FormControl>
-              <FormLabel id="receive-item-label">How will you receive the item?</FormLabel>
-              <RadioGroup
-                aria-labelledby="receive-item-label"
-                name="receieve-item-group"
-                value={transmissionType}
-                onChange={handleChange}
-              >
-                <FormControlLabel value="collection" control={<Radio />} label="Collection" />
-                <FormControlLabel value="delivery" control={<Radio />} label={`Delivery - M$${listing.shipping_cost}`} />
-              </RadioGroup>
-            </FormControl>
+            {listing.delivery === "true" && listing.collection === "true" ?
+              <FormControl>
+                <FormLabel id="receive-item-label">How will you receive the item?</FormLabel>
+                <RadioGroup
+                  aria-labelledby="receive-item-label"
+                  name="receieve-item-group"
+                  value={transmissionType}
+                  onChange={handleChange}
+                >
+                  <FormControlLabel value="collection" control={<Radio />} label="Collection" />
+                  <FormControlLabel value="delivery" control={<Radio />} label={`Delivery - M$${listing.shipping_cost}`} />
+                </RadioGroup>
+              </FormControl>
+              : null}
             {transmissionType === 'collection'
-              ? <FormControl sx={{ gap: 1 }}>
-                <Typography>Item is available from <a href={`https://www.google.com/maps/@${latitude},${longitude},17z`}>this location</a></Typography>
+              ? <FormControl sx={{ gap: 3 }}>
+
+                <Typography>Item is available for collection {listing.delivery ? '' : 'only'}</Typography>
+                <Button variant="outlined" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} startIcon={<MapIcon />}>Show me location</Button>
+
                 <FormLabel>Share your phone number with the seller to arrange collection:</FormLabel>
                 <TextField
                   id="outlined-multiline-static"
-                  label="Delivery address"
+                  label="Phone number"
                   value={phone}
                   onChange={handlePhoneChange}
                   sx={{ width: '100%' }}
                 />
               </FormControl>
               : null}
+              {listing.collection === "false" ? 
+              <>
+                <Typography variant="h6">The seller will deliver the item to you</Typography> 
+                <Typography>Delivery Cost: M${listing.shipping_cost}</Typography> 
+              </>
+              : null}
             {transmissionType === 'delivery'
-              ? <FormControl sx={{gap:1}}>
-                  <FormLabel>Enter your address in this box:</FormLabel>
-                  <TextField
-                    id="outlined-multiline-static"
-                    label="Delivery address"
-                    multiline
-                    rows={4}
-                    value={message}
-                    onChange={handleMessageChange}
-                    sx={{ width: '100%' }}
-                  />
-                </FormControl>
-            : null}
+              ? <FormControl sx={{ gap: 1 }}>
+                <FormLabel>Enter your address in this box:</FormLabel>
+                <TextField
+                  id="outlined-multiline-static"
+                  label="Delivery address"
+                  multiline
+                  rows={4}
+                  value={message}
+                  onChange={handleMessageChange}
+                  sx={{ width: '100%' }}
+                />
+              </FormControl>
+              : null}
           </Box>
           <Box
             m={1}
@@ -183,14 +203,14 @@ function ListingPurchase(props) {
           >
             <Typography variant="h6">Total: M${total}</Typography>
             <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
-               Pay & Confirm
+              Pay & Confirm
             </LoadingButton>
           </Box>
         </Box>
       );
     } else {
       return (
-          <PaymentError error={error} />
+        <PaymentError error={error} />
       );
     }
   } else {
