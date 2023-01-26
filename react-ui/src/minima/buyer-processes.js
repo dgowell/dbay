@@ -3,15 +3,19 @@ import { send, sendMoney } from './index';
 import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
+import { getHost } from '../database/settings';
 
 
 
-function sendPurchaseReceipt({ message, listingId, coinId, seller }) {
+async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType}) {
+    const host = await getHost();
     const data = {
         "type": "purchase_receipt",
         "message": message,
         "listing_id": listingId,
-        "coin_id": coinId
+        "coin_id": coinId,
+        "transmission_type": transmissionType,
+        "buyer_name": host.name
     }
     return new Promise(function (resolve, reject) {
         send(data, seller).then(

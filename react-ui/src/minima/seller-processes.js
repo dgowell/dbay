@@ -101,8 +101,12 @@ export function processPurchaseReceipt(entity){
         () => console.log('notification triggered'),
         error => console.error(`Couldn't update listing notification status: ${error}`)
     );
-    updateListing(entity.listing_id, 'transmission_type', entity.transmissionType).then(
-        () => console.log(`update transmission type to ${entity.transmissionType}`),
+    updateListing(entity.listing_id, 'transmission_type', entity.transmission_type).then(
+        () => console.log(`update transmission type to ${entity.transmission_type}`),
         error => console.error(`Couldn't update transmission type: ${error}`)
+    );
+    updateListing(entity.listing_id, 'buyer_name', entity.buyer_name).then(
+        () => console.log(`update buyers name to ${entity.buyer_name}`),
+        error => console.error(`Couldn't update buyers name: ${error}`)
     );
 }
