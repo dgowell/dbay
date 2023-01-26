@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useMemo } from "react";
-import PropTypes from "prop-types";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
-import { getListingById, updateListing, removeListing } from "../database/listing";
+import { getListingById, updateListing } from "../database/listing";
 import CardHeader from "@mui/material/CardHeader";
 import CircularProgress from "@mui/material/CircularProgress";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -11,7 +10,6 @@ import CardMedia from "@mui/material/CardMedia";
 import IconButton from "@mui/material/IconButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
-import TestImage from "../assets/images/test.webp";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
@@ -33,7 +31,7 @@ import Box from "@mui/material/Box";
 import BackButton from "./BackButton";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
-import { ErrorBoundary, useErrorHandler } from 'react-error-boundary'
+import { useErrorHandler } from 'react-error-boundary'
 import Carousel from 'react-material-ui-carousel';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
@@ -85,6 +83,7 @@ function ListingDetail() {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude
       });
+      console.log(JSON.stringify(coordinates));
     };
   }, []);
 
@@ -92,7 +91,9 @@ function ListingDetail() {
   useEffect(() => {
     if ((coordinates.latitude !== '') && listing) {
       const location = JSON.parse(listing.location);
-      setDistance(Math.round(haversine(coordinates, location)/1000));
+      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`)
+      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`)
+      setDistance((haversine(coordinates, location)/1000).toFixed(1));
     }
   },[coordinates, listing])
 
@@ -221,7 +222,7 @@ function ListingDetail() {
                       </ListItemIcon>
                       <ListItemText
                         primary="Collection"
-                        secondary={distance ? `${distance} km from me` : null}
+                        secondary={distance ? `${distance} km from me ${JSON.stringify(coordinates)}` : null}
                       />
                     </ListItemButton>
                   </ListItem>

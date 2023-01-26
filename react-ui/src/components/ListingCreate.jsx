@@ -52,7 +52,6 @@ const validationSchema = yup.object({
     .positive('Price must be at least 1 minima')
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
-    .required('Price is required')
 });
 
 export default function ListingCreate() {
@@ -413,7 +412,7 @@ export default function ListingCreate() {
                         <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
                         <LoadingButton mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
-                          ?  <Alert variant="success">Coorindates added!</Alert>
+                          ?  <Alert variant="success">Coorindates added! Lat: {location.latitude}, Long: {location.longitude}</Alert>
                           : null}
                       </Paper>
 

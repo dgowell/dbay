@@ -22,8 +22,8 @@ function Listing(props) {
         }}
       >
         <ListItemAvatar>
-          {props.listing.image ? (
-            <Avatar alt={props.listing.title} src={props.listing.image.split("(+_+)")[0]} style={{borderRadius:"0px"}} />
+          {props.listing?.image ? (
+            <Avatar alt={props.listing.title} src={props.listing.image.split("(+_+)")[0]} style={{borderRadius:"5px"}} />
           ) : (
             <Badge anchorOrigin={{
               vertical: 'top',
@@ -38,7 +38,7 @@ function Listing(props) {
 
         <ListItemText
           primary={props.listing.title}
-          secondary={props.listing.price ? `£${props.listing.price}` : null}
+          secondary={props.listing.price ? `M$${props.listing.price}` : null}
         />
 
       </ListItemButton>
