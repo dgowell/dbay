@@ -46,16 +46,16 @@ function Listing(props) {
         <Stack direction="row" spacing={1}>
 
           {listing.collection && (listing.status === 'available' || listing.status === 'pending')
-            ? <Chip label="Collection" color="primary" />
+            ? <Chip size="small" label="Collection" color="primary" variant="outlined"/>
             : null}
           {listing.delivery && (listing.status === 'available' || listing.status === 'pending')
-            ? <Chip label="Delivery" color="secondary" />
+            ? <Chip size="small" label="Delivery" color="secondary" variant="outlined"/>
             : null}
           {listing.transmission_type === "collection" && listing.status === 'sold'
-            ? <Chip label="Collection" color="primary" />
+            ? <Chip size="small" label="Collection" color="primary" />
             : null}
           {listing.transmission_type === "delivery" && listing.status === 'sold'
-            ? <Chip label="Delivery" color="secondary" />
+            ? <Chip size="small" label="Delivery" color="secondary" />
             : null}
 
           </Stack>
