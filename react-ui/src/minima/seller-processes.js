@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { send } from './index';
 import { updateListing, getStatus, getListingByPurchaseCode} from '../database/listing';
+import { getListingById } from '../database/listing';
 
 import { generate } from '@wcj/generate-password';
 
@@ -133,4 +134,18 @@ export function processCollectionConfirmation(entity) {
         () => console.log(`update buyers name to ${entity.buyer_name}`),
         error => console.error(`Couldn't update buyers name: ${error}`)
     );
+}
+
+export async function processCancelCollection(entity) {
+    //TODO: rewrite function that updates the listing all at once instead of hitting database x times
+    console.log(`Message received for cancelling collection`);
+    const listing = await getListingById(entity.listing_id);
+    if (listing.buyer_name === entity.buyer_name) {
+        updateListing(entity.listing_id, 'status', 'available').then(
+            () => console.log('listing now available again'),
+            error => console.error(`Couldn't update listing status to available ${error}`)
+        );
+    } else {
+        console.log("buyer name not the same as on listing so cancel averted!");
+    }
 }

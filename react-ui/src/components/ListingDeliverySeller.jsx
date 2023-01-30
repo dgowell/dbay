@@ -82,11 +82,11 @@ function ListingDeliverySeller() {
                                             ? <Typography gutterBottom variant="h6" component="div">Please send the item to ${listing.buyer_message}</Typography>
                                             : "Buyer supplied no contact details, enjoy your free money"
                                         }
-                                    </>
-                                }
-
                                     <Alert severity="info">Let the buyer know you've sent the item</Alert>
                                     <Button fullWidth variant="contained" onClick={handleItemSent}>Item Sent</Button>
+                                </>
+
+                                    }
                             </Box>
                         </CardContent>
                     </Card>

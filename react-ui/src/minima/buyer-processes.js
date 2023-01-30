@@ -44,6 +44,23 @@ async function sendCollectionConfirmation({ message, listingId, seller, transmis
     });
 }
 
+
+async function sendCancellationNotification({ listingId, seller }) {
+    const host = await getHost();
+    const data = {
+        "type": "cancel_collection",
+        "listing_id": listingId,
+        "buyer_name": host.name
+    }
+    return new Promise(function (resolve, reject) {
+        send(data, seller).then(
+            () => {
+                console.log(`sent cancellation to seller.`);
+                resolve(true);
+            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+    });
+}
+
 /**
 * Send's buyers delivery address to seller
 * @param {string} seller - Sellers hex address
@@ -237,3 +254,23 @@ hasSufficientFunds.PropTypes = {
     price: PropTypes.number.isRequired
 }
 
+/**
+* Send's cancel notification to seller
+* @param {string} seller - Sellers hex address
+* @param {string} listingId - The id of the listing that is being cancelled
+*/
+export function cancelCollection({ seller, listingId }) {
+    return new Promise(function (resolve, reject) {
+        updateListing(listingId, 'status', 'unchecked').catch((e) => console.error(e));
+        console.log(`Sending cancel notification to seller..`);
+        sendCancellationNotification({ listingId, seller })
+    })
+}
+cancelCollection.proptypes = {
+    seller: PropTypes.string.isRequired,
+    listingId: PropTypes.string.isRequired,
+    walletAddress: PropTypes.string.isRequired,
+    purchaseListing: PropTypes.string.isRequired,
+    amount: PropTypes.number.isRequired,
+    transmissionType: PropTypes.string.isRequired,
+}

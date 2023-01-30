@@ -8,7 +8,11 @@ import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
 import { processAvailabilityResponse } from './buyer-processes';
-import { processAvailabilityCheck, processPurchaseReceipt, processCollectionConfirmation } from './seller-processes';
+import {
+    processAvailabilityCheck,
+    processPurchaseReceipt,
+    processCollectionConfirmation,
+    processCancelCollection } from './seller-processes';
 
 
 /**
@@ -54,6 +58,10 @@ export function processMaximaEvent(msg) {
         case 'collection_confirmation':
             //buyer sends seller their number to arrange collection
             processCollectionConfirmation(entity);
+            break;
+        case 'cancel_collection':
+            //buyer sends seller their number to arrange collection
+            processCancelCollection(entity);
             break;
         default:
             console.log(entity);
@@ -148,14 +156,14 @@ export async function sendListingToContacts(listingId) {
     let listing = await getListingById(listingId);
     const contacts = await getContacts();
     const host = await getHost();
-    console.log("contacts",contacts);
+    console.log("contacts", contacts);
     listing.version = '0.1';
     listing.type = 'listing';
     listing.sent_by_name = host.name;
     listing.sent_by_pk = host.pk;
 
     return new Promise(function (resolve, reject) {
-        if (contacts.length === 0){
+        if (contacts.length === 0) {
             reject(Error('No contacts to send to'));
         }
         //send the listing to each contact

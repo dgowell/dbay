@@ -24,6 +24,7 @@ import WelcomePage from "./components/WelcomePage";
 import ListingDetailSeller from "./components/ListingDetailSeller";
 import ListingListSeller from "./components/ListingListSeller";
 import ListingDeliverySeller from "./components/ListingDeliverySeller";
+import ListingTransmissionBuyer from "./components/ListingTransmissionBuyer";
 
 const theme = createTheme({
   typography: {
@@ -109,6 +110,7 @@ function App() {
               <Route path="listing/create" element={<ListingCreate />} />
               <Route path="listing/:id" element={<ListingDetail />} />
               <Route path="listing/:id/purchase" element={<ListingPurchase />} />
+              <Route path="listing/transmission/:id" element={<ListingTransmissionBuyer />} />
               <Route path="seller/listings/" element={<ListingListSeller />} />
               <Route path="seller/listing/:id" element={<ListingDetailSeller />} />
               <Route path="seller/listing/delivery/:id" element={<ListingDeliverySeller />} />
