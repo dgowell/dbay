@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { getListingById } from '../database/listing';
 import { useNavigate } from "react-router";
-import { purchaseListing } from '../minima/buyer-processes';
+import { purchaseListing, collectListing } from '../minima/buyer-processes';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -64,6 +64,26 @@ function ListingPurchase(props) {
       setListing(result);
     });
   }, [params.id]);
+
+
+  function handleCollection() {
+    setLoading(true);
+    setError(false);
+
+    collectListing({
+      listingId: listing.listing_id,
+      seller: listing.created_by_pk,
+      message: message !== '' ? message : phone,
+      transmissionType: transmissionType,
+    }).then(
+      () => {
+        console.log("successfully sent collection request")
+        setLoading(false);
+        setTimeout(navigate('/collection-success'), 1000);
+      },
+      error => setError(error)
+    )
+  }
 
   function handleSend() {
     setLoading(true);
@@ -160,7 +180,7 @@ function ListingPurchase(props) {
               ? <FormControl sx={{ gap: 3 }}>
 
                 <Typography>Item is available for collection {listing.delivery ? '' : 'only'}</Typography>
-                <Button variant="outlined" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} startIcon={<MapIcon />}>Show me location</Button>
+                <Button variant="outlined" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank" startIcon={<MapIcon />}>Show me location</Button>
 
                 <FormLabel>Share your phone number with the seller to arrange collection:</FormLabel>
                 <TextField
@@ -201,10 +221,18 @@ function ListingPurchase(props) {
             justifyContent="center"
             alignItems="center"
           >
-            <Typography variant="h6">Total: M${total}</Typography>
-            <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
-              Pay & Confirm
-            </LoadingButton>
+            {transmissionType === 'delivery' &&
+            <><Typography variant="h6">Total: M${total}</Typography>
+              <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
+                Pay & Confirm
+              </LoadingButton>
+            </>}
+            {transmissionType === 'collection' &&
+              <>
+                <LoadingButton disabled={error} loading={loading} onClick={handleCollection} variant="contained">
+                  Confirm
+                </LoadingButton>
+              </>}
           </Box>
         </Box>
       );

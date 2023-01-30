@@ -84,7 +84,7 @@ function resetListingStatusTimeout(listingId) {
 
 export function processPurchaseReceipt(entity){
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
-    console.log(`Message received for purchased listing, updating..`)
+    console.log(`Message received for purchased listing, updating..`);
     updateListing(entity.listing_id, 'buyer_message', entity.message).then(
         () => console.log('customer message added succesfully'),
         error => console.error(`Couldn't add message to listing ${error}`)
@@ -92,6 +92,30 @@ export function processPurchaseReceipt(entity){
     updateListing(entity.listing_id, 'coin_id', entity.coin_id).then(
         () => console.log('coin id added to listing'),
         error => console.error(`Couldn't add coin id to listing ${error}`)
+    );
+    updateListing(entity.listing_id, 'status', 'sold').then(
+        () => console.log('listing sold'),
+        error => console.error(`Couldn't update listing status to sold ${error}`)
+    );
+    updateListing(entity.listing_id, 'notification', 'true').then(
+        () => console.log('notification triggered'),
+        error => console.error(`Couldn't update listing notification status: ${error}`)
+    );
+    updateListing(entity.listing_id, 'transmission_type', entity.transmission_type).then(
+        () => console.log(`update transmission type to ${entity.transmission_type}`),
+        error => console.error(`Couldn't update transmission type: ${error}`)
+    );
+    updateListing(entity.listing_id, 'buyer_name', entity.buyer_name).then(
+        () => console.log(`update buyers name to ${entity.buyer_name}`),
+        error => console.error(`Couldn't update buyers name: ${error}`)
+    );
+}
+
+export function processCollectionConfirmation(entity) {
+    console.log(`Message received for collection of listing, updating..`);
+    updateListing(entity.listing_id, 'buyer_message', entity.message).then(
+        () => console.log('customer message added succesfully'),
+        error => console.error(`Couldn't add message to listing ${error}`)
     );
     updateListing(entity.listing_id, 'status', 'sold').then(
         () => console.log('listing sold'),

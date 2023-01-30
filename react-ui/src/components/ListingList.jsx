@@ -51,10 +51,10 @@ function Listing(props) {
           {listing.delivery && (listing.status === 'available' || listing.status === 'pending')
             ? <Chip size="small" label="Delivery" color="secondary" variant="outlined"/>
             : null}
-          {listing.transmission_type === "collection" && listing.status === 'sold'
+          {listing.transmission_type === "collection" && (listing.status === 'sold' || listing.status === 'in progress')
             ? <Chip size="small" label="Collection" color="primary" />
             : null}
-          {listing.transmission_type === "delivery" && listing.status === 'sold'
+          {listing.transmission_type === "delivery" && (listing.status === 'sold' || listing.status === 'in progress')
             ? <Chip size="small" label="Delivery" color="secondary" />
             : null}
 

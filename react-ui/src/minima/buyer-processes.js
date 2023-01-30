@@ -26,6 +26,24 @@ async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmi
     });
 }
 
+async function sendCollectionConfirmation({ message, listingId, seller, transmissionType }) {
+    const host = await getHost();
+    const data = {
+        "type": "collection_confirmation",
+        "message": message,
+        "listing_id": listingId,
+        "transmission_type": transmissionType,
+        "buyer_name": host.name
+    }
+    return new Promise(function (resolve, reject) {
+        send(data, seller).then(
+            () => {
+                console.log(`sent customer message to seller: ${message}`);
+                return resolve(true);
+            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+    });
+}
+
 /**
 * Send's buyers delivery address to seller
 * @param {string} seller - Sellers hex address
@@ -71,6 +89,31 @@ purchaseListing.proptypes = {
     walletAddress: PropTypes.string.isRequired,
     purchaseListing: PropTypes.string.isRequired,
     amount: PropTypes.number.isRequired,
+    transmissionType: PropTypes.string.isRequired,
+}
+
+/**
+* Send's buyers details to seller for collection of listing
+* @param {string} seller - Sellers hex address
+* @param {string} address - Buyers physical address to send item to
+* @param {string} listingId - The id of the listing that is being purchased
+*/
+export function collectListing({ seller, message, listingId, transmissionType }) {
+    return new Promise(function (resolve, reject) {
+        updateListing(listingId, 'status', 'in progress').catch((e) => console.error(e));
+        updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
+        console.log(`Sending collection confirmation and phone numeber to seller.. ${message}`);
+        sendCollectionConfirmation({ message, listingId, seller, transmissionType })
+            .then(() => resolve(true))
+            .catch(Error(`Couldn't send collection confirmation`)
+            );
+    });
+}
+collectListing.proptypes = {
+    seller: PropTypes.string.isRequired,
+    address: PropTypes.string.isRequired,
+    listingId: PropTypes.string.isRequired,
+    walletAddress: PropTypes.string.isRequired,
     transmissionType: PropTypes.string.isRequired,
 }
 

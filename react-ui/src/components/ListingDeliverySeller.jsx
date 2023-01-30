@@ -21,6 +21,7 @@ import Divider from "@mui/material/Divider";
 function ListingDeliverySeller() {
     const [listing, setListing] = useState();
     const params = useParams();
+    const [intro, setIntro] = useState('');
 
     useEffect(() => {
         getListingById(params.id).then(function (result) {
@@ -37,6 +38,7 @@ function ListingDeliverySeller() {
     useEffect(() => {
         if (listing) {
             updateListing(listing.listing_id, 'notification', 'false').catch(e => console.error(`Couldn't reset notification ${e}`));
+            setIntro(encodeURI(`Hey this is ${listing.buyer_name} from dbay - when would you like to come and collect the ${listing.title}?`));
         }
     }, [listing]);
 
@@ -68,7 +70,7 @@ function ListingDeliverySeller() {
                                                         <ListItemText primary={listing.buyer_message} secondary={listing.buyer_name} />
                                                     </ListItemButton>
                                                 </ListItem>
-                                                <Button fullWidth variant="outlined" startIcon={<WhatsAppIcon />} href={`https://wa.me/${listing.buyer_message}`}>Send Message</Button>
+                                            <Button fullWidth variant="outlined" startIcon={<WhatsAppIcon />} href={`https://api.whatsapp.com/send?phone=${listing.buyer_message}&text=${intro}`}>Send Message</Button>
                                             </Box>
                                             : "No details supplied! Not really sure what you can do now sorry!"
                                         }

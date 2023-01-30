@@ -47,11 +47,6 @@ const validationSchema = yup.object({
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
     .required('Price is required'),
-  deliveryCost: yup
-    .number('Enter the price')
-    .positive('Price must be at least 1 minima')
-    .min(1, 'Price should be at least 1 minima')
-    .max(100000000000, 'Price should be below 100000000000 minima')
 });
 
 export default function ListingCreate() {
@@ -117,7 +112,7 @@ export default function ListingCreate() {
       delivery: false,
       collection: true,
       deliveryCost: 0,
-      deliveryCountries: []
+      deliveryCountries: ['']
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {

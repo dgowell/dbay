@@ -8,7 +8,7 @@ import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
 import { processAvailabilityResponse } from './buyer-processes';
-import { processAvailabilityCheck, processPurchaseReceipt } from './seller-processes';
+import { processAvailabilityCheck, processPurchaseReceipt, processCollectionConfirmation } from './seller-processes';
 
 
 /**
@@ -50,6 +50,10 @@ export function processMaximaEvent(msg) {
         case 'purchase_receipt':
             //buyer sends seller their address and coin id
             processPurchaseReceipt(entity);
+            break;
+        case 'collection_confirmation':
+            //buyer sends seller their number to arrange collection
+            processCollectionConfirmation(entity);
             break;
         default:
             console.log(entity);

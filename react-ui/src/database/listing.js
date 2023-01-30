@@ -84,12 +84,12 @@ export function createListing({
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
              ${sentByPk ? '"status",' : ''}
-            "created_at",
             "image",
             "description",
             ${location ? '"location",' : ''}
             ${shippingCost ? '"shipping_cost",' : ''}
             ${shippingCountries ? '"shipping_countries"' : ''}
+            "created_at"
         )
 
         values(
@@ -104,12 +104,12 @@ export function createListing({
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
             ${sentByPk ? `'unchecked',` : ''}
-            ${createdAt ? `'${createdAt}'` : `'${timestamp}'`},
             '${image}',
             '${description}',
             ${location ? `'${location}',` : ''}
             ${shippingCost ? `'${shippingCost}',` : ''}
             ${shippingCountries ? `'${shippingCountries}'` : ''}
+            ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
         );`;
 
         console.log(`title: ${title}, price: ${price}`);
@@ -168,7 +168,7 @@ getListings.propTypes = {
 * Fetches all listings that are the user has purchased
 */
 export function getMyPurchases() {
-    const Q = `select * from ${LISTINGSTABLE} where "status"='purchased';`
+    const Q = `select * from ${LISTINGSTABLE} where "status"='purchased' or "status"='in progress';`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
@@ -358,20 +358,6 @@ export async function processListing(entity) {
     }).then(() => {
         console.log(`Listing ${entity.title} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
-}
-
-/* This function hadles what happens when you purchase a listing */
-export function handlePurchase(listingId) {
-    //set listing to purchuarse_requested
-
-    //options:
-    //1. remove the item from the listing
-    //2. flag the item as purchased
-    //update value in listing directly
-    //deactivateListing(listingId).then((r)=> {
-    //    console.log(r);
-    //})
-
 }
 
 /**
