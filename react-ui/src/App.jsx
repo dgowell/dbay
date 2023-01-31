@@ -25,6 +25,7 @@ import ListingDetailSeller from "./components/ListingDetailSeller";
 import ListingListSeller from "./components/ListingListSeller";
 import ListingDeliverySeller from "./components/ListingDeliverySeller";
 import ListingTransmissionBuyer from "./components/ListingTransmissionBuyer";
+import CollectionSuccess from "./components/CollectionSuccess";
 
 const theme = createTheme({
   typography: {
@@ -115,6 +116,7 @@ function App() {
               <Route path="seller/listing/:id" element={<ListingDetailSeller />} />
               <Route path="seller/listing/delivery/:id" element={<ListingDeliverySeller />} />
               <Route path="purchases/" element={<Purchases />} />
+              <Route path="collection-success/" element={<CollectionSuccess />} />
               <Route path="payment-success/" element={<PaymentSuccess />} />
               <Route path="payment-error/" element={<PaymentError />} />
               <Route path="profile/" element={<Profile />} />

@@ -70,7 +70,7 @@ function ListingDeliverySeller() {
                                                         <ListItemText primary={listing.buyer_message} secondary={listing.buyer_name} />
                                                     </ListItemButton>
                                                 </ListItem>
-                                            <Button fullWidth variant="outlined" startIcon={<WhatsAppIcon />} href={`https://api.whatsapp.com/send?phone=${listing.buyer_message}&text=${intro}`}>Send Message</Button>
+                                            <Button fullWidth target="_blank" variant="outlined" startIcon={<WhatsAppIcon />} href={`https://api.whatsapp.com/send?phone=${listing.buyer_message}&text=${intro}`}>Send Message</Button>
                                             </Box>
                                             : "No details supplied! Not really sure what you can do now sorry!"
                                         }
