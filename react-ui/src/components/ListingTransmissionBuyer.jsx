@@ -10,7 +10,8 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Stack from '@mui/material/Stack';
 
-import ListItemText from '@mui/material/ListItemText';
+import ListItemText from "@mui/material/ListItemText";
+
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -18,6 +19,7 @@ import BackButton from './BackButton';
 import PaymentError from './PaymentError';
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import Badge from '@mui/material/Badge';
+import { hasSufficientFunds } from '../minima/buyer-processes';
 
 function ListingCollectionBuyer(props) {
     const [listing, setListing] = useState();
@@ -25,6 +27,13 @@ function ListingCollectionBuyer(props) {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const navigate = useNavigate();
+    const [intro, setIntro] = useState('');
+
+    useEffect(() => {
+        if (listing) {
+            setIntro(encodeURI(`Hi ${listing.created_by_name} this is ${listing.buyer_name} from dbay - when can I come and collect the ${listing.title}?`));
+        }
+    }, [listing]);
 
 
     useEffect(() => {
@@ -33,20 +42,30 @@ function ListingCollectionBuyer(props) {
         });
     }, [params.id]);
 
-    function handleSend() {
+    async function handleSend() {
         setLoading(true);
         setError(false);
 
-        purchaseListing({
-            listingId: listing.listing_id,
-            seller: listing.created_by_pk,
-            walletAddress: listing.wallet_address,
-            purchaseCode: listing.purchase_code,
-            amount: listing.price,
-        }).then(
-            () => navigate('/payment-success'),
-            error => setError(error)
-        )
+        //check there is money to pay for the item first
+        const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
+            setError('Insufficient Funds');
+            setLoading(false);
+            console.log(`Insufficient funds: ${error}`);
+        });
+
+        if (hasFunds) {
+            purchaseListing({
+                listingId: listing.listing_id,
+                seller: listing.created_by_pk,
+                walletAddress: listing.wallet_address,
+                purchaseCode: listing.purchase_code,
+                amount: listing.price,
+                transmissionType: listing.transmission_type,
+            }).then(
+                () => navigate('/payment-success'),
+                error => setError(error)
+            )
+        }
     }
     function handleCancel() {
         cancelCollection({
@@ -94,7 +113,10 @@ function ListingCollectionBuyer(props) {
                         gap: 3,
                     }}>
                         {listing.transmission_type === 'collection' &&
-                            <Typography>Please arrange collection with seller</Typography>
+                            <Box>
+                                <Typography mb={3} gutterBottom component="div">Please wait for seller to contact you.</Typography>
+                                <Typography gutterBottom component="div">You can pay below once you have collected the item</Typography>
+                            </Box>
                         }
                         {listing.transmission_type === 'delivery' &&
                             <Typography>Please wait for your delivery</Typography>
@@ -109,13 +131,13 @@ function ListingCollectionBuyer(props) {
                         alignItems="center"
                     >
                         {listing.transmission_type === 'collection' &&
-                            <Stack direction="row" spacing={2}>
+                            <Stack mt={15} direction="row" spacing={2}>
                                 <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
-                                    Collect & Pay
+                                     Pay {listing.created_by_name} M${listing.price}
                                 </LoadingButton>
-                                <Button onClick={handleCancel}>Cancel</Button>
+                                <Button variant="outlined" onClick={handleCancel}>Cancel</Button>
                             </Stack>
-                            }
+                        }
                     </Box>
                 </Box>
             );

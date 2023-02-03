@@ -64,8 +64,11 @@ async function sendCancellationNotification({ listingId, seller }) {
 /**
 * Send's buyers delivery address to seller
 * @param {string} seller - Sellers hex address
-* @param {string} address - Buyers physical address to send item to
+* @param {string} message - message from buyer
 * @param {string} listingId - The id of the listing that is being purchased
+* @param {string} purchaseCode - code sent from seller to confirm transaction
+* @param {int} amount - cost of purchase
+* @param {string} transmissionType - collection or delivery
 */
 export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType }) {
     return new Promise(function (resolve, reject) {
@@ -101,10 +104,10 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
 }
 purchaseListing.proptypes = {
     seller: PropTypes.string.isRequired,
-    address: PropTypes.string.isRequired,
+    message: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired,
     walletAddress: PropTypes.string.isRequired,
-    purchaseListing: PropTypes.string.isRequired,
+    purchaseCode: PropTypes.string.isRequired,
     amount: PropTypes.number.isRequired,
     transmissionType: PropTypes.string.isRequired,
 }

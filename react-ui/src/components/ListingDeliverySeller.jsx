@@ -5,6 +5,7 @@ import { getListingById, updateListing } from "../database/listing";
 import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import Card from "@mui/material/Card";
+import LoadingButton from "@mui/lab/LoadingButton";
 import Button from "@mui/material/Button";
 import BackButton from "./BackButton";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
@@ -16,12 +17,14 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Person4Icon from '@mui/icons-material/Person4';
 import Box from '@mui/material/Box';
-import Divider from "@mui/material/Divider";
+import { useNavigate } from "react-router";
 
 function ListingDeliverySeller() {
     const [listing, setListing] = useState();
     const params = useParams();
     const [intro, setIntro] = useState('');
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         getListingById(params.id).then(function (result) {
@@ -30,15 +33,19 @@ function ListingDeliverySeller() {
     }, [params.id]);
 
     function handleItemSent() {
+        setLoading(true);
         updateListing(listing.listing_id, "status", "completed")
-            .then(console.log('updated listing as completed!'))
+            .then(() => {
+                setLoading(false);
+                navigate('/seller/listings')
+            })
             .catch((e) => console.error(`Could not update listing as completed: ${e}`));
     }
 
     useEffect(() => {
         if (listing) {
             updateListing(listing.listing_id, 'notification', 'false').catch(e => console.error(`Couldn't reset notification ${e}`));
-            setIntro(encodeURI(`Hey this is ${listing.buyer_name} from dbay - when would you like to come and collect the ${listing.title}?`));
+            setIntro(encodeURI(`Hi ${listing.buyer_name} this is ${listing.created_by_name} from dbay - when would you like to come and collect the ${listing.title}?`));
         }
     }, [listing]);
 
@@ -53,15 +60,15 @@ function ListingDeliverySeller() {
                             }
                         />
                         <CardContent>
-                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap:4 , alignItems: 'center'}}>
+                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                                 <Alert severity="success">
-                                    You've successfully received payment from {listing.buyer_name}
+                                    {listing.buyer_name} has bought the {listing.title}
                                 </Alert>
                                 {listing.transmission_type === "collection" &&
                                     <>
                                         {listing.buyer_message
                                             ? <Box>
-                                                <Typography gutterBottom component="div">Contact buyer to arrange collection</Typography>
+                                                <Typography gutterBottom component="div">Please contact them to arrange collection:</Typography>
                                                 <ListItem disablePadding>
                                                     <ListItemButton>
                                                         <ListItemIcon>
@@ -70,7 +77,7 @@ function ListingDeliverySeller() {
                                                         <ListItemText primary={listing.buyer_message} secondary={listing.buyer_name} />
                                                     </ListItemButton>
                                                 </ListItem>
-                                            <Button fullWidth target="_blank" variant="outlined" startIcon={<WhatsAppIcon />} href={`https://api.whatsapp.com/send?phone=${listing.buyer_message}&text=${intro}`}>Send Message</Button>
+                                                <Button fullWidth target="_blank" variant="outlined" startIcon={<WhatsAppIcon />} href={`https://api.whatsapp.com/send?phone=${listing.buyer_message}&text=${intro}`}>Send Message</Button>
                                             </Box>
                                             : "No details supplied! Not really sure what you can do now sorry!"
                                         }
@@ -79,14 +86,17 @@ function ListingDeliverySeller() {
                                 {listing.transmission_type === "delivery" &&
                                     <>
                                         {listing.buyer_message
-                                            ? <Typography gutterBottom variant="h6" component="div">Please send the item to ${listing.buyer_message}</Typography>
+                                            ? <>
+                                                <Typography gutterBottom variant="h6" component="div">Please send the item to:</Typography>
+                                                <Typography gutterBottom component="p">{listing.buyer_message}</Typography>
+                                            </>
                                             : "Buyer supplied no contact details, enjoy your free money"
                                         }
-                                    <Alert severity="info">Let the buyer know you've sent the item</Alert>
-                                    <Button fullWidth variant="contained" onClick={handleItemSent}>Item Sent</Button>
-                                </>
+                                        <Alert severity="info">Let the buyer know you've sent the item</Alert>
+                                        <LoadingButton  loading={loading} fullWidth variant="contained" onClick={handleItemSent}>Item Sent</LoadingButton>
+                                    </>
 
-                                    }
+                                }
                             </Box>
                         </CardContent>
                     </Card>

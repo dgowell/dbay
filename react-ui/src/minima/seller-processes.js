@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { send } from './index';
-import { updateListing, getStatus, getListingByPurchaseCode} from '../database/listing';
+import { updateListing, getStatus, getListingByPurchaseCode } from '../database/listing';
 import { getListingById } from '../database/listing';
 
 import { generate } from '@wcj/generate-password';
@@ -77,26 +77,33 @@ function resetListingStatusTimeout(listingId) {
         if (status === 'unavailble' || status === 'pending') {
             updateListing(listingId, "status", "available")
                 .then(console.log('listing reset to availble'))
-                .catch((e)=> console.error(e));
+                .catch((e) => console.error(e));
         }
     }
     setTimeout(resetListing(listingId), 600000);
 }
 
-export function processPurchaseReceipt(entity){
+export function processPurchaseReceipt(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
     console.log(`Message received for purchased listing, updating..`);
-    updateListing(entity.listing_id, 'buyer_message', entity.message).then(
-        () => console.log('customer message added succesfully'),
-        error => console.error(`Couldn't add message to listing ${error}`)
-    );
+    if (entity.transmission_type === 'delivery') {
+        updateListing(entity.listing_id, 'buyer_message', entity.message).then(
+            () => console.log('customer message added succesfully'),
+            error => console.error(`Couldn't add message to listing ${error}`)
+        );
+        updateListing(entity.listing_id, 'status', 'sold').then(
+            () => console.log('listing sold'),
+            error => console.error(`Couldn't update listing status to sold ${error}`)
+        );
+    } else {
+        updateListing(entity.listing_id, 'status', 'completed').then(
+            () => console.log('listing completed'),
+            error => console.error(`Couldn't update listing status to completed ${error}`)
+        );
+    }
     updateListing(entity.listing_id, 'coin_id', entity.coin_id).then(
         () => console.log('coin id added to listing'),
         error => console.error(`Couldn't add coin id to listing ${error}`)
-    );
-    updateListing(entity.listing_id, 'status', 'sold').then(
-        () => console.log('listing sold'),
-        error => console.error(`Couldn't update listing status to sold ${error}`)
     );
     updateListing(entity.listing_id, 'notification', 'true').then(
         () => console.log('notification triggered'),

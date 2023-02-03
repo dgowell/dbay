@@ -88,7 +88,7 @@ export function createListing({
             "description",
             ${location ? '"location",' : ''}
             ${shippingCost ? '"shipping_cost",' : ''}
-            ${shippingCountries ? '"shipping_countries"' : ''}
+            ${shippingCountries ? '"shipping_countries",' : ''}
             "created_at"
         )
 
@@ -108,7 +108,7 @@ export function createListing({
             '${description}',
             ${location ? `'${location}',` : ''}
             ${shippingCost ? `'${shippingCost}',` : ''}
-            ${shippingCountries ? `'${shippingCountries}'` : ''}
+            ${shippingCountries ? `'${shippingCountries}',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
         );`;
 
