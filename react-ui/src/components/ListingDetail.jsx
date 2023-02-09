@@ -80,8 +80,8 @@ function ListingDetail() {
 
     function showPosition(position) {
       setCoordinates({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
+        latitude: (position.coords.latitude.toFixed(3)),
+        longitude: (position.coords.longitude.toFixed(3))
       });
       console.log(JSON.stringify(coordinates));
     };
