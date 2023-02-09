@@ -6,7 +6,7 @@ import Container from '@mui/material/Container';
 
 const ResponsiveAppBar = () => {
     return (
-        <AppBar position="static">
+        <AppBar elevation={0} position="static" sx={{backgroundColor:"#2c2c2c"}}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <Typography

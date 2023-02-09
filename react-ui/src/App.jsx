@@ -26,6 +26,7 @@ import ListingListSeller from "./components/ListingListSeller";
 import ListingDeliverySeller from "./components/ListingDeliverySeller";
 import ListingTransmissionBuyer from "./components/ListingTransmissionBuyer";
 import CollectionSuccess from "./components/CollectionSuccess";
+import InfoPage from "./components/InfoPage";
 
 const theme = createTheme({
   typography: {
@@ -122,6 +123,7 @@ function App() {
               <Route path="profile/" element={<Profile />} />
               <Route path="address/" element={<Profile />} />
               <Route path="name/" element={<Profile />} />
+              <Route path="info/" element={<InfoPage />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <BottomNavBar />

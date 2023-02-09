@@ -86,9 +86,11 @@ function ListingDeliverySeller() {
                                 {listing.transmission_type === "delivery" &&
                                     <>
                                         {listing.buyer_message
-                                            ? <>
+                                            ?<>
                                                 <Typography gutterBottom variant="h6" component="div">Please send the item to:</Typography>
-                                                <Typography gutterBottom component="p">{listing.buyer_message}</Typography>
+                                                <Typography gutterBottom sx={{textAlign:"left"}} component="p">{listing.buyer_message.split("\n").map((i, key) => {
+                                                                                            return <span key={key}>{i}</span>;
+                                                                                            })}</Typography>
                                             </>
                                             : "Buyer supplied no contact details, enjoy your free money"
                                         }

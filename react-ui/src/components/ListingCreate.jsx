@@ -47,6 +47,7 @@ const validationSchema = yup.object({
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
     .required('Price is required'),
+  ///description: yup.string('Description').required('Description is required'),
 });
 
 export default function ListingCreate() {
@@ -112,7 +113,8 @@ export default function ListingCreate() {
       delivery: false,
       collection: true,
       deliveryCost: 0,
-      deliveryCountries: ['']
+      deliveryCountries: [''],
+      description:''
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -140,6 +142,7 @@ export default function ListingCreate() {
 
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...formik.values };
+    console.log("des",newListing.description)
     let id = "";
     createListing({
       title: newListing.title,
@@ -170,8 +173,8 @@ export default function ListingCreate() {
           setSuccess(true);
           console.log(`/seller/listing/${id}`);
           setTimeout(() => {
-            navigate(`/seller/listing/${id}`);
-          }, 500);
+            navigate(`/info`);
+          },100);
         }
       }).catch((e) => {
         setError(`There was an error creating or sending your listing`);
@@ -195,8 +198,8 @@ export default function ListingCreate() {
 
     function showPosition(position) {
       setLocation({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
+        latitude: (position.coords.latitude.toFixed(3)),
+        longitude: (position.coords.longitude.toFixed(3))
       });
       setLoadingCoorindates(false);
     }
@@ -356,7 +359,7 @@ export default function ListingCreate() {
                 value={formik.values.title}
                 onChange={formik.handleChange}
                 variant="outlined"
-                error={formik.touched.title && Boolean(formik.errors.title)}
+                error={formik.touched.title }
                 helperText={formik.touched.title && formik.errors.title}
               />
             </Grid>
@@ -367,7 +370,7 @@ export default function ListingCreate() {
                   label="Asking Price"
                   id="askingPrice"
                   name="askingPrice"
-                  value={formik.values.askingPrice}
+                  // value={formik.values.askingPrice}
                   required
                   onChange={formik.handleChange}
                   startAdornment={
@@ -378,6 +381,20 @@ export default function ListingCreate() {
                 <FormHelperText error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}>
                   {formik.touched.askingPrice && formik.errors.askingPrice}
                 </FormHelperText>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+            <FormControl sx={{ gap: 1,width:'100%' }}>
+                <TextField
+                  id="description"
+                  name="description"
+                  label="Description"
+                  multiline
+                  rows={4}
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  sx={{ width: '100%' }}
+                />
               </FormControl>
             </Grid>
             <Grid item xs={12}>
@@ -407,7 +424,7 @@ export default function ListingCreate() {
                         <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
                         <LoadingButton mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
-                          ?  <Alert variant="success">Coorindates added! Lat: {location.latitude}, Long: {location.longitude}</Alert>
+                          ?  <Alert variant="success">Coorindates added!</Alert>
                           : null}
                       </Paper>
 

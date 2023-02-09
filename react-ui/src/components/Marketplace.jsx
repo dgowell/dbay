@@ -82,7 +82,7 @@ export default function Marketplace() {
               maxWidth: "400px",
             }}
           >
-            {categoryChips()}
+            {/* {categoryChips()} */}
           </Stack>
           {loading
           ? <>

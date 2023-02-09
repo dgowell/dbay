@@ -86,7 +86,7 @@ function ListingListSeller() {
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
           <Tab label="For Sale" {...a11yProps(0)} />
           <Tab label="In Progress" {...a11yProps(1)} />
-          <Tab label="Sent" {...a11yProps(2)} />
+          <Tab label="Completed" {...a11yProps(2)} />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>

@@ -38,31 +38,31 @@ function BottomNavBar() {
                 <BottomNavigationAction
                     component={Link}
                     to="/"
-                    label="Home"
+                    // label="Home"
                     icon={<HomeIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/"
-                    label="Favourites"
+                    // label="Favourites"
                     icon={<FavoriteIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/listing/create"
-                    label="Sell"
+                    // label="Sell"
                     icon={<AddCircleIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/"
-                    label="Inbox"
+                    // label="Inbox"
                     icon={<MailIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/profile"
-                    label="Me"
+                    // label="Me"
                     icon={
                         <Badge color="secondary" variant="dot" invisible={!notification}>
                             <AccountCircleIcon />
