@@ -9,7 +9,7 @@ const ResponsiveAppBar = () => {
         <AppBar elevation={0} position="static" sx={{backgroundColor:"#2c2c2c"}}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                    <Typography
+                    {/* <Typography
                         variant="h5"
                         noWrap
                         component="a"
@@ -26,7 +26,7 @@ const ResponsiveAppBar = () => {
                         }}
                     >
                         dbay
-                    </Typography>
+                    </Typography> */}
                 </Toolbar>
             </Container>
         </AppBar >

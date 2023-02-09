@@ -35,6 +35,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 
 const validationSchema = yup.object({
   title: yup
@@ -111,7 +112,7 @@ export default function ListingCreate() {
       title: '',
       askingPrice: 0,
       delivery: false,
-      collection: true,
+      collection: false,
       deliveryCost: 0,
       deliveryCountries: [''],
       description:''
@@ -173,7 +174,7 @@ export default function ListingCreate() {
           setSuccess(true);
           console.log(`/seller/listing/${id}`);
           setTimeout(() => {
-            navigate(`/info`);
+            navigate(`/info`,{state:{main:"Successfully published!"}});
           },100);
         }
       }).catch((e) => {
@@ -249,8 +250,8 @@ export default function ListingCreate() {
           alignItems: "center",
         }}
       >
-        <Typography variant="h4" gutterBottom>
-          Create New Listing
+        <Typography sx={{fontSize:'24px'}}  gutterBottom>
+          Create new listing
         </Typography>
         <Box
           component="form"

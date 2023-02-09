@@ -21,6 +21,8 @@ export default function Marketplace() {
   const [listings, setListings] = useState();
   const [host, setHost] = useState();
   const [loading, setLoading] = useState(false);
+  const [filterKey, setFilterKey] = useState("");
+
 
 
   /* fetches the listings from local database */
@@ -60,6 +62,10 @@ export default function Marketplace() {
     });
   }
 
+  function handleSearch(e){
+    setFilterKey(e.target.value);
+  }
+
   if (listings) {
     return (
       <div>
@@ -67,8 +73,8 @@ export default function Marketplace() {
           <Autocomplete
             id="free-solo-demo"
             freeSolo
-            options={listings.map((option) => option.name)}
-            renderInput={(params) => <TextField {...params} label="Search" />}
+            options={listings.map((option) => option.title)}
+            renderInput={(params) => <TextField {...params} onChange={(e)=>handleSearch(e)} label="Search" />}
           />
           <Stack component="ul" direction="row" spacing={1}
             sx={{
@@ -89,7 +95,7 @@ export default function Marketplace() {
               <Skeleton animation="wave" variant="circular" width={40} height={40} />
               <Skeleton animation="wave" height={8} width="80%" style={{ marginBottom: 6 }} />
             </>
-          : <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o))} />
+          : <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o)).filter((i)=>i.title.includes(filterKey))} />
           }
         </Stack>
       </div>

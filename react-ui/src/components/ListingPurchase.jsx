@@ -79,7 +79,7 @@ function ListingPurchase(props) {
       () => {
         console.log("successfully sent collection request")
         setLoading(false);
-        setTimeout(navigate('/collection-success'), 1000);
+        setTimeout(navigate('/info',{state:{sub:"The seller has been notified and will be in contact to arrange the collection. "}}), 1000);
       },
       error => setError(error)
     )

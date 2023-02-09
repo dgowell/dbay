@@ -27,6 +27,7 @@ import ListingDeliverySeller from "./components/ListingDeliverySeller";
 import ListingTransmissionBuyer from "./components/ListingTransmissionBuyer";
 import CollectionSuccess from "./components/CollectionSuccess";
 import InfoPage from "./components/InfoPage";
+import "@fontsource/roboto";
 
 const theme = createTheme({
   typography: {

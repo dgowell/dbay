@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-import HomeIcon from "@mui/icons-material/Home";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import MailIcon from "@mui/icons-material/Mail";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import Paper from "@mui/material/Paper";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from "../database/listing";
@@ -39,25 +39,25 @@ function BottomNavBar() {
                     component={Link}
                     to="/"
                     // label="Home"
-                    icon={<HomeIcon />}
+                    icon={<HomeOutlinedIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/"
                     // label="Favourites"
-                    icon={<FavoriteIcon />}
+                    icon={<FavoriteBorderOutlinedIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/listing/create"
                     // label="Sell"
-                    icon={<AddCircleIcon />}
+                    icon={<AddCircleOutlineOutlinedIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/"
                     // label="Inbox"
-                    icon={<MailIcon />}
+                    icon={<MailOutlinedIcon />}
                 />
                 <BottomNavigationAction
                     component={Link}
@@ -65,7 +65,7 @@ function BottomNavBar() {
                     // label="Me"
                     icon={
                         <Badge color="secondary" variant="dot" invisible={!notification}>
-                            <AccountCircleIcon />
+                            <AccountCircleOutlinedIcon />
                         </Badge>
                     }
                 />
