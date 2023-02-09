@@ -25,6 +25,8 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import Button from '@mui/material/Button';
 import MapIcon from '@mui/icons-material/Map';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
@@ -105,9 +107,6 @@ function ListingPurchase(props) {
   const handleMessageChange = (event) => {
     setMessage(event.target.value);
   };
-  const handlePhoneChange = (event) => {
-    setPhone(event.target.value);
-  };
 
   if (listing) {
 
@@ -183,13 +182,10 @@ function ListingPurchase(props) {
                 <Button variant="outlined" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank" startIcon={<MapIcon />}>Show me location</Button>
 
                 <FormLabel>Share your phone number with the seller to arrange collection:</FormLabel>
-                <TextField
-                  id="outlined-multiline-static"
-                  label="Phone number"
+                <PhoneInput
+                  placeholder="Enter phone number"
                   value={phone}
-                  onChange={handlePhoneChange}
-                  sx={{ width: '100%' }}
-                />
+                  onChange={setPhone} />
               </FormControl>
               : null}
               {listing.collection === "false" ? 
