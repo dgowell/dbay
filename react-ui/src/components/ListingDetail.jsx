@@ -222,7 +222,7 @@ function ListingDetail() {
                       </ListItemIcon>
                       <ListItemText
                         primary="Collection"
-                        secondary={distance ? `${distance} km from me ${JSON.stringify(coordinates)}` : null}
+                        secondary={distance ? `${distance} km from me` : null}
                       />
                     </ListItemButton>
                   </ListItem>
