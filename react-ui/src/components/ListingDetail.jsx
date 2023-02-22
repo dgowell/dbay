@@ -273,7 +273,7 @@ function ListingDetail() {
                   onClick={handleBuy}
                   startIcon={<PaymentIcon />}
                 >
-                  BUY NOW!
+                  BUY NOW
                 </Button>}
               <LoadingButton loading={loading} variant="outlined" onClick={handleContact} endIcon={<SendIcon />} >
                 Contact Seller

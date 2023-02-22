@@ -273,7 +273,7 @@ export default function ListingCreate() {
                 top: "0",
                 bottom: "0",
                 objectFit: "cover"
-              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", background: "rgba(30, 51, 238, 0.47)", border: "0.25px solid rgba(30, 51, 238, 0.47)", height: "100%" }}>
+              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", border: "0.25px solid rgba(30, 51, 238, 0.47)", height: "100%" }}>
                 <Box ><PhotoCamera /></Box>
                 <Box>
                   <span>Image Upload</span>
@@ -375,7 +375,7 @@ export default function ListingCreate() {
                   required
                   onChange={formik.handleChange}
                   startAdornment={
-                    <InputAdornment position="start">MIN</InputAdornment>
+                    <InputAdornment position="start">$M</InputAdornment>
                   }
                   error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}
                 />
@@ -452,10 +452,10 @@ export default function ListingCreate() {
                         label="Delivery Cost"
                         id="deliveryCost"
                         name="deliveryCost"
-                        value={formik.values.deliveryCost}
+                       // value={formik.values.deliveryCost}
                         onChange={formik.handleChange}
                         startAdornment={
-                          <InputAdornment position="start">MIN</InputAdornment>
+                          <InputAdornment position="start">$M</InputAdornment>
                         }
                         error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}
                       />
