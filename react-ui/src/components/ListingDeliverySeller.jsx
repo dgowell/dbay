@@ -62,7 +62,7 @@ function ListingDeliverySeller() {
                         <CardContent>
                             <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                                 <Alert severity="success">
-                                    {listing.buyer_name} has bought the {listing.title}
+                                    @{listing.buyer_name} has paid for your item
                                 </Alert>
                                 {listing.transmission_type === "collection" &&
                                     <>
@@ -86,9 +86,11 @@ function ListingDeliverySeller() {
                                 {listing.transmission_type === "delivery" &&
                                     <>
                                         {listing.buyer_message
-                                            ? <>
+                                            ?<>
                                                 <Typography gutterBottom variant="h6" component="div">Please send the item to:</Typography>
-                                                <Typography gutterBottom component="p">{listing.buyer_message}</Typography>
+                                                <Typography gutterBottom sx={{textAlign:"left"}} component="p">{listing.buyer_message.split("\n").map((i, key) => {
+                                                                                            return <p key={key}>{i}</p>;
+                                                                                            })}</Typography>
                                             </>
                                             : "Buyer supplied no contact details, enjoy your free money"
                                         }

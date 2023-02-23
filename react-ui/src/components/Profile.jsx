@@ -9,15 +9,24 @@ import ListItemText from '@mui/material/ListItemText';
 import { useNavigate } from "react-router-dom";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from '../database/listing';
+import { getHost } from "../database/settings";
 
 function Profile() {
     const [hasNotification, setHasNotification] = useState(false);
+    const [name, setName] = useState("");
+
     const navigate = useNavigate();
     useEffect(() => {
         getNotificationStatus().then(
             status => setHasNotification(status),
             error => console.error(`couldn't get notification status ${error}`)
         )
+        getHost().then((data)=>{
+            setName(data.name);
+        }
+        )
+        
+       
     });
 
     return (<>
@@ -30,7 +39,7 @@ function Profile() {
             mb: 6
         }}>
             <AccountCircleIcon />
-            <Typography variant="h6" mt={1}></Typography>
+            <Typography variant="h6" mt={1}>@{name}</Typography>
         </Box>
         <Box sx={{
             m: 2,

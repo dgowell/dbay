@@ -114,8 +114,8 @@ function ListingCollectionBuyer(props) {
                     }}>
                         {listing.transmission_type === 'collection' &&
                             <Box>
-                                <Typography mb={3} gutterBottom component="div">Please wait for seller to contact you.</Typography>
-                                <Typography gutterBottom component="div">You can pay below once you have collected the item</Typography>
+                                <Typography mb={3} gutterBottom component="div">Please wait for the seller to arrange collection on Whatsapp.</Typography>
+                                <Typography gutterBottom component="div">When you have collected the item and are happy with it, you can complete the purchase by paying the seller using the button below</Typography>
                             </Box>
                         }
                         {listing.transmission_type === 'delivery' &&
@@ -133,7 +133,7 @@ function ListingCollectionBuyer(props) {
                         {listing.transmission_type === 'collection' &&
                             <Stack mt={15} direction="row" spacing={2}>
                                 <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
-                                     Pay {listing.created_by_name} M${listing.price}
+                                     PAY NOW
                                 </LoadingButton>
                                 <Button variant="outlined" onClick={handleCancel}>Cancel</Button>
                             </Stack>

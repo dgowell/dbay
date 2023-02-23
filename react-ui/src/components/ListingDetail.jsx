@@ -24,7 +24,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import ForwardIcon from "@mui/icons-material/Forward";
+import ForwardOutlinedIcon from "@mui/icons-material/ForwardOutlined";
 import SendIcon from "@mui/icons-material/Send";
 import PaymentIcon from "@mui/icons-material/Payment";
 import Box from "@mui/material/Box";
@@ -33,8 +33,8 @@ import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
 import { useErrorHandler } from 'react-error-boundary'
 import Carousel from 'react-material-ui-carousel';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import haversine from 'haversine-distance';
 
 function AvailabilityCheckScreen() {
@@ -80,8 +80,8 @@ function ListingDetail() {
 
     function showPosition(position) {
       setCoordinates({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
+        latitude: (position.coords.latitude.toFixed(3)),
+        longitude: (position.coords.longitude.toFixed(3))
       });
       console.log(JSON.stringify(coordinates));
     };
@@ -200,7 +200,7 @@ function ListingDetail() {
               </Carousel>
               <CardContent>
                 <Typography gutterBottom variant="h4" component="div">
-                  £{listing.price}
+                  $M{listing.price}
                 </Typography>
                 <Typography gutterBottom variant="h6" component="div">
                   {listing.title}
@@ -218,11 +218,11 @@ function ListingDetail() {
                   <ListItem disablePadding>
                     <ListItemButton>
                       <ListItemIcon>
-                        <LocationOnIcon />
+                        <LocationOnOutlinedIcon />
                       </ListItemIcon>
                       <ListItemText
                         primary="Collection"
-                        secondary={distance ? `${distance} km from me ${JSON.stringify(coordinates)}` : null}
+                        secondary={distance ? `${distance} km from me` : null}
                       />
                     </ListItemButton>
                   </ListItem>
@@ -232,10 +232,10 @@ function ListingDetail() {
                   <ListItem disablePadding>
                     <ListItemButton>
                       <ListItemIcon>
-                        <LocalShippingIcon />
+                        <LocalShippingOutlinedIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary={`Shipping £${listing.shipping_cost}`}
+                        primary={`Shipping $M${listing.shipping_cost}`}
                         secondary={listing.shipping_countries}
                       />
                     </ListItemButton>
@@ -247,19 +247,19 @@ function ListingDetail() {
                       <StorefrontIcon />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`${listing.created_by_name}`}
-                      secondary={'Seller of item'}
+                      secondary={`@${listing.created_by_name}`}
+                      primary={'Seller'}
                     />
                   </ListItemButton>
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemButton>
                     <ListItemIcon>
-                      <ForwardIcon />
+                      <ForwardOutlinedIcon />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`${listing.sent_by_name}`}
-                      secondary={'Sender of item'}
+                      secondary={`@${listing.sent_by_name}`}
+                      primary={'Sender'}
                     />
                   </ListItemButton>
                 </ListItem>
@@ -273,7 +273,7 @@ function ListingDetail() {
                   onClick={handleBuy}
                   startIcon={<PaymentIcon />}
                 >
-                  I want it
+                  BUY NOW
                 </Button>}
               <LoadingButton loading={loading} variant="outlined" onClick={handleContact} endIcon={<SendIcon />} >
                 Contact Seller

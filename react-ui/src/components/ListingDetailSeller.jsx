@@ -38,7 +38,6 @@ function ListingDetailSeller() {
         getListingById(params.id).then(function (result) {
             setListing(result);
             setImages(result.image.split("(+_+)"))
-
         });
     }, [params.id]);
 

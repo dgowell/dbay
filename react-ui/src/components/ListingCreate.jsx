@@ -35,6 +35,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 
 const validationSchema = yup.object({
   title: yup
@@ -47,6 +48,7 @@ const validationSchema = yup.object({
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
     .required('Price is required'),
+  ///description: yup.string('Description').required('Description is required'),
 });
 
 export default function ListingCreate() {
@@ -110,9 +112,10 @@ export default function ListingCreate() {
       title: '',
       askingPrice: 0,
       delivery: false,
-      collection: true,
+      collection: false,
       deliveryCost: 0,
-      deliveryCountries: ['']
+      deliveryCountries: [''],
+      description:''
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -140,6 +143,7 @@ export default function ListingCreate() {
 
     // When a post request is sent to the create url, we'll add a new record to the database.
     const newListing = { ...formik.values };
+    console.log("des",newListing.description)
     let id = "";
     createListing({
       title: newListing.title,
@@ -170,8 +174,8 @@ export default function ListingCreate() {
           setSuccess(true);
           console.log(`/seller/listing/${id}`);
           setTimeout(() => {
-            navigate(`/seller/listing/${id}`);
-          }, 500);
+            navigate(`/info`,{state:{main:"Successfully published!"}});
+          },100);
         }
       }).catch((e) => {
         setError(`There was an error creating or sending your listing`);
@@ -195,8 +199,8 @@ export default function ListingCreate() {
 
     function showPosition(position) {
       setLocation({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
+        latitude: (position.coords.latitude.toFixed(3)),
+        longitude: (position.coords.longitude.toFixed(3))
       });
       setLoadingCoorindates(false);
     }
@@ -246,8 +250,8 @@ export default function ListingCreate() {
           alignItems: "center",
         }}
       >
-        <Typography variant="h4" gutterBottom>
-          Create New Listing
+        <Typography sx={{fontSize:'24px'}}  gutterBottom>
+          Create new listing
         </Typography>
         <Box
           component="form"
@@ -269,7 +273,7 @@ export default function ListingCreate() {
                 top: "0",
                 bottom: "0",
                 objectFit: "cover"
-              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", background: "rgba(30, 51, 238, 0.47)", border: "0.25px solid rgba(30, 51, 238, 0.47)", height: "100%" }}>
+              }} /> : <Box style={{ textAlign: "center", padding: "2rem 2rem 0.5rem", borderRadius: "15px", border: "0.25px solid rgba(30, 51, 238, 0.47)", height: "100%" }}>
                 <Box ><PhotoCamera /></Box>
                 <Box>
                   <span>Image Upload</span>
@@ -356,7 +360,7 @@ export default function ListingCreate() {
                 value={formik.values.title}
                 onChange={formik.handleChange}
                 variant="outlined"
-                error={formik.touched.title && Boolean(formik.errors.title)}
+                error={formik.touched.title }
                 helperText={formik.touched.title && formik.errors.title}
               />
             </Grid>
@@ -367,17 +371,31 @@ export default function ListingCreate() {
                   label="Asking Price"
                   id="askingPrice"
                   name="askingPrice"
-                  value={formik.values.askingPrice}
+                  // value={formik.values.askingPrice}
                   required
                   onChange={formik.handleChange}
                   startAdornment={
-                    <InputAdornment position="start">MIN</InputAdornment>
+                    <InputAdornment position="start">$M</InputAdornment>
                   }
                   error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}
                 />
                 <FormHelperText error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}>
                   {formik.touched.askingPrice && formik.errors.askingPrice}
                 </FormHelperText>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+            <FormControl sx={{ gap: 1,width:'100%' }}>
+                <TextField
+                  id="description"
+                  name="description"
+                  label="Description"
+                  multiline
+                  rows={4}
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  sx={{ width: '100%' }}
+                />
               </FormControl>
             </Grid>
             <Grid item xs={12}>
@@ -407,7 +425,7 @@ export default function ListingCreate() {
                         <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
                         <LoadingButton mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
-                          ?  <Alert variant="success">Coorindates added! Lat: {location.latitude}, Long: {location.longitude}</Alert>
+                          ?  <Alert variant="success">Coorindates added!</Alert>
                           : null}
                       </Paper>
 
@@ -434,10 +452,10 @@ export default function ListingCreate() {
                         label="Delivery Cost"
                         id="deliveryCost"
                         name="deliveryCost"
-                        value={formik.values.deliveryCost}
+                       // value={formik.values.deliveryCost}
                         onChange={formik.handleChange}
                         startAdornment={
-                          <InputAdornment position="start">MIN</InputAdornment>
+                          <InputAdornment position="start">$M</InputAdornment>
                         }
                         error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}
                       />
