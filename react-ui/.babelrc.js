@@ -9,5 +9,10 @@ module.exports = {
         }
       ]
     ],
-    //plugins: ["@babel/plugin-proposal-async-generator-functions"]
+  //   plugins:[ ["@babel/plugin-proposal-async-generator-functions",
+  //   {
+  //     "module": "bluebird",
+  //     "method": "coroutine"
+  //   }]
+  // ]
   }
