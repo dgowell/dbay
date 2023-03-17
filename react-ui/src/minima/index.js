@@ -35,7 +35,7 @@ export function processMaximaEvent(msg) {
     //The JSON
     var jsonstr = hexToUtf8(datastr);
     //And create the actual JSON
-    var entity = JSON.parse(jsonstr);
+    var entity = JSON.parse(jsonstr.replace(/'/g,""));
 
     //determine what type of message you're receiving
     switch (entity.type) {

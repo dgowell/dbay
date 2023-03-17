@@ -40,9 +40,11 @@ export async function createHost(name, pk) {
 export function getHost() {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`select "pk", "name" FROM SETTINGS;`, function (res) {
+            console.log("res_Host",res);
             if (res.status && res.count === 1) {
                 resolve(res.rows[0]);
-            } else if (res.error.includes('Table \"SETTINGS\" not found')) {
+            } else if (res.error) {
+                console.log(res.error);
                 resolve("No Tables Created");
             } else {
                 reject(res.error);

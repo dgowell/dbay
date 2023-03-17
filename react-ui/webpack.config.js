@@ -8,7 +8,7 @@ const banner = `
 `;
 
 module.exports = {
-  entry: './src/minima/index.js',
+  entry: './src/minima/service_test.js',
   output: {
     path: path.resolve(__dirname,'public'),
     filename:'service.js'
