@@ -363,7 +363,7 @@ function getMLS() {
     MDS.cmd('maxima', function (res) {
         MDS.log(JSON.stringify(res));
         if (res.status) {
-            pb = res.response.mls;
+            mls = res.response.mls;
         } else {
             return Error(`Couldn't fetch maxima public key ${res.error}`);
         }
@@ -403,7 +403,7 @@ function createListingTable() {
             "price" INT NOT NULL,
             "created_by_pk" varchar(640) NOT NULL,
             "created_by_name" char(50),
-            "sent_by_pk" varchar(620),
+            "sent_by_pk" varchar(640),
             "sent_by_name" char(50),
             "created_at" int not null,
             "wallet_address" varchar(80) not null,
@@ -471,6 +471,7 @@ function setup() {
     let hostName = getMaximaContactName();
     let mls = getMLS();
     const permanentAddress = `MAX#${pk}#${mls}`;
+    MDS.log(`Permanent Address: ${permanentAddress}`);
 
     //return the store name
     createListingTable();

@@ -207,11 +207,63 @@ sendListingToContacts.propTypes = {
 
 
 /**
+* Get's sellers current public key using permanent address
+* @param {string} permanentAddress - The seller permanent address MAX#<pk>#<mls>
+*/
+export function getSellersPubKey(permanentAddress) {
+    return new Promise(function (resolve, reject) {
+        const func = `maxextra action:getaddress maxaddress:${permanentAddress}`;
+        console.log(func);
+        //Send the message via Maxima!..
+        window.MDS.cmd(func, function (resp) {
+            debugger;
+            if (resp.status === false) {
+                reject(resp.error);
+                console.error(resp.error);
+                window.MDS.log(JSON.stringify(resp));
+            } else if (resp.response.success === false) {
+                reject(resp.response.error);
+                console.error(resp.response.error);
+                window.MDS.log(JSON.stringify(resp));
+            } else if (resp.status === true) {
+                resolve(resp.response.mlsresponse.publickey);
+            }
+        });
+    });
+}
+
+
+/**
+* Get's sellers current contact address using permanent address
+* @param {string} permanentAddress - The seller permanent address MAX#<pk>#<mls>
+*/
+export function getSellersAddress(permanentAddress) {
+    return new Promise(function (resolve, reject) {
+        const func = `maxextra action:getaddress maxaddress:${permanentAddress}`;
+        //Send the message via Maxima!..
+        window.MDS.cmd(func, function (resp) {
+            debugger;
+            if (resp.status === false) {
+                reject(resp.error);
+                console.error(resp.error);
+                window.MDS.log(JSON.stringify(resp));
+            } else if (resp.response.success === false) {
+                reject(resp.response.error);
+                console.error(resp.response.error);
+                window.MDS.log(JSON.stringify(resp));
+            } else if (resp.status === true) {
+                resolve(resp.response.mlsresponse.address);
+            }
+        });
+    });
+}
+
+/**
 * Sends data to a publickey address via maxima
 * @param {string} data - The data to send
-* @param {string} publickey - Address to send to
+* @param {string} address - Either public key or contact address
 */
-export function send(data, publickey) {
+export function send(data, address) {
     return new Promise(function (resolve, reject) {
 
         //before sending append version number of application
@@ -224,7 +276,12 @@ export function send(data, publickey) {
         const hexstr = "0x" + utf8ToHex(datastr).toUpperCase().trim();
 
         //Create the function..
-        const fullfunc = `maxima action:send publickey:${publickey} application:${APPLICATION_NAME} data:${hexstr}`;
+        let fullfunc = '';
+        if (address.includes('@')){
+            fullfunc = `maxima action:send to:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+        } else {
+            fullfunc = `maxima action:send publickey:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+        }
 
         //Send the message via Maxima!..
         window.MDS.cmd(fullfunc, function (resp) {

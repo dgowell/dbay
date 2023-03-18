@@ -93,9 +93,9 @@ function ListingDetail() {
       const location = JSON.parse(listing.location);
       console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`)
       window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`)
-      setDistance((haversine(coordinates, location)/1000).toFixed(1));
+      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
     }
-  },[coordinates, listing])
+  }, [coordinates, listing])
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
@@ -130,11 +130,17 @@ function ListingDetail() {
 
 
     //check there is money to pay for the item first
-    const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
-      setError('Insufficient Funds');
-      setLoading(false);
-      console.log(`Insufficient funds: ${error}`);
-    });
+    let hasFunds = true;
+    /*if (process.env.NODE_ENV === 'development') {
+      hasFunds = true;
+    } else {
+      hasFunds = await hasSufficientFunds(listing.price).catch(error => {
+        setError('Insufficient Funds');
+        setLoading(false);
+        console.log(`Insufficient funds: ${error}`);
+      });
+    }
+    */
 
     if (hasFunds) {
       const isAvailable = await checkAvailability({

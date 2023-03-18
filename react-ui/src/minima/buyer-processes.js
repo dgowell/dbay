@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { send, sendMoney } from './index';
+import { getSellersAddress, send, sendMoney } from './index';
 import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
@@ -169,9 +169,12 @@ export function checkAvailability({
     };
     console.log(`checking availability`);
 
-    return new Promise(function (resolve, reject) {
+    return new Promise(async function (resolve, reject) {
+        //get sellers address from permanent address
+        let sellerCurrentPk = await getSellersAddress(seller);
+
         //send request to seller
-        send(data, seller)
+        send(data, sellerCurrentPk)
             .then(() => console.log(`successfully sent check request to seller`))
             .catch(error => reject(Error(error)));
 
