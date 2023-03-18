@@ -1,23 +1,23 @@
 var LISTINGSTABLE = 'LISTING';
 var SETTINGSTABLE = 'SETTINGS';
 var APPLICATION_NAME = 'stampd';
-MDS.init(function(msg){
+MDS.init(function (msg) {
     //MDS.log("event: "+msg);
-        switch (msg.event) {
-            case "inited":
-               setup();
-                break;
-            case "MAXIMA":
-                processMaximaEvent(msg)   
-            default:
-              break;
-        }
-  });
-  function hexToUtf8(s) {
+    switch (msg.event) {
+        case "inited":
+            setup();
+            break;
+        case "MAXIMA":
+            processMaximaEvent(msg)
+        default:
+            break;
+    }
+});
+function hexToUtf8(s) {
     return decodeURIComponent(s).split("%27").join("'");
-  }
+}
 
-  function processMaximaEvent(msg) {
+function processMaximaEvent(msg) {
 
     //Is it for us.. ?
     if (msg.data.application !== "stampd") {
@@ -33,16 +33,16 @@ MDS.init(function(msg){
     MDS.log(JSON.stringify(msg.data.data));
     MDS.log("----");
 
-    var jsonstr ="";
-    MDS.cmd("convert from:HEX to:String data:"+msg.data.data,function(resp){
-        MDS.log(JSON.stringify(resp.response.conversion).replace(/'/g,""));
-        jsonstr=JSON.parse(resp.response.conversion.replace(/'/g,""));
+    var jsonstr = "";
+    MDS.cmd("convert from:HEX to:String data:" + msg.data.data, function (resp) {
+        MDS.log(JSON.stringify(resp.response.conversion).replace(/'/g, ""));
+        jsonstr = JSON.parse(resp.response.conversion.replace(/'/g, ""));
     });
     //The JSON
     //var jsonstr = hexToUtf8(datastr);
     //And create the actual JSON
     MDS.log(JSON.stringify(jsonstr));
-    var entity =jsonstr;
+    var entity = jsonstr;
     MDS.log("======");
     MDS.log(entity.type);
     MDS.log("======");
@@ -78,15 +78,15 @@ MDS.init(function(msg){
 
 }
 function cg(length) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  let counter = 0;
-  while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
-  }
-  return result;
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
+    }
+    return result;
 }
 
 function processAvailabilityCheck(entity) {
@@ -108,9 +108,9 @@ function processAvailabilityCheck(entity) {
         const purchaseCode = cg(20);
         data.purchase_code = purchaseCode;
 
-         send(data, entity.buyer_pk);
-         updateListing(entity.listing_id, "purchase_code", purchaseCode);
-         updateListing(entity.listing_id, "status", "pending");
+        send(data, entity.buyer_pk);
+        updateListing(entity.listing_id, "purchase_code", purchaseCode);
+        updateListing(entity.listing_id, "status", "pending");
         //resetListingStatusTimeout(entity.listing_id);
     } catch (error) {
         MDS.log(`There was an error processing availability check: ${error}`);
@@ -118,65 +118,65 @@ function processAvailabilityCheck(entity) {
 }
 
 function getStatus(listingId) {
-  var st ='';
-            MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
-            if (res) {
-                st= res;
-            }
-            else {
-                MDS.log(`MDS.SQL ERROR, could get status of listing ${res.error}`);
-            }
-        });
-      return st;
+    var st = '';
+    MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
+        if (res) {
+            st = res;
+        }
+        else {
+            MDS.log(`MDS.SQL ERROR, could get status of listing ${res.error}`);
+        }
+    });
+    return st;
 }
 
- function utf8ToHex(s) {
+function utf8ToHex(s) {
     return encodeURIComponent(s).split("'").join("%27");
 }
 
 function send(data, publickey) {
 
-        //before sending append version number of application
+    //before sending append version number of application
 
-        //Convert to a string..
-        var datastr = JSON.stringify(data);
-        MDS.log(datastr);
-        var hexstr= "";
-        const funcC = `convert from:String to:HEX data:'${String(datastr)}'`;
-        MDS.log(funcC);
-        MDS.cmd(funcC,function(resp){
+    //Convert to a string..
+    var datastr = JSON.stringify(data);
+    MDS.log(datastr);
+    var hexstr = "";
+    const funcC = `convert from:String to:HEX data:'${String(datastr)}'`;
+    MDS.log(funcC);
+    MDS.cmd(funcC, function (resp) {
+        MDS.log(JSON.stringify(resp));
+        hexstr = resp.response.conversion;
+    });
+    //And now convert to HEX
+    //const hexstr = "0x" + utf8ToHex(datastr).toUpperCase().trim();
+
+    //Create the function..
+    const fullfunc = `maxima action:send publickey:${publickey} application:${APPLICATION_NAME} data:${hexstr}`;
+
+    //Send the message via Maxima!..
+    MDS.cmd(fullfunc, function (resp) {
+        if (resp.status === false) {
             MDS.log(JSON.stringify(resp));
-            hexstr=resp.response.conversion;
-        });
-        //And now convert to HEX
-        //const hexstr = "0x" + utf8ToHex(datastr).toUpperCase().trim();
-
-        //Create the function..
-        const fullfunc = `maxima action:send publickey:${publickey} application:${APPLICATION_NAME} data:${hexstr}`;
-
-        //Send the message via Maxima!..
-        MDS.cmd(fullfunc, function (resp) {
-            if (resp.status === false) {
-                MDS.log(JSON.stringify(resp));
-                return false;
-            } else if (resp.response.delivered === false) {
-                MDS.log(JSON.stringify(resp));
-                return false;
-            } else if (resp.status === true) {
-                return true;
-            }
-        });
+            return false;
+        } else if (resp.response.delivered === false) {
+            MDS.log(JSON.stringify(resp));
+            return false;
+        } else if (resp.status === true) {
+            return true;
+        }
+    });
 }
 
 function updateListing(listingId, key, value) {
-       MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listingId}';`, function (res) {
-            if (res.status) {
-                return res;
-            } else {
-               MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`);
-               return false;
-            }
-        });
+    MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listingId}';`, function (res) {
+        if (res.status) {
+            return res;
+        } else {
+            MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`);
+            return false;
+        }
+    });
 }
 
 function processAvailabilityResponse(entity) {
@@ -186,17 +186,17 @@ function processAvailabilityResponse(entity) {
 }
 
 function getHost() {
-  var host='';
-        MDS.sql(`select "pk", "name" FROM SETTINGS;`, function (res) {
-            if (res.status && res.count === 1) {
-                host= res.rows[0];
-            } else if (res.error.includes('Table \"SETTINGS\" not found')) {
-                return "No Tables Created";
-            } else {
-                return res.error;
-            }
-        });
-return host;
+    var host = '';
+    MDS.sql(`select "pk", "name" FROM SETTINGS;`, function (res) {
+        if (res.status && res.count === 1) {
+            host = res.rows[0];
+        } else if (res.error.includes('Table \"SETTINGS\" not found')) {
+            return "No Tables Created";
+        } else {
+            return res.error;
+        }
+    });
+    return host;
 }
 
 function createListing({
@@ -261,22 +261,22 @@ function createListing({
             ${shippingCountries ? `'${shippingCountries}',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
         );`;
-        MDS.sql(fullsql, (res) => {
-            MDS.log(`MDS.SQL, ${fullsql}`);
-            if (res.status) {
-                return listingId ? listingId : id;
-            } else {
-                MDS.log(`MDS.SQL ERROR, could not create listing ${res.error}}`);
-                return Error(res.error);
-            }
-        });
+    MDS.sql(fullsql, (res) => {
+        MDS.log(`MDS.SQL, ${fullsql}`);
+        if (res.status) {
+            return listingId ? listingId : id;
+        } else {
+            MDS.log(`MDS.SQL ERROR, could not create listing ${res.error}}`);
+            return Error(res.error);
+        }
+    });
 }
 
 
 function processListing(entity) {
 
     //check it's not one of your own
-    const host =  getHost();
+    const host = getHost();
     if (host.pk === entity.created_by_pk) {
         return;
     }
@@ -291,13 +291,13 @@ function processListing(entity) {
         sentByPk: entity.sent_by_pk,
         walletAddress: entity.wallet_address,
         createdAt: entity.created_at,
-        image:entity.image,
-        description:entity.description,
-        collection:entity.collection,
-        delivery:entity.delivery,
-        location:entity.location,
-        shippingCost:entity.shipping_cost,
-        shippingCountries:entity.shipping_countries
+        image: entity.image,
+        description: entity.description,
+        collection: entity.collection,
+        delivery: entity.delivery,
+        location: entity.location,
+        shippingCost: entity.shipping_cost,
+        shippingCountries: entity.shipping_countries
     });
     MDS.log(`Listing ${entity.title} added!`);
 }
@@ -316,7 +316,7 @@ function processPurchaseReceipt(entity) {
     updateListing(entity.listing_id, 'transmission_type', entity.transmission_type)
     updateListing(entity.listing_id, 'buyer_name', entity.buyer_name)
 }
- function processCollectionConfirmation(entity) {
+function processCollectionConfirmation(entity) {
     MDS.log(`Message received for collection of listing, updating..`);
     updateListing(entity.listing_id, 'buyer_message', entity.message)
     updateListing(entity.listing_id, 'status', 'sold')
@@ -325,60 +325,74 @@ function processPurchaseReceipt(entity) {
     updateListing(entity.listing_id, 'buyer_name', entity.buyer_name)
 }
 function getListingById(id) {
-  var listings ='';
-       MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
-            if (res.status) {
-                if (res.count > 1) {
-                    MDS.log(`More than one listing with id ${id}`);
-                    return null;
-                } else {
-                    listings= res.rows[0];
-                }
+    var listings = '';
+    MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
+        if (res.status) {
+            if (res.count > 1) {
+                MDS.log(`More than one listing with id ${id}`);
+                return null;
             } else {
-               MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`);
-               return null;
+                listings = res.rows[0];
             }
-        });
+        } else {
+            MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`);
+            return null;
+        }
+    });
     return listings;
 }
 
 function processCancelCollection(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
     MDS.log(`Message received for cancelling collection`);
-    const listing =  getListingById(entity.listing_id);
+    const listing = getListingById(entity.listing_id);
     if (listing.buyer_name === entity.buyer_name) {
         updateListing(entity.listing_id, 'status', 'available')
     } else {
         MDS.log("buyer name not the same as on listing so cancel averted!");
     }
 }
+
+function getMLS() {
+    var mls = '';
+    MDS.cmd('maxima', function (res) {
+        MDS.log(JSON.stringify(res));
+        if (res.status) {
+            pb = res.response.mls;
+        } else {
+            return Error(`Couldn't fetch maxima public key ${res.error}`);
+        }
+    })
+    return mls;
+}
+
 function getPublicKey() {
-  var pb='';
-        MDS.cmd('maxima', function (res) {
-            MDS.log(JSON.stringify(res));
-            if (res.status) {
-                pb= res.response.publickey;
-            } else {
-                return Error(`Couldn't fetch maxima public key ${res.error}`);
-            }
-        })
+    var pb = '';
+    MDS.cmd('maxima', function (res) {
+        MDS.log(JSON.stringify(res));
+        if (res.status) {
+            pb = res.response.publickey;
+        } else {
+            return Error(`Couldn't fetch maxima public key ${res.error}`);
+        }
+    })
     return pb;
 }
 
 function getMaximaContactName() {
-  var mcn='';
-        MDS.cmd('maxima', function (res) {
-            if (res.status) {
-                mcn= res.response.name;
-            } else {
-                return Error(`Couldn't fetch maxima contact name ${res.error}`);
-            }
-        })
-        return mcn;
-    }
+    var mcn = '';
+    MDS.cmd('maxima', function (res) {
+        if (res.status) {
+            mcn = res.response.name;
+        } else {
+            return Error(`Couldn't fetch maxima contact name ${res.error}`);
+        }
+    })
+    return mcn;
+}
 
-    function createListingTable() {
-        const Q = `create table if not exists ${LISTINGSTABLE} (
+function createListingTable() {
+    const Q = `create table if not exists ${LISTINGSTABLE} (
             "listing_id" varchar(343) primary key,
             "title" varchar(50) NOT NULL,
             "price" INT NOT NULL,
@@ -404,62 +418,62 @@ function getMaximaContactName() {
             "shipping_countries" varchar(150),
             "transmission_type" varchar(10),
             constraint UQ_listing_id unique("listing_id")
-            
             )`;
-    
-            MDS.sql(Q, function (res) {
-                MDS.log(`MDS.SQL, ${Q}`);
-                if (res.status) {
-                    return true;
-                } else {
-                    return Error(`Creating listing tables ${res.error}`);
-                }
-            })
-    }
-    function createSettingsTable() {
-        const Q = `create table if not exists ${SETTINGSTABLE} (
-            "pk" varchar(330),
+
+    MDS.sql(Q, function (res) {
+        MDS.log(`MDS.SQL, ${Q}`);
+        if (res.status) {
+            return true;
+        } else {
+            return Error(`Creating listing tables ${res.error}`);
+        }
+    })
+}
+function createSettingsTable() {
+    const Q = `create table if not exists ${SETTINGSTABLE} (
+            "pk" varchar(620),
             "name" varchar(50),
             CONSTRAINT AK_name UNIQUE("name"),
             CONSTRAINT AK_pk UNIQUE("pk")
             )`;
-    
-            MDS.sql(Q, function (res) {
-                MDS.log(`MDS.SQL, ${Q}`);
-                if (res.status) {
-                    return true;
-                } else {
-                    return Error(`${res.error}`);
-                }
-            })
-    }
-    function createHost(name, pk) {
-            let fullsql = `insert into ${SETTINGSTABLE}("name", "pk") values('${name}', '${pk}');`;
-            MDS.log(`Store added to settings: ${name}`);
-            MDS.sql(fullsql, (res) => {
-                if (res.status) {
-                   return true;
-                } else {
-                    return Error (res.error);
-                }
-            });
+
+    MDS.sql(Q, function (res) {
+        MDS.log(`MDS.SQL, ${Q}`);
+        if (res.status) {
+            return true;
+        } else {
+            return Error(`${res.error}`);
         }
+    })
+}
+function createHost(name, pk) {
+    let fullsql = `insert into ${SETTINGSTABLE}("name", "pk") values('${name}', '${pk}');`;
+    MDS.log(`Store added to settings: ${name}`);
+    MDS.sql(fullsql, (res) => {
+        if (res.status) {
+            return true;
+        } else {
+            return Error(res.error);
+        }
+    });
+}
 function setup() {
     //register the store name and public key
     //if no store then create it
     //store name = maxima contact name
     //store id = current public key
-    let storeId =  getPublicKey();
-    let storeName =  getMaximaContactName();
+    let pk = getPublicKey();
+    let hostName = getMaximaContactName();
+    let mls = getMLS();
+    const permanentAddress = `MAX#${pk}#${mls}`;
 
     //return the store name
-        createListingTable();
-            MDS.log('Listing table created or exists');
-            createSettingsTable();
-                MDS.log('Settings table created or exists');
-                MDS.log(storeId);
-                MDS.log(storeName);
-                 createHost(storeName, storeId);
-                     MDS.log('Local hosting info stored in database');
+    createListingTable();
+    MDS.log('Listing table created or exists');
+    createSettingsTable();
+    MDS.log('Settings table created or exists');
+    MDS.log(hostName);
+    createHost(hostName, permanentAddress);
+    MDS.log('Local hosting info stored in database');
 
 }

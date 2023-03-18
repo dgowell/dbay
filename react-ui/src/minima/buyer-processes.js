@@ -44,7 +44,6 @@ async function sendCollectionConfirmation({ message, listingId, seller, transmis
     });
 }
 
-
 async function sendCancellationNotification({ listingId, seller }) {
     const host = await getHost();
     const data = {

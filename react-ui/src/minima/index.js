@@ -12,7 +12,8 @@ import {
     processAvailabilityCheck,
     processPurchaseReceipt,
     processCollectionConfirmation,
-    processCancelCollection } from './seller-processes';
+    processCancelCollection
+} from './seller-processes';
 
 
 /**
@@ -35,7 +36,7 @@ export function processMaximaEvent(msg) {
     //The JSON
     var jsonstr = hexToUtf8(datastr);
     //And create the actual JSON
-    var entity = JSON.parse(jsonstr.replace(/'/g,""));
+    var entity = JSON.parse(jsonstr.replace(/'/g, ""));
 
     //determine what type of message you're receiving
     switch (entity.type) {
@@ -85,6 +86,22 @@ export function getContacts() {
             .catch((e) => reject(Error(`Couldn't fetch public keys of max contacts ${e}`)));
     });
 }
+
+/*
+*   Gets the current MLS of the node and returns it
+*/
+export function getMLS() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('maxima', function (res) {
+            if (res.status) {
+                resolve(res.response.mls);
+            } else {
+                reject(Error(`Couldn't fetch mls ${res.error}`));
+            }
+        })
+    })
+}
+
 
 /**
 * Fetches a list of maxima contacts
