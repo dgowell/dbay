@@ -1,6 +1,7 @@
 var LISTINGSTABLE = 'LISTING';
 var SETTINGSTABLE = 'SETTINGS';
 var APPLICATION_NAME = 'stampd';
+
 MDS.init(function (msg) {
     //MDS.log("event: "+msg);
     switch (msg.event) {
@@ -8,11 +9,13 @@ MDS.init(function (msg) {
             setup();
             break;
         case "MAXIMA":
-            processMaximaEvent(msg)
+            processMaximaEvent(msg);
+            break;
         default:
             break;
     }
 });
+
 function hexToUtf8(s) {
     return decodeURIComponent(s).split("%27").join("'");
 }
@@ -218,7 +221,9 @@ function createListing({
     shippingCountries
 }) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
-    const id = `${randomId}${createdByPk}`;
+    const pk = getPublicKey();
+    const id = `${randomId}${pk}`;
+    MDS.log(`the id for the listing is: ${id}`);
     const timestamp = Math.floor(Date.now() / 1000);
 
     let fullsql = `insert into ${LISTINGSTABLE}
@@ -393,12 +398,12 @@ function getMaximaContactName() {
 
 function createListingTable() {
     const Q = `create table if not exists ${LISTINGSTABLE} (
-            "listing_id" varchar(343) primary key,
+            "listing_id" varchar(666) primary key,
             "title" varchar(50) NOT NULL,
             "price" INT NOT NULL,
-            "created_by_pk" varchar(330) NOT NULL,
+            "created_by_pk" varchar(640) NOT NULL,
             "created_by_name" char(50),
-            "sent_by_pk" varchar(330),
+            "sent_by_pk" varchar(620),
             "sent_by_name" char(50),
             "created_at" int not null,
             "wallet_address" varchar(80) not null,
@@ -431,7 +436,7 @@ function createListingTable() {
 }
 function createSettingsTable() {
     const Q = `create table if not exists ${SETTINGSTABLE} (
-            "pk" varchar(620),
+            "pk" varchar(640),
             "name" varchar(50),
             CONSTRAINT AK_name UNIQUE("name"),
             CONSTRAINT AK_pk UNIQUE("pk")

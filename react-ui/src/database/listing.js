@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { getHost } from "./settings";
+import { getPublicKey } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
 
@@ -31,7 +32,6 @@ export function createListingTable() {
         "shipping_countries" varchar(150),
         "transmission_type" varchar(10),
         constraint UQ_listing_id unique("listing_id")
-        
         )`;
 
     return new Promise((resolve, reject) => {
@@ -47,7 +47,9 @@ export function createListingTable() {
     })
 }
 
+
 /* adds a listing to the database */
+
 export function createListing({
     title,
     price,
@@ -66,8 +68,12 @@ export function createListing({
     shippingCost,
     shippingCountries
 }) {
-    const randomId = Math.trunc(Math.random() * 10000000000000000);
-    const id = `${randomId}${createdByPk}`;
+    let id = '';
+    if (!listingId) {
+        const randomId = Math.trunc(Math.random() * 10000000000000000);
+        const pk = getPublicKey();
+        id = `${randomId}${pk}`;
+    }
     const timestamp = Math.floor(Date.now() / 1000);
 
     return new Promise(function (resolve, reject) {
@@ -141,6 +147,7 @@ createListing.propTypes = {
     shippingCost:PropTypes.number,
     shippingCountries:PropTypes.string
 }
+
 
 /**
 * Fetches all listings listings using a particular Id
