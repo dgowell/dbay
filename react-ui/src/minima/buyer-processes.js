@@ -7,7 +7,7 @@ import { getHost } from '../database/settings';
 
 
 
-async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType}) {
+export async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType}) {
     const host = await getHost();
     const data = {
         "type": "purchase_receipt",

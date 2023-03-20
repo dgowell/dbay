@@ -27,6 +27,8 @@ import Button from '@mui/material/Button';
 import MapIcon from '@mui/icons-material/Map';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { updateListing } from '../database/listing';
+import { sendPurchaseReceipt } from '../minima/buyer-processes';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
@@ -90,19 +92,29 @@ function ListingPurchase(props) {
   function handleSend() {
     setLoading(true);
     setError(false);
-
-    purchaseListing({
-      listingId: listing.listing_id,
-      seller: listing.created_by_pk,
-      walletAddress: listing.wallet_address,
-      purchaseCode: listing.purchase_code,
-      message: message !== '' ? message : phone,
-      amount: listing.price,
-      transmissionType: transmissionType,
-    }).then(
-      () => navigate('/payment-success'),
-      error => setError(error)
-    )
+    if(process.env.REACT_APP_MODE==="mainnet"){
+      updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
+      updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e)=>console.error(e));
+      sendPurchaseReceipt({
+        message:message !== '' ? message : phone,
+        listingId: listing.listing_id,
+        coinId:"0x1asd234", seller: listing.created_by_pk,
+        transmissionType: transmissionType })
+      navigate('/payment-success');
+    }else{
+      purchaseListing({
+        listingId: listing.listing_id,
+        seller: listing.created_by_pk,
+        walletAddress: listing.wallet_address,
+        purchaseCode: listing.purchase_code,
+        message: message !== '' ? message : phone,
+        amount: listing.price,
+        transmissionType: transmissionType,
+      }).then(
+        () => navigate('/payment-success'),
+        error => setError(error)
+      )
+    }
   }
   const handleMessageChange = (event) => {
     setMessage(event.target.value);
