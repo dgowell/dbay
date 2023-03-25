@@ -130,19 +130,16 @@ function ListingDetail() {
 
 
     //check there is money to pay for the item first
-    let hasFunds = true;
-    /*if (process.env.NODE_ENV === 'development') {
-      hasFunds = true;
-    } else {
-      hasFunds = await hasSufficientFunds(listing.price).catch(error => {
+    const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
+      if(process.env.REACT_APP_MODE==="mainnet"){
         setError('Insufficient Funds');
         setLoading(false);
-        console.log(`Insufficient funds: ${error}`);
-      });
-    }
-    */
+      }
+      console.log(`Insufficient funds: ${error}`);
 
-    if (hasFunds) {
+    });
+
+    if (hasFunds || (process.env.REACT_APP_MODE==="mainnet")) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,
         buyerPk: buyerAddress,

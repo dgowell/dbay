@@ -20,6 +20,8 @@ import PaymentError from './PaymentError';
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import Badge from '@mui/material/Badge';
 import { hasSufficientFunds } from '../minima/buyer-processes';
+import { updateListing } from '../database/listing';
+import { sendPurchaseReceipt } from '../minima/buyer-processes';
 
 function ListingCollectionBuyer(props) {
     const [listing, setListing] = useState();
@@ -53,19 +55,29 @@ function ListingCollectionBuyer(props) {
             console.log(`Insufficient funds: ${error}`);
         });
 
-        if (hasFunds) {
-            purchaseListing({
-                listingId: listing.listing_id,
-                seller: listing.created_by_pk,
-                walletAddress: listing.wallet_address,
-                purchaseCode: listing.purchase_code,
-                amount: listing.price,
-                transmissionType: listing.transmission_type,
-            }).then(
-                () => navigate('/payment-success'),
-                error => setError(error)
-            )
-        }
+        if (hasFunds|| (process.env.REACT_APP_MODE==="mainnet")) {
+            if(process.env.REACT_APP_MODE==="mainnet"){
+                updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
+                updateListing(listing.listing_id, 'transmission_type',  listing.transmission_type).catch((e)=>console.error(e));
+                sendPurchaseReceipt({
+                    listingId: listing.listing_id,
+                    coinId:"0x1asd234", seller: listing.created_by_pk,
+                    transmissionType: listing.transmission_type })
+                navigate('/payment-success');
+              }else{
+                    purchaseListing({
+                        listingId: listing.listing_id,
+                        seller: listing.created_by_pk,
+                        walletAddress: listing.wallet_address,
+                        purchaseCode: listing.purchase_code,
+                        amount: listing.price,
+                        transmissionType: listing.transmission_type,
+                    }).then(
+                        () => navigate('/payment-success'),
+                        error => setError(error)
+                    )
+                 }
+         }
     }
     function handleCancel() {
         cancelCollection({
