@@ -131,6 +131,21 @@ export function getMaximaContactName() {
         })
     })
 }
+
+/**
+* Fetches maxima contact address
+*/
+export function getMaximaContactAddress() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('maxima', function (res) {
+            if (res.status) {
+                resolve(res.response.contact);
+            } else {
+                reject(Error(`Couldn't fetch maxima contact name ${res.error}`));
+            }
+        })
+    })
+}
 /**
 * Fetches maxima public key
 */
@@ -161,6 +176,7 @@ export function getMiniAddress() {
         })
     })
 }
+
 
 
 

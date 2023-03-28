@@ -137,7 +137,7 @@ function utf8ToHex(s) {
     return encodeURIComponent(s).split("'").join("%27");
 }
 
-function send(data, publickey) {
+function send(data, address) {
 
     //before sending append version number of application
 
@@ -155,7 +155,12 @@ function send(data, publickey) {
     //const hexstr = "0x" + utf8ToHex(datastr).toUpperCase().trim();
 
     //Create the function..
-    const fullfunc = `maxima action:send publickey:${publickey} application:${APPLICATION_NAME} data:${hexstr}`;
+    let fullfunc = '';
+    if (address.includes('@')) {
+        fullfunc = `maxima action:send to:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+    } else {
+        fullfunc = `maxima action:send publickey:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+    }
 
     //Send the message via Maxima!..
     MDS.cmd(fullfunc, function (resp) {
