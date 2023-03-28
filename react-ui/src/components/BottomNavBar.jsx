@@ -10,6 +10,7 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import Paper from "@mui/material/Paper";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from "../database/listing";
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 function BottomNavBar() {
     const [activePage, setActivePage] = useState();
@@ -41,31 +42,31 @@ function BottomNavBar() {
                     // label="Home"
                     icon={<HomeOutlinedIcon />}
                 />
-                <BottomNavigationAction
+                {/* <BottomNavigationAction
                     component={Link}
                     to="/"
                     // label="Favourites"
                     icon={<FavoriteBorderOutlinedIcon />}
-                />
+                /> */}
                 <BottomNavigationAction
                     component={Link}
                     to="/listing/create"
                     // label="Sell"
-                    icon={<AddCircleOutlineOutlinedIcon />}
+                    icon={<AddCircleOutlineOutlinedIcon  fontSize="large"/>}
                 />
-                <BottomNavigationAction
+                {/* <BottomNavigationAction
                     component={Link}
                     to="/"
                     // label="Inbox"
                     icon={<MailOutlinedIcon />}
-                />
+                /> */}
                 <BottomNavigationAction
                     component={Link}
                     to="/profile"
                     // label="Me"
                     icon={
                         <Badge color="secondary" variant="dot" invisible={!notification}>
-                            <AccountCircleOutlinedIcon />
+                            <SwapHorizIcon />
                         </Badge>
                     }
                 />

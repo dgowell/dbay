@@ -173,11 +173,11 @@ function ListingDetail() {
       : <div>
         {listing && buyerAddress && buyerName ? (
           <div>
-            <Card sx={{ maxWidth: '100%', marginTop: 2 }}>
+            <Card sx={{ maxWidth: '100%', marginTop: 2,border: "none", boxShadow: "none"  }}>
               <CardHeader
-                avatar={
-                  <BackButton />
-                }
+                // avatar={
+                //   <BackButton />
+                // }
                 action={
                   <Tooltip title="Share to all your contacts" placement="top">
                     <IconButton
@@ -217,69 +217,33 @@ function ListingDetail() {
               <List>
                 {listing.collection === "true"
                   ?
-                  <ListItem disablePadding>
-                    <ListItemButton>
-                      <ListItemIcon>
-                        <LocationOnOutlinedIcon />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary="Collection"
-                        secondary={distance ? `${distance} km from me` : null}
-                      />
-                    </ListItemButton>
+                  <ListItem sx={{mb:2}} disablePadding>
+                    <span style={{fontWeight: 400,fontSize: "20px",color:"#2C2C2C"}}>Collection</span> <span style={{marginLeft:"55%",color:"#888787"}}>{distance ? `${distance} km` : null}</span>
                   </ListItem>
                   : null}
                 {listing.delivery === "true"
                   ?
-                  <ListItem disablePadding>
-                    <ListItemButton>
-                      <ListItemIcon>
-                        <LocalShippingOutlinedIcon />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`Shipping $M${listing.shipping_cost}`}
-                        secondary={listing.shipping_countries}
-                      />
-                    </ListItemButton>
+                  <ListItem sx={{mb:2}} disablePadding>
+                    <span style={{fontWeight: 400,fontSize: "20px",color:"#2C2C2C"}}>Shipping</span> <span style={{marginLeft:"60%",color:"#888787"}}>{`$M${listing.shipping_cost}`}</span>
                   </ListItem>
                   : null}
-                <ListItem disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>
-                      <StorefrontIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      secondary={`@${listing.created_by_name}`}
-                      primary={'Seller'}
-                    />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>
-                      <ForwardOutlinedIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      secondary={`@${listing.sent_by_name}`}
-                      primary={'Sender'}
-                    />
-                  </ListItemButton>
+                <Divider />
+                <ListItem sx={{mt:2}} disablePadding>
+                <span style={{fontWeight: 400,fontSize: "20px",color:"#2C2C2C"}}>Vendor</span> <span style={{marginLeft:"60%",color:"#888787"}}>{`@${listing.created_by_name}`}</span>
                 </ListItem>
               </List>
             </Card>
+
             <Stack spacing={2} mt={4} mb={8}>
               {listing.status === "purchased"
                 ? null
                 : <Button
+                    style={{color:"#2C2C2C"}}
                   variant="contained"
                   onClick={handleBuy}
-                  startIcon={<PaymentIcon />}
                 >
-                  BUY NOW
+                 I WANT IT
                 </Button>}
-              <LoadingButton loading={loading} variant="outlined" onClick={handleContact} endIcon={<SendIcon />} >
-                Contact Seller
-              </LoadingButton>
             </Stack>
           </div>
         ) : <ListingDetailSkeleton />}
