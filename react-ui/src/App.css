@@ -51,7 +51,7 @@
 
 }
 
-.css-14rv86o-MuiButtonBase-root-MuiButton-root-MuiLoadingButton-root{
+.css-14rv86o-MuiButtonBase-root-MuiButton-root-MuiLoadingButton-root {
   /* Primary Color */
 background: linear-gradient(270deg, #000 0%, #2C2C2C 100%);
 /* Primary Shadow */
@@ -77,7 +77,11 @@ border-radius: 6px;
     /* Primary Color */
 background: #D9D9D9!important;
 border-radius: 510px!important;
-color:"#2C2C2C"!important;
 
+}
+.css-w1ly0o-MuiButtonBase-root-MuiButton-root-MuiLoadingButton-root{
+background: #D9D9D9!important;
+border-radius: 510px!important;
+box-shadow: none!important;
 }
 

@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from '../database/listing';
 import { getHost } from "../database/settings";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import IconButton from '@mui/material/IconButton';
 
 function Profile() {
     const [hasNotification, setHasNotification] = useState(false);
@@ -30,7 +32,7 @@ function Profile() {
     });
 
     return (<>
-        <Box sx={{
+        {/* <Box sx={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -40,33 +42,41 @@ function Profile() {
         }}>
             <AccountCircleIcon />
             <Typography variant="h6" mt={1}>@{name}</Typography>
-        </Box>
+        </Box> */}
         <Box sx={{
             m: 2,
         }}>
             <Typography variant="h3">Transactions</Typography>
             <nav aria-label="main mailbox folders">
                 <List>
-                    <ListItem disablePadding>
+                    <ListItem     secondaryAction={
+                        <IconButton edge="end" aria-label="comments">
+                            <ArrowForwardIcon />
+                            </IconButton>} disablePadding>
                         <ListItemButton onClick={() => navigate('/purchases')}>
-                            <ListItemText primary="Purchases" />
+                            <ListItemText primary="My Purchases" />
                         </ListItemButton>
                     </ListItem>
-                    <ListItem disablePadding>
+                    <ListItem secondaryAction={
+                        <IconButton edge="end" aria-label="comments">
+                            <ArrowForwardIcon />
+                            </IconButton>}  disablePadding>
 
                         <ListItemButton onClick={() => navigate('/seller/listings')}>
+                        <ListItemText primary="My Listings" />
                             <Badge anchorOrigin={{
                                 vertical: 'top',
                                 horizontal: 'left',
                             }} color="secondary" variant="dot" invisible={!hasNotification}>
-                                <ListItemText primary="My Listings" />
+                               
                             </Badge>
+                           
                         </ListItemButton>
 
                     </ListItem>
                 </List>
             </nav>
-            <Typography variant="h3">Account</Typography>
+            {/* <Typography variant="h3">Account</Typography>
             <nav aria-label="main mailbox folders">
                 <List>
                     <ListItem disablePadding>
@@ -80,7 +90,7 @@ function Profile() {
                         </ListItemButton>
                     </ListItem>
                 </List>
-            </nav>
+            </nav> */}
         </Box>
     </>
     )

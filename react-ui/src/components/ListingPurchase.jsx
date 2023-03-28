@@ -29,6 +29,10 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { updateListing } from '../database/listing';
 import { sendPurchaseReceipt } from '../minima/buyer-processes';
+import Alert from '@mui/material/Alert';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import ListItemButton from "@mui/material/ListItemButton";
+import InfoIcon from '@mui/icons-material/Info';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
@@ -83,7 +87,8 @@ function ListingPurchase(props) {
       () => {
         console.log("successfully sent collection request")
         setLoading(false);
-        setTimeout(navigate('/info',{state:{sub:"The seller has been notified and will be in contact to arrange the collection. "}}), 1000);
+        navigate("/arr-col");
+        //setTimeout(navigate('/info',{state:{sub:"The seller has been notified and will be in contact to arrange the collection. "}}), 1000);
       },
       error => setError(error)
     )
@@ -133,24 +138,16 @@ function ListingPurchase(props) {
           display: 'flex',
           flexDirection: 'column',
         }}>
-          <Box mb={4} >
-            <BackButton />
-          </Box>
-          <List>
+          <List >
             <ListItem>
-              <ListItemIcon>
-                <CheckCircleIcon color="success" />
-              </ListItemIcon>
-              <ListItemText primary="Item is available" />
+              <Alert sx={{width:"100%"}} severity='success' variant="outlined">Item is Available</Alert>
             </ListItem>
             <ListItem>
-              <ListItemIcon>
-                <CheckCircleIcon color="success" />
-              </ListItemIcon>
-              <ListItemText primary="You have sufficient funds" />
+            <Alert sx={{width:"100%"}} severity='success' variant="outlined">You have sufficient funds</Alert>
             </ListItem>
             <ListItem>
-              <ListItemAvatar>
+              <spna style={{fontWeight:700,fontSize:"20px"}}>Choose preferred option</spna>
+              {/* <ListItemAvatar>
                 {listing.image ? (
                   <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
                 ) : (
@@ -164,7 +161,7 @@ function ListingPurchase(props) {
                   </Badge>
                 )}
               </ListItemAvatar>
-              <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
+              <ListItemText primary={`M$${listing.price}`} secondary={listing.title} /> */}
             </ListItem>
           </List>
           <Box sx={{
@@ -175,7 +172,7 @@ function ListingPurchase(props) {
           }}>
             {listing.delivery === "true" && listing.collection === "true" ?
               <FormControl>
-                <FormLabel id="receive-item-label">How will you receive the item?</FormLabel>
+                {/* <FormLabel id="receive-item-label">How will you receive the item?</FormLabel> */}
                 <RadioGroup
                   aria-labelledby="receive-item-label"
                   name="receieve-item-group"
@@ -183,21 +180,36 @@ function ListingPurchase(props) {
                   onChange={handleChange}
                 >
                   <FormControlLabel value="collection" control={<Radio />} label="Collection" />
-                  <FormControlLabel value="delivery" control={<Radio />} label={`Delivery - M$${listing.shipping_cost}`} />
+                  <FormControlLabel value="delivery" control={<Radio  />} label={`Delivery - M$${listing.shipping_cost}`} />
                 </RadioGroup>
               </FormControl>
               : null}
             {transmissionType === 'collection'
-              ? <FormControl sx={{ gap: 3 }}>
+              ? <FormControl>
+                  <List>
+                    <ListItem >
+                      <ListItemIcon sx={{fontSize:"20px"}}>
+                        <LocationOnOutlinedIcon />
+                      </ListItemIcon>
+                      <ListItemButton component="a" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">
+                      <ListItemText   primaryTypographyProps={{fontSize: 20}}   primary="See location" />
+                      </ListItemButton>
+                    </ListItem>
+                    <ListItem >
+                      <ListItemIcon sx={{fontSize:"16px"}}>
+                        <InfoIcon />
+                      </ListItemIcon>
+                      <ListItemText primaryTypographyProps={{fontSize: 16}}  primary="This is an approximation. Seller will provide exact location privately. " />
+                    </ListItem>
+                  </List>
+                {/* <Typography>Item is available for collection {listing.delivery ? '' : 'only'}</Typography> */}
+                {/* <Button variant="outlined" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank" startIcon={<LocationOnOutlinedIcon />}>See location</Button> */}
 
-                <Typography>Item is available for collection {listing.delivery ? '' : 'only'}</Typography>
-                <Button variant="outlined" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank" startIcon={<MapIcon />}>Show me location</Button>
-
-                <FormLabel>Share your phone number with the seller to arrange collection:</FormLabel>
+                {/* <FormLabel>Share your phone number with the seller to arrange collection:</FormLabel>
                 <PhoneInput
                   placeholder="Enter phone number"
                   value={phone}
-                  onChange={setPhone} />
+                  onChange={setPhone} /> */}
               </FormControl>
               : null}
               {listing.collection === "false" ? 
@@ -208,10 +220,10 @@ function ListingPurchase(props) {
               : null}
             {transmissionType === 'delivery'
               ? <FormControl sx={{ gap: 1 }}>
-                <FormLabel>Enter your address in this box:</FormLabel>
+                {/* <FormLabel>Enter your address in this box:</FormLabel> */}
                 <TextField
                   id="outlined-multiline-static"
-                  label="Delivery address"
+                  label="Name and address here"
                   multiline
                   rows={4}
                   value={message}
@@ -230,15 +242,16 @@ function ListingPurchase(props) {
             alignItems="center"
           >
             {transmissionType === 'delivery' &&
-            <><Typography variant="h6">Total: M${total}</Typography>
-              <LoadingButton disabled={error} loading={loading} onClick={handleSend} variant="contained">
-                Pay & Confirm
+            <>
+            {/* <Typography variant="h6">Total: M${total}</Typography> */}
+              <LoadingButton style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleSend} variant="contained">
+                Pay & Continue
               </LoadingButton>
             </>}
             {transmissionType === 'collection' &&
               <>
-                <LoadingButton disabled={error} loading={loading} onClick={handleCollection} variant="contained">
-                  Confirm
+                <LoadingButton style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleCollection} variant="contained">
+                  Continue
                 </LoadingButton>
               </>}
           </Box>
