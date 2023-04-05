@@ -8,18 +8,19 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate } from "react-router";
 
+
 const ResponsiveAppBar = () => {
     const navigate = useNavigate();
     return (
-        <AppBar elevation={0} position="static" sx={{backgroundColor:"#D9D9D9"}}>
+        <AppBar elevation={0} position="sticky" sx={{backgroundColor:"#2C2C2C"}}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
 
-                    <IconButton sx={{color:"#222222"}} onClick={()=>navigate(-1)}>
+                    <IconButton sx={{color:"white"}} onClick={()=>navigate(-1)}>
                         <ArrowBackIcon/>
                     </IconButton>
-                    <IconButton  sx={{color:"#222222"}} onClick={()=>navigate("/profile")}>
-                        <PersonIcon/>
+                    <IconButton size='small' sx={{color:"white"}}>
+                        <img src={"/transparent.png"} />
                     </IconButton>
 
                 </Toolbar>

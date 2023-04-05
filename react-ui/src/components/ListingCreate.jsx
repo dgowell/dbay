@@ -146,13 +146,13 @@ export default function ListingCreate() {
     console.log("des",newListing.description)
     let id = "";
     createListing({
-      title: newListing.title,
+      title: newListing.title.replace(/'/g,"''"),
       price: newListing.askingPrice,
       createdByPk: host.pk,
       createdByName: host.name,
       walletAddress: walletAddress,
       image: images.join("(+_+)"),
-      description: newListing.description ?? '',
+      description: newListing.description.replace(/'/g,"''") ?? '',
       collection: newListing.collection,
       delivery: newListing.delivery,
       location: JSON.stringify(location),

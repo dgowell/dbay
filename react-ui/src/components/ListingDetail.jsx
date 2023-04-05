@@ -145,6 +145,7 @@ function ListingDetail() {
         listingId: listing.listing_id,
       }).catch(error => {
         console.log(`Item is not available ${error}`);
+        navigate(`/info`,{state:{action:"error",main:"Not available",sub:"It looks like someone has recently bought this item or the seller has removed it from sale"}});
         setError(`Not available`);
         setLoading(false);
       });

@@ -156,6 +156,16 @@ export default function Marketplace() {
             srcSet={`${item.image.split("(+_+)")[0]}`}
             alt={item.title}
             loading="lazy"
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: "15px",
+              left: "0",
+              right: "0",
+              top: "0",
+              bottom: "0",
+              objectFit: "cover"
+            }}
           />
           <ImageListItemBar
           sx={{ background: "rgba(0, 0, 0, 0)"}}

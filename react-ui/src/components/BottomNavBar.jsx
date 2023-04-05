@@ -13,7 +13,7 @@ import { getNotificationStatus } from "../database/listing";
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 function BottomNavBar() {
-    const [activePage, setActivePage] = useState();
+    const [activePage, setActivePage] = useState(0);
     const [notification, setNotifcation] = useState(false);
 
 
@@ -30,6 +30,9 @@ function BottomNavBar() {
             elevation={3}
         >
             <BottomNavigation
+            sx={{backgroundColor:"#2C2C2C",  "& .Mui-selected, .Mui-selected > svg": {
+                color: "#007A78!important"
+              }}}
                 showLabels
                 value={activePage}
                 onChange={(event, page) => {
@@ -37,6 +40,7 @@ function BottomNavBar() {
                 }}
             >
                 <BottomNavigationAction
+                    sx={{color:"white"}}
                     component={Link}
                     to="/"
                     // label="Home"
@@ -49,6 +53,7 @@ function BottomNavBar() {
                     icon={<FavoriteBorderOutlinedIcon />}
                 /> */}
                 <BottomNavigationAction
+                     sx={{color:"white"}}
                     component={Link}
                     to="/listing/create"
                     // label="Sell"
@@ -61,6 +66,7 @@ function BottomNavBar() {
                     icon={<MailOutlinedIcon />}
                 /> */}
                 <BottomNavigationAction
+                     sx={{color:"white"}}
                     component={Link}
                     to="/profile"
                     // label="Me"
