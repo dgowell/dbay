@@ -52,8 +52,10 @@ async function sendCollectionConfirmation({ message, listingId, seller, transmis
         "transmission_type": transmissionType,
         "buyer_name": host.name
     }
+    const sellerAddress = await getSellerAddress(seller, listingId);
+
     return new Promise(function (resolve, reject) {
-        send(data, seller).then(
+        send(data, sellerAddress).then(
             () => {
                 console.log(`sent customer message to seller: ${message}`);
                 return resolve(true);
@@ -68,8 +70,9 @@ async function sendCancellationNotification({ listingId, seller }) {
         "listing_id": listingId,
         "buyer_name": host.name
     }
+    const sellerAddress = await getSellerAddress(seller, listingId);
     return new Promise(function (resolve, reject) {
-        send(data, seller).then(
+        send(data, sellerAddress).then(
             () => {
                 console.log(`sent cancellation to seller.`);
                 resolve(true);
