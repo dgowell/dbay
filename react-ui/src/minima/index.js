@@ -132,6 +132,28 @@ export function getMaximaContactName() {
     })
 }
 
+
+/**
+* Checks maxcontacts against contact name and returns contact address if found
+*/
+export function isContact(pk) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('maxcontacts', function (res) {
+            if (res.status) {
+                const contacts = res.response.contacts;
+                contacts.forEach((c) => {
+                    if (pk === c.publickey) {
+                        resolve(c.currentaddress);
+                    }
+                })
+                resolve(false);
+            } else {
+                reject(Error(`Couldn't find a matching name ${res.error}`));
+            }
+        })
+    })
+}
+
 /**
 * Fetches maxima contact address
 */
@@ -280,7 +302,7 @@ export function getSellersAddress(permanentAddress) {
 * @param {string} address - Either public key or contact address
 */
 export function send(data, address) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(async function (resolve, reject) {
 
         //before sending append version number of application
 
@@ -293,6 +315,7 @@ export function send(data, address) {
 
         //Create the function..
         let fullfunc = '';
+        console.log(`Heres the address we'll send to: ${address}`);
         if (address.includes('@')){
             fullfunc = `maxima action:send to:${address} application:${APPLICATION_NAME} data:${hexstr}`;
         } else {

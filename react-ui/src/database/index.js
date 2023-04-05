@@ -22,7 +22,6 @@ import {
 export async function setup() {
     const pk = await getPublicKey();
     const mls = await getMLS();
-    debugger;
     const permanentAddress = `MAX#${pk}#${mls}`;
     const hostName = await getMaximaContactName();
 

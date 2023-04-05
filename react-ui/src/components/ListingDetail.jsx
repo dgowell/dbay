@@ -13,7 +13,7 @@ import Card from "@mui/material/Card";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
-import { sendListingToContacts, getMiniAddress, getMaximaContactAddress } from "../minima";
+import { sendListingToContacts, getMaximaContactAddress } from "../minima";
 import { checkAvailability, hasSufficientFunds } from '../minima/buyer-processes';
 import { useNavigate } from "react-router";
 import Divider from "@mui/material/Divider";
@@ -138,7 +138,6 @@ function ListingDetail() {
       console.log(`Insufficient funds: ${error}`);
       return true;
     });
-    debugger;
     if (hasFunds || (process.env.REACT_APP_MODE==="mainnet")) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,

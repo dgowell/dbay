@@ -1,13 +1,28 @@
 import PropTypes from 'prop-types';
-import { getSellersAddress, send, sendMoney } from './index';
-import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
+import { getSellersAddress, send, sendMoney, isContact } from './index';
+import { updateListing, getStatus, removeListing, resetListingState, getCreatedByNameById } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
 import { getHost } from '../database/settings';
 
+async function getSellerAddress(address) {
+    //get name of node that create item
+    const e = address.split('#');
+    const pk = e[1];
 
+    return new Promise(async function (resolve, reject) {
+        //find out if they're a contact
+        const currentAddress = await isContact(pk);
+        if (currentAddress && currentAddress.includes('@')) {
+            resolve(currentAddress);
+        } else {
+            const currentAddress = await getSellersAddress(address);
+            resolve(currentAddress);
+        }
+    });
+}
 
-export async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType}) {
+export async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType }) {
     const host = await getHost();
     const data = {
         "type": "purchase_receipt",
@@ -17,12 +32,14 @@ export async function sendPurchaseReceipt({ message, listingId, coinId, seller, 
         "transmission_type": transmissionType,
         "buyer_name": host.name
     }
+    const sellerAddress = await getSellerAddress(seller, listingId);
+
     return new Promise(function (resolve, reject) {
-        send(data, seller).then(
+        send(data, sellerAddress).then(
             () => {
                 console.log(`sent customer message to seller: ${message}`);
                 resolve(true);
-            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+            }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
     });
 }
 
@@ -40,7 +57,7 @@ async function sendCollectionConfirmation({ message, listingId, seller, transmis
             () => {
                 console.log(`sent customer message to seller: ${message}`);
                 return resolve(true);
-            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+            }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
     });
 }
 
@@ -75,7 +92,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
             .then((coinId) => {
                 if (coinId.includes('0x')) {
                     updateListing(listingId, 'status', 'purchased').catch((e) => console.error(e));
-                    updateListing(listingId, 'transmission_type', transmissionType).catch((e)=>console.error(e));
+                    updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
                     console.log(`Sending purchase receipt to seller..`);
                     return sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
@@ -171,7 +188,7 @@ export function checkAvailability({
 
     return new Promise(async function (resolve, reject) {
         //get sellers address from permanent address
-        let sellerCurrentPk = await getSellersAddress(seller);
+        let sellerCurrentPk = await getSellersAddress(seller).catch(e => Error(console.error(e)));
 
         //send request to seller
         send(data, sellerCurrentPk)

@@ -50,7 +50,7 @@ export function createListingTable() {
 
 /* adds a listing to the database */
 
-export function createListing({
+export async function createListing({
     title,
     price,
     createdByPk,
@@ -71,7 +71,7 @@ export function createListing({
     let id = '';
     if (!listingId) {
         const randomId = Math.trunc(Math.random() * 10000000000000000);
-        const pk = getPublicKey();
+        const pk = await getPublicKey();
         id = `${randomId}${pk}`;
     }
     const timestamp = Math.floor(Date.now() / 1000);
@@ -204,6 +204,30 @@ export function getListingById(id) {
             } else {
                 reject(Error(`MDS.SQL ERROR, could get listing by Id ${res.error}`));
                 window.MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`);
+            }
+        });
+    });
+}
+getListingById.propTypes = {
+    id: PropTypes.string.isRequired,
+}
+
+/**
+* Fetches created_by_name from listing
+* @param {string} id - The id of the listing
+*/
+export function getCreatedByNameById(id) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT 'created_by_name' FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
+            if (res.status) {
+                if (res.count > 1) {
+                    reject(`More than one listing with id ${id}`, null);
+                } else {
+                    resolve(res.rows[0]);
+                }
+            } else {
+                reject(Error(`MDS.SQL ERROR, could not get created by name by Id ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could not get create by name by Id ${res.error}`);
             }
         });
     });
