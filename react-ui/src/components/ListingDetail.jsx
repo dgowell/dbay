@@ -176,6 +176,7 @@ function ListingDetail() {
           <div>
             <Card sx={{ maxWidth: '100%', marginTop: 2,border: "none", boxShadow: "none"  }}>
               <CardHeader
+                 title="Listing Detail"
                 // avatar={
                 //   <BackButton />
                 // }
@@ -201,7 +202,7 @@ function ListingDetail() {
                     />))
                 }
               </Carousel>
-              <CardContent>
+              <CardContent sx={{padding:0}} >
                 <Typography gutterBottom variant="h4" component="div">
                   $M{listing.price}
                 </Typography>
@@ -239,6 +240,7 @@ function ListingDetail() {
               {listing.status === "purchased"
                 ? null
                 : <Button
+                    className={"custom-loading"}
                     style={{color:"#2C2C2C"}}
                   variant="contained"
                   onClick={handleBuy}

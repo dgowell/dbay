@@ -121,7 +121,7 @@ export default function ListingUpdate() {
             </FormControl>
           </Grid>
         </Grid>
-        <LoadingButton
+        <LoadingButton className={"custom-loading"}
           fullWidth
           variant="contained"
           type="submit"

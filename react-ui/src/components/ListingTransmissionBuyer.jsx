@@ -213,7 +213,7 @@ function ListingCollectionBuyer(props) {
                     >
                         {listing.transmission_type === 'collection' &&
                             <Stack mt={15} direction="row" spacing={2} width={"100%"}>
-                                <LoadingButton style={{color:"#2C2C2C",width:"100%"}} disabled={error} loading={loading} onClick={handleOpen} variant="contained">
+                                <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C",width:"100%"}} disabled={error} loading={loading} onClick={handleOpen} variant="contained">
                                      PAY NOW
                                 </LoadingButton>
                                 {/* <Button variant="outlined" onClick={handleCancel}>Cancel</Button> */}
@@ -231,7 +231,7 @@ function ListingCollectionBuyer(props) {
                             {`Pay $M${listing.price} from your Minima wallet?`}
                             </Typography>
                             <Stack mt={15} direction="row" spacing={2} width={"100%"} sx={{justifyContent:"center",textAlign:"center"}} >
-                                <LoadingButton style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleSend} variant="contained">
+                                <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleSend} variant="contained">
                                      PAY NOW
                                 </LoadingButton>
                                 <Button sx={{borderRadius:"510px"}} variant="outlined" onClick={handleClose}>Cancel</Button>

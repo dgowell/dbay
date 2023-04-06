@@ -63,7 +63,7 @@ return (
             </CardContent>
           </Card>
           <div style={{justifyContent:"center",width:"100%"}}>
-            <LoadingButton style={{color:"#2C2C2C",width:"100%"}}  onClick={()=>navigate("/")} variant="contained">
+            <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C",width:"100%"}}  onClick={()=>navigate("/")} variant="contained">
                         Close
             </LoadingButton>
           </div>

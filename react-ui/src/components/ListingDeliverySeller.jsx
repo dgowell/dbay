@@ -53,16 +53,16 @@ function ListingDeliverySeller() {
         <div>
             {listing ? (
                 <div>
-                    <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8 }}>
+                    <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8,boxShadow:"none" }}>
                         <CardHeader
-                            avatar={
-                                <BackButton />
-                            }
+                            // avatar={
+                            //     <BackButton />
+                            // }
                         />
                         <CardContent>
-                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
-                                <Alert severity="success">
-                                    @{listing.buyer_name} has paid for your item
+                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center',boxShadow:"none" }}>
+                                <Alert  sx={{width:"100%"}} severity='success' variant="outlined">
+                                    @{listing.buyer_name} has bought your item, let them know you’ve sent it
                                 </Alert>
                                 {listing.transmission_type === "collection" &&
                                     <>
@@ -94,8 +94,8 @@ function ListingDeliverySeller() {
                                             </>
                                             : "Buyer supplied no contact details, enjoy your free money"
                                         }
-                                        <Alert severity="info">Let the buyer know you've sent the item</Alert>
-                                        <LoadingButton  loading={loading} fullWidth variant="contained" onClick={handleItemSent}>Item Sent</LoadingButton>
+                                        {/* <Alert severity="info">Let the buyer know you've sent the item</Alert> */}
+                                        <LoadingButton className={"custom-loading"}  sx={{marginTop:"60%"}} loading={loading} fullWidth variant="contained" onClick={handleItemSent}>Item Sent</LoadingButton>
                                     </>
 
                                 }

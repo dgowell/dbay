@@ -174,7 +174,7 @@ export default function ListingCreate() {
           setSuccess(true);
           console.log(`/seller/listing/${id}`);
           setTimeout(() => {
-            navigate(`/info`,{state:{main:"Successfully published!"}});
+            navigate(`/info`,{state:{main:"Successfully published!",sub:"your listing is now published over the minima it may take some time to be available to the other minimalists"}});
           },100);
         }
       }).catch((e) => {
@@ -423,7 +423,7 @@ export default function ListingCreate() {
                         mb:3
                       }}elevation={2}>
                         <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
-                        <LoadingButton mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
+                        <LoadingButton className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
                           ?  <Alert variant="success">Coorindates added!</Alert>
                           : null}
@@ -491,7 +491,7 @@ export default function ListingCreate() {
             </Grid>
           </Grid>
           <Grid style={{ marginBottom: "20%" }}>
-            <LoadingButton
+            <LoadingButton className={"custom-loading"}
               fullWidth
               variant="contained"
               type="submit"

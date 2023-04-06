@@ -105,7 +105,7 @@ function ListingPurchase(props) {
         listingId: listing.listing_id,
         coinId:"0x1asd234", seller: listing.created_by_pk,
         transmissionType: transmissionType })
-      navigate('/payment-success');
+      navigate('/info',{state:{main:"Payment Successfull!",sub:`@${listing.created_by_name} has received your order and will post your item to the address provided. `}});
     }else{
       purchaseListing({
         listingId: listing.listing_id,
@@ -116,7 +116,7 @@ function ListingPurchase(props) {
         amount: listing.price,
         transmissionType: transmissionType,
       }).then(
-        () => navigate('/payment-success'),
+        () => navigate('/info',{state:{main:"Payment Successfull!",sub:`@${listing.created_by_name} has received your order and will post your item to the address provided. `}}),
         error => setError(error)
       )
     }
@@ -138,6 +138,9 @@ function ListingPurchase(props) {
           display: 'flex',
           flexDirection: 'column',
         }}>
+        <Typography sx={{fontSize:'24px'}}  gutterBottom>
+          Shipping
+        </Typography>
           <List >
             <ListItem>
               <Alert sx={{width:"100%"}} severity='success' variant="outlined">Item is Available</Alert>
@@ -244,13 +247,13 @@ function ListingPurchase(props) {
             {transmissionType === 'delivery' &&
             <>
             {/* <Typography variant="h6">Total: M${total}</Typography> */}
-              <LoadingButton style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleSend} variant="contained">
+              <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleSend} variant="contained">
                 Pay & Continue
               </LoadingButton>
             </>}
             {transmissionType === 'collection' &&
               <>
-                <LoadingButton style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleCollection} variant="contained">
+                <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleCollection} variant="contained">
                   Continue
                 </LoadingButton>
               </>}

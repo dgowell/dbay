@@ -66,11 +66,11 @@ function ListingDetailSeller() {
         <div>
             {listing ? (
                 <div>
-                    <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8 }}>
+                    <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8,boxShadow:"none" }}>
                         <CardHeader
-                            avatar={
-                                <BackButton />
-                            }
+                            // avatar={
+                            //     <BackButton />
+                            // }
                             action={
                                 <Tooltip title="Share to all your contacts" placement="top">
                                     <IconButton

@@ -54,7 +54,7 @@ return (
                               lineHeight: '128.91%',}} gutterBottom>
             {sub ?? ''} 
             </Typography>
-            <LoadingButton         
+            <LoadingButton className={"custom-loading"}         
               fullWidth
               variant="outlined"
               sx={{
