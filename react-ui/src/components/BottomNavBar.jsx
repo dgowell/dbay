@@ -10,9 +10,10 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import Paper from "@mui/material/Paper";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from "../database/listing";
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 function BottomNavBar() {
-    const [activePage, setActivePage] = useState();
+    const [activePage, setActivePage] = useState(0);
     const [notification, setNotifcation] = useState(false);
 
 
@@ -29,6 +30,9 @@ function BottomNavBar() {
             elevation={3}
         >
             <BottomNavigation
+            sx={{backgroundColor:"#2C2C2C",  "& .Mui-selected, .Mui-selected > svg": {
+                color: "#007A78!important"
+              }}}
                 showLabels
                 value={activePage}
                 onChange={(event, page) => {
@@ -36,36 +40,39 @@ function BottomNavBar() {
                 }}
             >
                 <BottomNavigationAction
+                    sx={{color:"white"}}
                     component={Link}
                     to="/"
                     // label="Home"
                     icon={<HomeOutlinedIcon />}
                 />
-                <BottomNavigationAction
+                {/* <BottomNavigationAction
                     component={Link}
                     to="/"
                     // label="Favourites"
                     icon={<FavoriteBorderOutlinedIcon />}
-                />
+                /> */}
                 <BottomNavigationAction
+                     sx={{color:"white"}}
                     component={Link}
                     to="/listing/create"
                     // label="Sell"
-                    icon={<AddCircleOutlineOutlinedIcon />}
+                    icon={<AddCircleOutlineOutlinedIcon  fontSize="large"/>}
                 />
-                <BottomNavigationAction
+                {/* <BottomNavigationAction
                     component={Link}
                     to="/"
                     // label="Inbox"
                     icon={<MailOutlinedIcon />}
-                />
+                /> */}
                 <BottomNavigationAction
+                     sx={{color:"white"}}
                     component={Link}
                     to="/profile"
                     // label="Me"
                     icon={
                         <Badge color="secondary" variant="dot" invisible={!notification}>
-                            <AccountCircleOutlinedIcon />
+                            <SwapHorizIcon />
                         </Badge>
                     }
                 />

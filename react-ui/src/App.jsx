@@ -27,6 +27,8 @@ import ListingDeliverySeller from "./components/ListingDeliverySeller";
 import ListingTransmissionBuyer from "./components/ListingTransmissionBuyer";
 import CollectionSuccess from "./components/CollectionSuccess";
 import InfoPage from "./components/InfoPage";
+import ArrangeCollection from "./components/ArrangeCollection";
+
 import "@fontsource/roboto";
 
 const theme = createTheme({
@@ -39,6 +41,12 @@ const theme = createTheme({
   palette: {
     primary: {
       main: '#2e2e2e',
+    }
+  }, overrides: {
+    MuiButton: {
+      root: {
+        background: 'red'
+      }
     }
   }
 });
@@ -125,6 +133,7 @@ function App() {
               <Route path="address/" element={<Profile />} />
               <Route path="name/" element={<Profile />} />
               <Route path="info/" element={<InfoPage />} />
+              <Route path="arr-col/" element={<ArrangeCollection />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <BottomNavBar />

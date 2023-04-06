@@ -8,7 +8,19 @@ import Chip from "@mui/material/Chip";
 import filter from 'lodash/filter';
 import { getHost } from '../database/settings';
 import Skeleton from '@mui/material/Skeleton';
-
+import ImageList from '@mui/material/ImageList';
+import ImageListItem from '@mui/material/ImageListItem';
+import ImageListItemBar from '@mui/material/ImageListItemBar';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import { useNavigate } from "react-router-dom";
 const categories = [
   { category_id: 1, name: "Not a real category" },
   { category_id: 2, name: "Pick me" },
@@ -22,6 +34,21 @@ export default function Marketplace() {
   const [host, setHost] = useState();
   const [loading, setLoading] = useState(false);
   const [filterKey, setFilterKey] = useState("");
+  const [sort, setSort] = useState(0);
+  const navigate = useNavigate();
+
+  const handleSort = (event) => {
+    const val= event.target.value;
+    console.log(val);
+    var sort =[];
+    if (val==2){
+     sort = [...listings].sort((a, b) => b.price - a.price)
+    }else{
+     sort = [...listings].sort((a, b) => a.price - b.price)
+    }
+    setListings(sort)
+    setSort(val);
+  };
 
 
 
@@ -74,8 +101,31 @@ export default function Marketplace() {
             id="free-solo-demo"
             freeSolo
             options={listings.map((option) => option.title)}
-            renderInput={(params) => <TextField {...params} onChange={(e)=>handleSearch(e)} label="Search" />}
+            renderInput={(params) => <TextField {...params}  onChange={(e)=>handleSearch(e)} placeholder={"search..."}  InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }} />}
           />
+              <Stack  component="ul" direction="row" sx={{ml:20}} >
+                <FormControl sx={{ml:"60%",fontSize:"10px"}}  fullWidth>
+                <InputLabel id="demo-simple-select-label"></InputLabel>
+                  <Select
+                    sx={{borderRadius:5,background:"#D9D9D9",height:"50%"}}
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    label="sorting"
+                    value={sort}
+                    onChange={handleSort}
+                  >
+                    <MenuItem disabled value={0}>Sort By</MenuItem>
+                    <MenuItem value={1}>low-high</MenuItem>
+                    <MenuItem value={2}>high-low</MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
           <Stack component="ul" direction="row" spacing={1}
             sx={{
               display: "flex",
@@ -95,8 +145,81 @@ export default function Marketplace() {
               <Skeleton animation="wave" variant="circular" width={40} height={40} />
               <Skeleton animation="wave" height={8} width="80%" style={{ marginBottom: 6 }} />
             </>
-          : <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o)).filter((i)=>i.title.includes(filterKey))} />
-          }
+          // : <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o)).filter((i)=>i.title.includes(filterKey))} />
+        : <>
+      <ImageList sx={{ width:"100%"}}>
+      {filter(listings, o => marketplaceFilter(o)).filter((i)=>i.title.includes(filterKey)).map((item,ind) => (
+        <ImageListItem sx={{height:"153px"}} key={"list_"+ind}>
+          <img 
+            onClick={()=>navigate(`/listing/${item.listing_id}`)}
+            src={`${item.image.split("(+_+)")[0]}`}
+            srcSet={`${item.image.split("(+_+)")[0]}`}
+            alt={item.title}
+            loading="lazy"
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: "15px",
+              left: "0",
+              right: "0",
+              top: "0",
+              bottom: "0",
+              objectFit: "cover"
+            }}
+          />
+          <ImageListItemBar
+          sx={{ background: "rgba(0, 0, 0, 0)"}}
+          position="top"
+          actionPosition="left"
+            actionIcon={
+              <>
+              {item.collection==='true' && (item.status === 'available' || item.status === 'pending' || item.status === 'unchecked')
+            ?               <IconButton
+              size="small"
+              sx={{ color: '#333333',background:"rgba(255,255,255,0.5)" }}
+            >
+              <LocationOnOutlinedIcon fontSize="2px"/>
+            </IconButton>
+            : null}
+          {item.delivery==='true' && (item.status === 'available' || item.status === 'pending' || item.status === 'unchecked')
+            ?               <IconButton
+                size="small"
+                sx={{ color: '#333333',background:"rgba(255,255,255,0.5)" }}
+              >
+                <LocalShippingOutlinedIcon fontSize="2px"/>
+              </IconButton>
+            : null}
+          {item.transmission_type === "collection" && (item.status === 'sold' || item.status === 'in progress')
+            ?               <IconButton
+              size="small"
+              sx={{ color: '#333333',background:"rgba(255,255,255,0.5)" }}
+            >
+              <LocationOnOutlinedIcon fontSize="2px"/>
+            </IconButton>
+            : null}
+          {item.transmission_type === "delivery" && (item.status === 'sold' || item.status === 'in progress')
+            ?                <IconButton
+                size="small"
+                sx={{ color: '#333333',background:"rgba(255,255,255,0.5)" }}
+              >
+                <LocalShippingOutlinedIcon fontSize="2px"/>
+              </IconButton>
+            : null}
+
+
+            </>
+            }
+          />
+          <ImageListItemBar
+            title={"$M"+item.price}
+            subtitle={<span>{item.title}</span>}
+            position="below"
+          />
+        </ImageListItem>
+      ))}
+    </ImageList>
+        </>  
+        }
         </Stack>
       </div>
     );

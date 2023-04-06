@@ -69,8 +69,8 @@ function Purchases() {
     return (
        <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label="In progress" {...a11yProps(0)} />
+        <Tabs value={value} onChange={handleChange} variant="fullWidth" aria-label="basic tabs example" centered>
+          <Tab label="On Going" {...a11yProps(0)} />
           <Tab label="Purchased" {...a11yProps(1)} />
         </Tabs>
       </Box>
