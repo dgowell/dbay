@@ -32,7 +32,7 @@ export async function sendPurchaseReceipt({ message, listingId, coinId, seller, 
         "transmission_type": transmissionType,
         "buyer_name": host.name
     }
-    const sellerAddress = await getSellerAddress(seller, listingId);
+    const sellerAddress = await getSellerAddress(seller);
 
     return new Promise(function (resolve, reject) {
         send(data, sellerAddress).then(
@@ -52,7 +52,7 @@ async function sendCollectionConfirmation({ message, listingId, seller, transmis
         "transmission_type": transmissionType,
         "buyer_name": host.name
     }
-    const sellerAddress = await getSellerAddress(seller, listingId);
+    const sellerAddress = await getSellerAddress(seller);
 
     return new Promise(function (resolve, reject) {
         send(data, sellerAddress).then(
@@ -70,7 +70,7 @@ async function sendCancellationNotification({ listingId, seller }) {
         "listing_id": listingId,
         "buyer_name": host.name
     }
-    const sellerAddress = await getSellerAddress(seller, listingId);
+    const sellerAddress = await getSellerAddress(seller);
     return new Promise(function (resolve, reject) {
         send(data, sellerAddress).then(
             () => {
@@ -191,10 +191,10 @@ export function checkAvailability({
 
     return new Promise(async function (resolve, reject) {
         //get sellers address from permanent address
-        let sellerCurrentPk = await getSellersAddress(seller).catch(e => Error(console.error(e)));
+        let sellerAddress = await getSellerAddress(seller).catch(e => Error(console.error(e)));
 
         //send request to seller
-        send(data, sellerCurrentPk)
+        send(data, sellerAddress)
             .then(() => console.log(`successfully sent check request to seller`))
             .catch(error => reject(Error(error)));
 

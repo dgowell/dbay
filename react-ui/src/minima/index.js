@@ -143,6 +143,7 @@ export function isContact(pk) {
                 const contacts = res.response.contacts;
                 contacts.forEach((c) => {
                     if (pk === c.publickey) {
+                        console.log("this is one of your contacts");
                         resolve(c.currentaddress);
                     }
                 })
