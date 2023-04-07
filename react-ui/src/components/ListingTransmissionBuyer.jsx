@@ -88,7 +88,7 @@ function ListingCollectionBuyer(props) {
                     coinId:"0x1asd234", seller: listing.created_by_pk,
                     transmissionType: listing.transmission_type })
                // navigate('/payment-success');
-               setTimeout(navigate('/info',{state:{sub:`You’ve successfully paid @${listing.created_by_pk} $M${listing.price}`}}), 1000);
+               setTimeout(navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}), 1000);
               }else{
                     purchaseListing({
                         listingId: listing.listing_id,

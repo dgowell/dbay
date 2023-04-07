@@ -375,6 +375,37 @@ export function sendMoney({
         })
     })
 }
+
+export  function  addContact(max){
+    var msg="";
+    var status=false;
+    return new Promise(function(resolve,reject){
+        const fullFunc = `maxextra action:getaddress maxaddress:${max}`;
+        window.MDS.cmd(fullFunc, function (res){
+            if(res.status===true){
+                const addCnt = `maxcontacts action:add contact:${res.response.mlsresponse.address}`;
+                window.MDS.cmd(addCnt,function (res){
+                    if(res.status===true){
+                        msg="success fully added contact"
+                        status=true;
+                        resolve({msg,status});
+                    }else{
+                        msg="unable to add contact,Something went wrong";
+                        status=false;
+                        reject({msg,status})
+                    }
+                })
+            }else{
+                msg="unable to add contact,Something went wrong";
+                status=false;
+                reject({msg,status})
+            }
+        })
+
+    })
+
+}
+
 sendMoney.propTypes = {
     walletAddress: PropTypes.string.isRequired,
     amount: PropTypes.number.isRequired,

@@ -133,7 +133,7 @@ function App() {
               <Route path="address/" element={<Profile />} />
               <Route path="name/" element={<Profile />} />
               <Route path="info/" element={<InfoPage />} />
-              <Route path="arr-col/" element={<ArrangeCollection />} />
+              <Route path="arr-col/:id" element={<ArrangeCollection />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <BottomNavBar />

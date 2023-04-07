@@ -20,7 +20,7 @@ const ResponsiveAppBar = () => {
                         <ArrowBackIcon/>
                     </IconButton>
                     <IconButton size='small' sx={{color:"white"}}>
-                        <img src={"/transparent.png"} />
+                        <img src={window.location.origin +"/transparent.png"} />
                     </IconButton>
 
                 </Toolbar>
