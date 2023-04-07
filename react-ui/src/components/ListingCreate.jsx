@@ -65,7 +65,7 @@ export default function ListingCreate() {
   const [images, setImages] = useState([]);
   const [walletAddress, setWalletAddress] = useState("");
   const [location, setLocation] = useState({ latitude: '', longitude: '' });
-  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const fullScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const options = useMemo(() => countryList().getData(), []);
 
   const handleModalOpen = (i) => {
@@ -174,7 +174,7 @@ export default function ListingCreate() {
           setSuccess(true);
           console.log(`/seller/listing/${id}`);
           setTimeout(() => {
-            navigate(`/info`,{state:{main:"Successfully published!",sub:"your listing is now published over the minima it may take some time to be available to the other minimalists"}});
+            navigate(`/info`,{state:{main:"Successfully published!",sub:"Congratulations, your item has been successfully shared and is available to buyers on the dBay marketplace."}});
           },100);
         }
       }).catch((e) => {
@@ -425,7 +425,7 @@ export default function ListingCreate() {
                         <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
                         <LoadingButton className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
-                          ?  <Alert variant="success">Coorindates added!</Alert>
+                          ?  <Alert variant="success">coordinates added!</Alert>
                           : null}
                       </Paper>
 

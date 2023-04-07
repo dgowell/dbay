@@ -18,10 +18,41 @@ import ListItemText from '@mui/material/ListItemText';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import Avatar from "@mui/material/Avatar";
 import Alert from '@mui/material/Alert';
+import { getListingById } from "../database/listing";
+import { getContacts,addContact } from "../minima";
+
 
 export default function InfoPage() {
+  const params = useParams();
   const navigate = useNavigate();
-  const {state} = useLocation();
+  const [listing,setListing] = useState();
+  const [seller,setSeller] = useState();
+  const [msg,setMsg] = useState();
+  const [status,setStatus] = useState();
+  const [isContact,setIsContact]=useState(false);
+
+  useEffect(() => {
+    getListingById(params.id).then(function (result) {
+      setListing(result);
+     const contacts =  getContacts();
+     const slr = result.created_by_pk;
+     setSeller(slr);
+     const mls = slr.split("#")[1];
+      Object.keys(contacts).forEach((key,val)=>{
+        if(mls==contacts[key]["extradata"]["mls"]){
+          setIsContact(true);
+        }
+      })
+    }).catch((e) => console.error(e));
+  }, [params.id]);
+ 
+async  function handleAdd() {
+   const {msg,status} = await addContact(seller);
+   console.log(msg,status);
+   setStatus(status);
+   setMsg(msg);
+  }
+
 return (
     <div>
       <Stack spacing={2} sx={{ width: '100%', mt: 2, mb:8,height:'100%' }}>
@@ -46,16 +77,13 @@ return (
                         <ListItemText primaryTypographyProps={{fontSize: 20,fontWeight:700}} primary={"maxSolo"} secondary={"Add the seller as a contact and get in touch with them using the MaxSolo MiniDapp. "}/>                    
                     </ListItem>
                     <ListItem>
-                        <ListItemAvatar>
-                            <Avatar>
-                                <PersonAddIcon />
-                            </Avatar>
-                        </ListItemAvatar>
-                     <ListItemText primary="Add contact" />
+                    {isContact ?   <ListItemText primary="Already a contact"/> :<LoadingButton className={"custom-loading"} style={{color:"#2C2C2C"}}  onClick={()=>handleAdd()} variant="contained">
+                        add Contact
+                      </LoadingButton> }  
                     </ListItem>
-                    <ListItem>
-                        <Alert sx={{width:"100%"}} severity='success' variant="outlined">Contact successfully added</Alert>
-                    </ListItem>
+                   {msg && <ListItem>
+                       <Alert sx={{width:"100%"}} severity={status ? 'success': 'error'} variant="outlined">{msg}</Alert>
+                    </ListItem>}
                     <ListItem>
                         <Alert sx={{width:"100%"}} severity='success' variant="outlined">The seller is waiting for you to get in touch</Alert>
                     </ListItem>
@@ -63,7 +91,7 @@ return (
             </CardContent>
           </Card>
           <div style={{justifyContent:"center",width:"100%"}}>
-            <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C",width:"100%"}}  onClick={()=>navigate("/")} variant="contained">
+            <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C",width:"100%",marginTop:"60%",marginBottom:0}}  onClick={()=>navigate("/")} variant="contained">
                         Close
             </LoadingButton>
           </div>

@@ -87,7 +87,7 @@ function ListingPurchase(props) {
       () => {
         console.log("successfully sent collection request")
         setLoading(false);
-        navigate("/arr-col");
+        navigate(`/arr-col/${listing.listing_id}`);
         //setTimeout(navigate('/info',{state:{sub:"The seller has been notified and will be in contact to arrange the collection. "}}), 1000);
       },
       error => setError(error)
@@ -191,11 +191,11 @@ function ListingPurchase(props) {
               ? <FormControl>
                   <List>
                     <ListItem >
-                      <ListItemIcon sx={{fontSize:"20px"}}>
+                      {/* <ListItemIcon sx={{fontSize:"20px"}}>
                         <LocationOnOutlinedIcon />
-                      </ListItemIcon>
-                      <ListItemButton component="a" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">
-                      <ListItemText   primaryTypographyProps={{fontSize: 20}}   primary="See location" />
+                      </ListItemIcon> */}
+                      <ListItemButton className={"custom-loading"} component="a" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">
+                      <ListItemText   primaryTypographyProps={{fontSize: 20,textAlign:"center"}}   primary="See location" />
                       </ListItemButton>
                     </ListItem>
                     <ListItem >

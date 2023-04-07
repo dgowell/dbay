@@ -36,6 +36,7 @@ import Carousel from 'react-material-ui-carousel';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import haversine from 'haversine-distance';
+import Alert from '@mui/material/Alert';
 
 function AvailabilityCheckScreen() {
   return (
@@ -61,6 +62,7 @@ function ListingDetail() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(false);
   const [images, setImages] = useState([]);
   const [distance, setDistance] = useState(0);
   const navigate = useNavigate();
@@ -100,6 +102,7 @@ function ListingDetail() {
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
+      console.log(result.description);
       setImages(result.image.split("(+_+)"))
     }).catch((e) => console.error(e));
   }, [params.id]);
@@ -131,7 +134,7 @@ function ListingDetail() {
 
     //check there is money to pay for the item first
     const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
-      if(process.env.REACT_APP_MODE==="mainnet"){
+      if(process.env.REACT_APP_MODE!=="mainnet"){
         setError('Insufficient Funds');
         setLoading(false);
       }
@@ -157,8 +160,9 @@ function ListingDetail() {
     }
   }
 
-  function handleShare() {
-    sendListingToContacts(listing.listing_id);
+async  function handleShare() {
+   await sendListingToContacts(listing.listing_id);
+  setAlert(true);
     //TODO:show to user that the listing has been shared
   }
 
@@ -176,7 +180,7 @@ function ListingDetail() {
           <div>
             <Card sx={{ maxWidth: '100%', marginTop: 2,border: "none", boxShadow: "none"  }}>
               <CardHeader
-                 title="Listing Detail"
+                //  title="Listing Detail"
                 // avatar={
                 //   <BackButton />
                 // }
@@ -211,7 +215,7 @@ function ListingDetail() {
                 </Typography>
                 <Typography gutterBottom component="div">
                   {listing.description
-                    ? listing.description
+                    ?  <pre style={{ fontFamily: 'inherit' }}>{listing.description}</pre>
                     : "This is a temporary description."}
                 </Typography>
               </CardContent>
@@ -235,7 +239,7 @@ function ListingDetail() {
                 </ListItem>
               </List>
             </Card>
-
+           {alert && <Alert sx={{width:"100%"}} severity={'success'} variant="outlined">{"Success fully shared with contacts!"}</Alert>}
             <Stack spacing={2} mt={4} mb={8}>
               {listing.status === "purchased"
                 ? null
