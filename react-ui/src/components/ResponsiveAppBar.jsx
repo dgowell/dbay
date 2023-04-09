@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate } from "react-router";
+import { ReactComponent as Logo } from '../assets/images/logo.svg';
 
 
 const ResponsiveAppBar = () => {
@@ -19,8 +20,8 @@ const ResponsiveAppBar = () => {
                     <IconButton sx={{color:"white"}} onClick={()=>navigate(-1)}>
                         <ArrowBackIcon/>
                     </IconButton>
-                    <IconButton size='small' sx={{color:"white"}}>
-                        <img src={window.location.origin +"/transparent.png"} />
+                    <IconButton size='small' sx={{color:"white", height: "40px"}}>
+                        <Logo />
                     </IconButton>
 
                 </Toolbar>

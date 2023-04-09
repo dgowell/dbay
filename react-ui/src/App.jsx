@@ -50,6 +50,9 @@ const theme = createTheme({
     },
     error: {
       main: '#FF4A4A',
+    },
+    grey: {
+      main: '#8F8F8F',
     }
   }, overrides: {
     MuiButton: {

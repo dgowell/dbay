@@ -64,13 +64,14 @@ border-radius: 6px;
 }
 
 .css-bynrdj-MuiButtonBase-root-MuiSwitch-switchBase.Mui-checked{
-  color: #526bff !important;
+  color: #526bff;
 }
 .css-bynrdj-MuiButtonBase-root-MuiSwitch-switchBase.Mui-checked+.MuiSwitch-track{
-  background-color: #526bff !important;
+  background-color: #526bff;
 }
-.css-q1o44k-MuiButtonBase-root-MuiBottomNavigationAction-root.Mui-selected{
-  color: #526BFF!important;
+.Mui-selected>svg, 
+.Mui-selected>span>svg  {
+  color: #526BFF;
 }
 
 .css-vmaine-MuiButtonBase-root-MuiButton-root{
@@ -89,4 +90,12 @@ box-shadow: none!important;
 .custom-loading{
 border-radius: 510px!important;
 box-shadow: none!important;
+}
+
+#main-logo {
+  height: 40px;
+  width: 40px;
+}
+.select-sort:before {
+  border-bottom: 0!important;
 }
