@@ -1,22 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Stack from "@mui/material/Stack";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
+import Stack from "@mui/material/Stack"
 import Typography from '@mui/material/Typography';
-import sent from "../assets/images/ts_1.gif";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import LoadingButton from "@mui/lab/LoadingButton";
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import { CardHeader } from "@mui/material";
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import Avatar from "@mui/material/Avatar";
 import Alert from '@mui/material/Alert';
 import { getListingById } from "../database/listing";
 import { getContacts, addContact } from "../minima";
