@@ -33,7 +33,7 @@ import "@fontsource/roboto";
 
 const theme = createTheme({
   typography: {
-    "fontFamily": `"Karla", "Arial", sans-serif`,
+    "fontFamily": `"Roboto", "Arial", sans-serif`,
     "fontSize": 14,
     "fontWeightRegular": 400,
     "fontWeightMedium": 700

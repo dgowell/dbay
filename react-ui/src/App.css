@@ -90,6 +90,7 @@ box-shadow: none!important;
 .custom-loading{
 border-radius: 510px!important;
 box-shadow: none!important;
+width: 100%;
 }
 
 #main-logo {

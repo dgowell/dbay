@@ -11,28 +11,20 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import Avatar from '@mui/material/Avatar';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import BackButton from '../components/BackButton';
 import PaymentError from '../components/PaymentError';
-import BungalowIcon from "@mui/icons-material/Bungalow";
-import Badge from '@mui/material/Badge';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import haversine from 'haversine-distance';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import Button from '@mui/material/Button';
-import MapIcon from '@mui/icons-material/Map';
-import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { updateListing } from '../database/listing';
 import { sendPurchaseReceipt } from '../minima/buyer-processes';
 import Alert from '@mui/material/Alert';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import ListItemButton from "@mui/material/ListItemButton";
 import InfoIcon from '@mui/icons-material/Info';
+import { Divider } from '@mui/material';
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
@@ -40,10 +32,31 @@ function ListingPurchase(props) {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [distance, setDistance] = useState(0);
   const [total, setTotal] = useState(0);
   const [transmissionType, setTransmissionType] = useState('');
   const params = useParams();
   const navigate = useNavigate();
+  const [coordinates, setCoordinates] = useState({
+    latitude: '',
+    longitude: ''
+  })
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+
+    function showPosition(position) {
+      setCoordinates({
+        latitude: (position.coords.latitude.toFixed(3)),
+        longitude: (position.coords.longitude.toFixed(3))
+      });
+      console.log(JSON.stringify(coordinates));
+    };
+  }, []);
 
   useEffect(() => {
     if (listing) {
@@ -73,6 +86,14 @@ function ListingPurchase(props) {
     });
   }, [params.id]);
 
+  useEffect(() => {
+    if ((coordinates.latitude !== '') && listing) {
+      const location = JSON.parse(listing.location);
+      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`)
+      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`)
+      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
+    }
+  }, [coordinates, listing])
 
   function handleCollection() {
     setLoading(true);
@@ -95,6 +116,8 @@ function ListingPurchase(props) {
   }
 
   function handleSend() {
+
+
     setLoading(true);
     setError(false);
     if(process.env.REACT_APP_MODE==="mainnet"){
@@ -132,39 +155,21 @@ function ListingPurchase(props) {
     if (!error) {
       return (
         <Box sx={{
-          pt: 2,
+          pt: 4,
           pb:10,
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
         }}>
-        <Typography sx={{fontSize:'24px'}}  gutterBottom>
+        <Typography variant="h1" sx={{fontSize:'24px', textAlign:'center'}}  gutterBottom>
           Shipping
         </Typography>
           <List >
             <ListItem>
-              <Alert sx={{width:"100%"}} severity='success' variant="outlined">Item is Available</Alert>
+              <Alert sx={{width:"100%"}} severity='success' variant="outlined">Item is available</Alert>
             </ListItem>
             <ListItem>
             <Alert sx={{width:"100%"}} severity='success' variant="outlined">You have sufficient funds</Alert>
-            </ListItem>
-            <ListItem>
-              <spna style={{fontWeight:700,fontSize:"20px"}}>Choose preferred option</spna>
-              {/* <ListItemAvatar>
-                {listing.image ? (
-                  <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
-                ) : (
-                  <Badge anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
-                    <Avatar>
-                      <BungalowIcon />
-                    </Avatar>
-                  </Badge>
-                )}
-              </ListItemAvatar>
-              <ListItemText primary={`M$${listing.price}`} secondary={listing.title} /> */}
             </ListItem>
           </List>
           <Box sx={{
@@ -175,52 +180,41 @@ function ListingPurchase(props) {
           }}>
             {listing.delivery === "true" && listing.collection === "true" ?
               <FormControl>
-                {/* <FormLabel id="receive-item-label">How will you receive the item?</FormLabel> */}
+                <FormLabel>Choose preferred option</FormLabel>
                 <RadioGroup
                   aria-labelledby="receive-item-label"
                   name="receieve-item-group"
                   value={transmissionType}
                   onChange={handleChange}
                 >
-                  <FormControlLabel value="collection" control={<Radio />} label="Collection" />
-                  <FormControlLabel value="delivery" control={<Radio  />} label={`Delivery - M$${listing.shipping_cost}`} />
+                  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
+                  <Typography variant="caption" color="grey" mt='-12px'>{distance ? `${distance}km` : null}</Typography>
+                  {transmissionType === 'collection'
+                    ? <Box p={2} >
+                      <Button variant="outlined" color="secondary" className={"custom-loading"} href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">See location</Button>
+                      <List>
+                        <ListItem >
+                          <ListItemIcon sx={{ fontSize: "16px", minWidth: "45px" }}>
+                            <InfoIcon />
+                          </ListItemIcon>
+                          <ListItemText primaryTypographyProps={{ fontSize: 13 }} primary="This is an approximation. Seller will provide exact location privately. " />
+                        </ListItem>
+                      </List>
+                    </Box>
+                    : null}
+                    <Divider />
+                  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0}} labelPlacement="start" value="delivery" control={<Radio  />} label={`Delivery`} />
+                  <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
+                  {listing.collection === "false" ?
+                    <>
+                      <Typography variant="h6">The seller will deliver the item to you</Typography>
+                      <Typography>Delivery Cost: M${listing.shipping_cost}</Typography>
+                    </>
+                    : null}
                 </RadioGroup>
               </FormControl>
               : null}
-            {transmissionType === 'collection'
-              ? <FormControl>
-                  <List>
-                    <ListItem >
-                      {/* <ListItemIcon sx={{fontSize:"20px"}}>
-                        <LocationOnOutlinedIcon />
-                      </ListItemIcon> */}
-                      <ListItemButton className={"custom-loading"} component="a" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">
-                      <ListItemText   primaryTypographyProps={{fontSize: 20,textAlign:"center"}}   primary="See location" />
-                      </ListItemButton>
-                    </ListItem>
-                    <ListItem >
-                      <ListItemIcon sx={{fontSize:"16px"}}>
-                        <InfoIcon />
-                      </ListItemIcon>
-                      <ListItemText primaryTypographyProps={{fontSize: 16}}  primary="This is an approximation. Seller will provide exact location privately. " />
-                    </ListItem>
-                  </List>
-                {/* <Typography>Item is available for collection {listing.delivery ? '' : 'only'}</Typography> */}
-                {/* <Button variant="outlined" href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank" startIcon={<LocationOnOutlinedIcon />}>See location</Button> */}
 
-                {/* <FormLabel>Share your phone number with the seller to arrange collection:</FormLabel>
-                <PhoneInput
-                  placeholder="Enter phone number"
-                  value={phone}
-                  onChange={setPhone} /> */}
-              </FormControl>
-              : null}
-              {listing.collection === "false" ? 
-              <>
-                <Typography variant="h6">The seller will deliver the item to you</Typography> 
-                <Typography>Delivery Cost: M${listing.shipping_cost}</Typography> 
-              </>
-              : null}
             {transmissionType === 'delivery'
               ? <FormControl sx={{ gap: 1 }}>
                 {/* <FormLabel>Enter your address in this box:</FormLabel> */}
@@ -247,13 +241,13 @@ function ListingPurchase(props) {
             {transmissionType === 'delivery' &&
             <>
             {/* <Typography variant="h6">Total: M${total}</Typography> */}
-              <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleSend} variant="contained">
+              <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleSend} variant="contained">
                 Pay & Continue
               </LoadingButton>
             </>}
             {transmissionType === 'collection' &&
               <>
-                <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleCollection} variant="contained">
+                <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleCollection} variant="contained">
                   Continue
                 </LoadingButton>
               </>}

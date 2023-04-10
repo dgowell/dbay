@@ -171,7 +171,7 @@ export default function ListingCreate() {
         setSuccess(true);
         console.log(`/seller/listing/${id}`);
         setTimeout(() => {
-          navigate(`/info`, { state: { main: "Successfully published!", sub: "Congratulations, your item has been successfully shared and is available to buyers on the dBay marketplace." } });
+          navigate(`/info`, { state: { main: "Successfully published!", sub: "" } });
         }, 100);
       }
     }).catch((e) => {
