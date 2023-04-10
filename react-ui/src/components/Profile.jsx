@@ -27,12 +27,10 @@ function Profile() {
             setName(data.name);
         }
         )
-        
-       
     });
 
     return (<>
-        {/* <Box sx={{
+        <Box sx={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -42,7 +40,7 @@ function Profile() {
         }}>
             <AccountCircleIcon />
             <Typography variant="h6" mt={1}>@{name}</Typography>
-        </Box> */}
+        </Box>
         <Box sx={{
             m: 2,
         }}>

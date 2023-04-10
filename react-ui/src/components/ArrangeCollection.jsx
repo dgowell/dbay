@@ -66,7 +66,6 @@ export default function InfoPage() {
         <LoadingButton className={"custom-loading"} color="secondary" onClick={() => navigate("/")} variant="outlined">
           Close
         </LoadingButton>
-
     </Stack>
   );
 }
