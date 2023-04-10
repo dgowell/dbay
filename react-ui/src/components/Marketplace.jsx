@@ -136,7 +136,7 @@ export default function Marketplace() {
             </>
             // : <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o)).filter((i)=>i.title.includes(filterKey))} />
             : <>
-              <ImageList sx={{ width: "100%" }}>
+              <ImageList  gap="20px" sx={{ width: "100%" }}>
                 {filter(listings, o => marketplaceFilter(o)).filter((i) => i.title.toLowerCase().includes(filterKey.toLowerCase())).map((item, ind) => (
                   <ImageListItem sx={{ height: "153px" }} key={"list_" + ind}>
                     <img
@@ -147,7 +147,7 @@ export default function Marketplace() {
                       loading="lazy"
                       style={{
                         height: "153px",
-                        borderRadius: "15px",
+                        borderRadius: "5px",
                         left: "0",
                         right: "0",
                         top: "0",
@@ -157,7 +157,7 @@ export default function Marketplace() {
                     />
                     <ImageListItemBar
                       sx={{ background: "rgba(0, 0, 0, 0)",
-                    top:"120px", right:"5px" }}
+                      top:"120px", right:"5px" }}
                       position="top"
                       actionPosition="right"
                       actionIcon={

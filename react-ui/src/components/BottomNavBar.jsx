@@ -24,8 +24,8 @@ function BottomNavBar() {
 
     return (
         <Paper
-            sx={{ position: "fixed", bottom: 0, left: 0, right: 0 ,zIndex: 3, backgroundColor: "#FFFFFF"}}
-            elevation={3}
+            sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 3, backgroundColor: "#000"}}
+            elevation={6}
         >
             <BottomNavigation
                 showLabels

@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import { getListingById, updateListing } from "../database/listing";
-import CardHeader from "@mui/material/CardHeader";
 import CircularProgress from "@mui/material/CircularProgress";
-import LoadingButton from "@mui/lab/LoadingButton";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import IconButton from "@mui/material/IconButton";
@@ -16,27 +14,22 @@ import { getHost } from "../database/settings";
 import { sendListingToContacts, getMaximaContactAddress } from "../minima";
 import { checkAvailability, hasSufficientFunds } from '../minima/buyer-processes';
 import { useNavigate } from "react-router";
-import Divider from "@mui/material/Divider";
 import { Stack } from "@mui/system";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import StorefrontIcon from "@mui/icons-material/Storefront";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import ForwardOutlinedIcon from "@mui/icons-material/ForwardOutlined";
-import SendIcon from "@mui/icons-material/Send";
-import PaymentIcon from "@mui/icons-material/Payment";
 import Box from "@mui/material/Box";
-import BackButton from "./BackButton";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
 import { useErrorHandler } from 'react-error-boundary'
 import Carousel from 'react-material-ui-carousel';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import haversine from 'haversine-distance';
 import Alert from '@mui/material/Alert';
+import PersonPinCircleOutlinedIcon from '@mui/icons-material/PersonPinCircleOutlined';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 
 function AvailabilityCheckScreen() {
   return (
@@ -134,21 +127,21 @@ function ListingDetail() {
 
     //check there is money to pay for the item first
     const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
-      if(process.env.REACT_APP_MODE!=="mainnet"){
+      if (process.env.REACT_APP_MODE !== "mainnet") {
         setError('Insufficient Funds');
         setLoading(false);
       }
       console.log(`Insufficient funds: ${error}`);
       return true;
     });
-    if (hasFunds || (process.env.REACT_APP_MODE==="mainnet")) {
+    if (hasFunds || (process.env.REACT_APP_MODE === "mainnet")) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,
         buyerPk: buyerAddress,
         listingId: listing.listing_id,
       }).catch(error => {
         console.log(`Item is not available ${error}`);
-        navigate(`/info`,{state:{action:"error",main:"Not available",sub:"It looks like someone has recently bought this item or the seller has removed it from sale"}});
+        navigate(`/info`, { state: { action: "error", main: "Not available", sub: "It looks like someone has recently bought this item or the seller has removed it from sale" } });
         setError(`Not available`);
         setLoading(false);
       });
@@ -160,9 +153,9 @@ function ListingDetail() {
     }
   }
 
-async  function handleShare() {
-   await sendListingToContacts(listing.listing_id);
-  setAlert(true);
+  async function handleShare() {
+    await sendListingToContacts(listing.listing_id);
+    setAlert(true);
     //TODO:show to user that the listing has been shared
   }
 
@@ -178,13 +171,28 @@ async  function handleShare() {
       : <div>
         {listing && buyerAddress && buyerName ? (
           <div>
-            <Card sx={{ maxWidth: '100%', marginTop: 2,border: "none", boxShadow: "none"  }}>
-              <CardHeader
-                //  title="Listing Detail"
-                // avatar={
-                //   <BackButton />
-                // }
-                action={
+            <Card sx={{ maxWidth: '100%', marginTop: 2, border: "none", boxShadow: "none" }}>
+              <Carousel height="350px" animation="slide" navButtonsAlwaysVisible={false}>
+                {
+                  images.map((image, i) => (
+                    <CardMedia
+                      component="img"
+                      width="100%"
+                      height="100%"
+                      minHeight="100%"
+                      minWidth="100%"
+                      objectFit="cover"
+                      position="center"
+                      image={image}
+                      alt="Test Image"
+                    />))
+                }
+              </Carousel>
+              <CardContent sx={{ padding: 0 }} >
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb="1rem">
+                  <Typography gutterBottom variant="h5" component="div" mb="0">
+                    $M{listing.price}
+                  </Typography>
                   <Tooltip title="Share to all your contacts" placement="top">
                     <IconButton
                       onClick={() => handleShare()}
@@ -193,68 +201,67 @@ async  function handleShare() {
                       <ShareIcon />
                     </IconButton>
                   </Tooltip>
-                }
-              />
-              <Carousel animation="slide" navButtonsAlwaysVisible={true}>
-                {
-                  images.map((image, i) => (
-                    <CardMedia
-                      component="img"
-                      width="100%"
-                      image={image}
-                      alt="Test Image"
-                    />))
-                }
-              </Carousel>
-              <CardContent sx={{padding:0}} >
-                <Typography gutterBottom variant="h4" component="div">
-                  $M{listing.price}
-                </Typography>
+                </Stack>
+
                 <Typography gutterBottom variant="h6" component="div">
                   {listing.title}
                 </Typography>
-                <Typography gutterBottom component="div">
+                <Typography gutterBottom component="div" mb="1.5rem">
                   {listing.description
-                    ?  <pre style={{ fontFamily: 'inherit' }}>{listing.description}</pre>
-                    : "This is a temporary description."}
+                    ? <pre style={{ fontFamily: 'inherit' }}>{listing.description}</pre>
+                    : "This item has no description"}
                 </Typography>
               </CardContent>
-              <Divider />
               <List>
                 {listing.collection === "true"
                   ?
-                  <ListItem sx={{mb:2}} disablePadding>
-                    <span style={{fontWeight: 400,fontSize: "20px",color:"#2C2C2C"}}>Collection</span> <span style={{marginLeft:"55%",color:"#888787"}}>{distance ? `${distance} km` : null}</span>
+                  <ListItem disablePadding>
+                    <ListItemIcon>
+                      <PersonPinCircleOutlinedIcon color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Collection" secondary={distance ? `${distance} km away` : null} />
                   </ListItem>
                   : null}
                 {listing.delivery === "true"
                   ?
-                  <ListItem sx={{mb:2}} disablePadding>
-                    <span style={{fontWeight: 400,fontSize: "20px",color:"#2C2C2C"}}>Shipping</span> <span style={{marginLeft:"60%",color:"#888787"}}>{`$M${listing.shipping_cost}`}</span>
+                  <ListItem disablePadding>
+                    <ListItemIcon>
+                      <LocalShippingOutlinedIcon color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Shipping" secondary={`$M${listing.shipping_cost}`} />
                   </ListItem>
                   : null}
-                <Divider />
-                <ListItem sx={{mt:2}} disablePadding>
-                <span style={{fontWeight: 400,fontSize: "20px",color:"#2C2C2C"}}>Vendor</span> <span style={{marginLeft:"60%",color:"#888787"}}>{`@${listing.created_by_name}`}</span>
+                <ListItem disablePadding>
+                  <ListItemIcon>
+                    <StorefrontOutlinedIcon color="secondary" />
+                  </ListItemIcon>
+                  <ListItemText primary="Seller" secondary={`@${listing.created_by_name}`} />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemIcon>
+                    <ForwardOutlinedIcon color="secondary" />
+                  </ListItemIcon>
+                  <ListItemText primary="Sender" secondary={`@${listing.sent_by_name}`} />
                 </ListItem>
               </List>
             </Card>
-           {alert && <Alert sx={{width:"100%"}} severity={'success'} variant="outlined">{"Success fully shared with contacts!"}</Alert>}
-            <Stack spacing={2} mt={4} mb={8}>
+            {alert && <Alert sx={{ width: "100%" }} severity={'success'} variant="outlined">{"Success fully shared with contacts!"}</Alert>}
+            <Stack spacing={2} mt={4} mb={10}>
               {listing.status === "purchased"
                 ? null
                 : <Button
-                    className={"custom-loading"}
-                    style={{color:"#2C2C2C"}}
+                  className={"custom-loading"}
+                  color="secondary"
                   variant="contained"
                   onClick={handleBuy}
                 >
-                 I WANT IT
+                  I WANT IT
                 </Button>}
             </Stack>
           </div>
-        ) : <ListingDetailSkeleton />}
-      </div>
+        ) : <ListingDetailSkeleton />
+        }
+      </div >
   );
 }
 export default ListingDetail;
