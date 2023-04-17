@@ -29,6 +29,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import Divider from "@mui/material/Divider";
 import Modal from '@mui/material/Modal';
+import Alert from '@mui/material/Alert';
+import { isContact,addContact } from '../minima';
 
 function ListingCollectionBuyer(props) {
     const [open, setOpen] = useState(false);
@@ -40,6 +42,17 @@ function ListingCollectionBuyer(props) {
     const params = useParams();
     const navigate = useNavigate();
     const [intro, setIntro] = useState('');
+    const [isFriend,setIsFriend]=useState(false);
+    const [status, setStatus] = useState();
+    const [msg, setMsg] = useState();
+    const [seller, setSeller] = useState();
+
+
+    async function handleAdd() {
+        const { msg, status } = await addContact(seller);
+        setStatus(status);
+        setMsg(msg);
+      }
 
     const style = {
         position: 'absolute',
@@ -65,6 +78,14 @@ function ListingCollectionBuyer(props) {
     useEffect(() => {
         getListingById(params.id).then(function (result) {
             setListing(result);
+            const slr = result.created_by_pk;
+            setSeller(slr);
+            const pk = slr.split("#")[1];
+            isContact(pk).then((res)=>{
+                if(res!==false){
+                    setIsFriend(true);
+                }
+            })
         });
     }, [params.id]);
 
@@ -98,7 +119,7 @@ function ListingCollectionBuyer(props) {
                         amount: listing.price,
                         transmissionType: listing.transmission_type,
                     }).then(
-                        () => navigate('/payment-success'),
+                        () =>setTimeout(navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}), 1000),
                         error => setError(error)
                     )
                  }
@@ -111,6 +132,11 @@ function ListingCollectionBuyer(props) {
         })
     }
 
+    function handleReceived(){
+        updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e)); 
+        navigate('/seller/listings/')
+    }
+
     if (listing) {
         if (!error) {
             return (
@@ -121,7 +147,7 @@ function ListingCollectionBuyer(props) {
                     display: 'flex',
                     flexDirection: 'column',
                 }}>
-    <Accordion>
+    <Accordion sx={{boxShadow:"none"}}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
@@ -148,10 +174,21 @@ function ListingCollectionBuyer(props) {
                 </ListItemAvatar>
                 <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
             </ListItem>
+            <ListItem>
+            <Typography gutterBottom variant="h6" component="div">Seller will deliver your item to:</Typography>
+            </ListItem>
+            <ListItem>
+            {listing.buyer_message
+            ?<><Typography gutterBottom sx={{textAlign:"left"}} component="p">
+                {listing.buyer_message.split("\n").map((i, key) => {
+                return <p key={key}>{i}</p>;
+                })}
+                </Typography></> : "You have missed the delivery details , you can contact seller via maxSolo for missing details"}
+            </ListItem>
         </List>
         </AccordionDetails>
       </Accordion>
-      <Accordion expanded={true}>
+      <Accordion expanded={true} sx={{boxShadow:"none"}}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
@@ -174,15 +211,12 @@ function ListingCollectionBuyer(props) {
                             // </Box>
                             <List>
                                 <ListItem>
-                                    <ListItemText primaryTypographyProps={{fontSize: 16,fontWeight:700}} primary={"Chat over MaxSolo, meet and pay when you are with the seller."}/>                    
+                                    <ListItemText primaryTypographyProps={{fontSize: 16,fontWeight:700}} primary={(!isFriend ?  `Add @${listing.created_by_name}.` : `@${listing.created_by_name} is already a contact`) +`Chat over MaxSolo, meet and pay when you are with the seller.`}/>                    
                                 </ListItem>
                                 <ListItem>
-                                    <ListItemAvatar>
-                                        <Avatar>
-                                            <PersonAddIcon />
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText primary="Add contact" />
+                                    {!isFriend && <><LoadingButton className={"custom-loading"} sx={{width:"100%"}} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
+                                    {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
+                                    </>}
                                 </ListItem>
                                 <Divider/>
                                 <ListItem>
@@ -191,7 +225,20 @@ function ListingCollectionBuyer(props) {
                             </List>
                         }
                         {listing.transmission_type === 'delivery' &&
-                            <Typography>Please wait for your delivery</Typography>
+                        <List>
+                            <ListItem>
+                                <ListItemText primaryTypographyProps={{fontSize: 16,fontWeight:700}} primary={(!isFriend ?  `Add @${listing.created_by_name}. ` : `@${listing.created_by_name} is already a contact. `) +`Chat over MaxSolo, meet and pay when you are with the seller.`}/>                    
+                            </ListItem>
+                            <ListItem>
+                                {!isFriend && <><LoadingButton className={"custom-loading"} sx={{width:"100%"}} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
+                                {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
+                                </>}
+                            </ListItem>
+                            <Divider/>
+                            <ListItem>
+                                <ListItemText primary="When you have received your item click below to confirm " />
+                            </ListItem>
+                        </List>
                         }
                     </Box>
 
@@ -213,11 +260,22 @@ function ListingCollectionBuyer(props) {
                     >
                         {listing.transmission_type === 'collection' &&
                             <Stack mt={15} direction="row" spacing={2} width={"100%"}>
-                                <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C",width:"100%"}} disabled={error} loading={loading} onClick={handleOpen} variant="contained">
+                                <LoadingButton className={"custom-loading"} color={"secondary"} disabled={error} loading={loading} onClick={handleOpen} variant="contained">
                                      PAY NOW
                                 </LoadingButton>
                                 {/* <Button variant="outlined" onClick={handleCancel}>Cancel</Button> */}
                             </Stack>
+                        }
+                            {listing.transmission_type === 'delivery' && <></>
+                            // <Stack mt={15} direction="row" spacing={2} width={"100%"}>
+                            //     <Stack spacing={2} sx={{paddingLeft: 2, paddingRight: 2}}>
+                            //     <LoadingButton className={"custom-loading"} color={"secondary"}  loading={loading} onClick={handleReceived} variant="contained">
+                            //          Item Received
+                            //     </LoadingButton>
+                            //     <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">Once seller confirms the delivery kindly  acknowledge</Typography>
+                            //     </Stack>
+                            //     {/* <Button variant="outlined" onClick={handleCancel}>Cancel</Button> */}
+                            // </Stack>
                         }
                     </Box>
                     <Modal
@@ -231,7 +289,7 @@ function ListingCollectionBuyer(props) {
                             {`Pay $M${listing.price} from your Minima wallet?`}
                             </Typography>
                             <Stack mt={15} direction="row" spacing={2} width={"100%"} sx={{justifyContent:"center",textAlign:"center"}} >
-                                <LoadingButton className={"custom-loading"} style={{color:"#2C2C2C"}} disabled={error} loading={loading} onClick={handleSend} variant="contained">
+                                <LoadingButton className={"custom-loading"} color={"secondary"} disabled={error} loading={loading} onClick={handleSend} variant="contained">
                                      PAY NOW
                                 </LoadingButton>
                                 <Button sx={{borderRadius:"510px"}} variant="outlined" onClick={handleClose}>Cancel</Button>

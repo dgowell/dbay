@@ -407,6 +407,18 @@ export  function  addContact(max){
 
 }
 
+export async function isContactByName(adrs){
+    const contacts = await getMaxContacts();
+    var found=false;
+    for(const contact of contacts){
+        if(contact.extradata.name==adrs){
+            found=true;
+            break;
+        }
+    }
+    return found;
+}
+
 sendMoney.propTypes = {
     walletAddress: PropTypes.string.isRequired,
     amount: PropTypes.number.isRequired,
