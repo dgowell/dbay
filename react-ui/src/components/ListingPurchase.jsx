@@ -121,7 +121,7 @@ function ListingPurchase(props) {
     setLoading(true);
     setError(false);
     if(process.env.REACT_APP_MODE==="mainnet"){
-      updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
+      updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
       updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e)=>console.error(e));
       sendPurchaseReceipt({
         message:message !== '' ? message : phone,
@@ -178,16 +178,16 @@ function ListingPurchase(props) {
             p: 2,
             gap: 3,
           }}>
-            {listing.delivery === "true" && listing.collection === "true" ?
+
               <FormControl>
-                <FormLabel>Choose preferred option</FormLabel>
+              {listing.delivery === "true" && listing.collection === "true" ? <FormLabel>Choose preferred option</FormLabel> :null }
                 <RadioGroup
                   aria-labelledby="receive-item-label"
                   name="receieve-item-group"
                   value={transmissionType}
                   onChange={handleChange}
                 >
-                  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
+                {transmissionType === 'collection' && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
                   <Typography variant="caption" color="grey" mt='-12px'>{distance ? `${distance}km` : null}</Typography>
                   {transmissionType === 'collection'
                     ? <Box p={2} >
@@ -201,19 +201,19 @@ function ListingPurchase(props) {
                         </ListItem>
                       </List>
                     </Box>
-                    : null}
+                    : null}</>}
                     <Divider />
-                  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0}} labelPlacement="start" value="delivery" control={<Radio  />} label={`Delivery`} />
+                    {transmissionType === 'delivery' && 
+                  <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0}} labelPlacement="start" value="delivery" control={<Radio  />} label={`Delivery`} />
                   <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
                   {listing.collection === "false" ?
                     <>
                       <Typography variant="h6">The seller will deliver the item to you</Typography>
                       <Typography>Delivery Cost: M${listing.shipping_cost}</Typography>
                     </>
-                    : null}
+                    : null}</>}
                 </RadioGroup>
               </FormControl>
-              : null}
 
             {transmissionType === 'delivery'
               ? <FormControl sx={{ gap: 1 }}>
