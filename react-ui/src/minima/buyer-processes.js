@@ -9,15 +9,21 @@ async function getSellerAddress(address) {
     //get name of node that create item
     const e = address.split('#');
     const pk = e[1];
-
+    var currentAddress ="";
     return new Promise(async function (resolve, reject) {
         //find out if they're a contact
-        const currentAddress = await isContact(pk);
+         currentAddress = await isContact(pk);
+         console.log("iscontact",currentAddress);
         if (currentAddress && currentAddress.includes('@')) {
             resolve(currentAddress);
         } else {
-            const currentAddress = await getSellersAddress(address);
+             currentAddress = await getSellersAddress(address).catch(e=>console.log("inside",e));
+            console.log("here",currentAddress);
+            if(currentAddress){
             resolve(currentAddress);
+            }else{
+                reject(currentAddress);
+            }
         }
     });
 }
@@ -26,7 +32,7 @@ export async function sendPurchaseReceipt({ message, listingId, coinId, seller, 
     const host = await getHost();
     const data = {
         "type": "purchase_receipt",
-        "message": message,
+        "buyer_message": message,
         "listing_id": listingId,
         "coin_id": coinId,
         "transmission_type": transmissionType,
@@ -116,9 +122,9 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
                         .then(() => console.log('listing state reset because of error'))
                         .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
                     console.error(error);
-                    reject(Error(error));
+                    reject(error);
                 }
-            }).then(resolve(true));
+            });//.then(resolve(true));
     })
 }
 purchaseListing.proptypes = {
@@ -191,7 +197,7 @@ export function checkAvailability({
 
     return new Promise(async function (resolve, reject) {
         //get sellers address from permanent address
-        let sellerAddress = await getSellerAddress(seller).catch(e => Error(console.error(e)));
+        let sellerAddress = await getSellerAddress(seller).catch(e => {reject(e); Error(console.error(e))});
 
         //send request to seller
         send(data, sellerAddress)

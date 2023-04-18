@@ -136,12 +136,14 @@ function ListingPurchase(props) {
         walletAddress: listing.wallet_address,
         purchaseCode: listing.purchase_code,
         message: message !== '' ? message : phone,
-        amount: listing.price,
+        amount: (listing.price + listing.shipping_cost),
         transmissionType: transmissionType,
       }).then(
         () => navigate('/info',{state:{main:"Payment Successfull!",sub:`@${listing.created_by_name} has received your order and will post your item to the address provided. `}}),
-        error => setError(error)
-      )
+        error =>navigate('/info',{state:{action:"error",main:"Payment Failed!",sub:`This has happened either because dbay has not been given WRITE permission, or your wallet is password protected. Or both.`}})
+      ).catch((e)=>{
+        console.log("error",e);
+      })
     }
   }
   const handleMessageChange = (event) => {
@@ -187,7 +189,7 @@ function ListingPurchase(props) {
                   value={transmissionType}
                   onChange={handleChange}
                 >
-                {transmissionType === 'collection' && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
+                {listing.collection === "true" && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
                   <Typography variant="caption" color="grey" mt='-12px'>{distance ? `${distance}km` : null}</Typography>
                   {transmissionType === 'collection'
                     ? <Box p={2} >
@@ -203,7 +205,7 @@ function ListingPurchase(props) {
                     </Box>
                     : null}</>}
                     <Divider />
-                    {transmissionType === 'delivery' && 
+                    {listing.delivery === "true" && 
                   <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0}} labelPlacement="start" value="delivery" control={<Radio  />} label={`Delivery`} />
                   <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
                   {listing.collection === "false" ?
