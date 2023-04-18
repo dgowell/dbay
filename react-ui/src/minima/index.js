@@ -287,8 +287,8 @@ export function getSellersAddress(permanentAddress) {
                 console.error(resp.error);
                 window.MDS.log(JSON.stringify(resp));
             } else if (resp.response.success === false) {
-                reject(resp.response.error);
-                console.error(resp.response.error);
+                reject(resp.response.error ? resp.response.error : false );
+                console.error(resp.response.error ? resp.response.error : false);
                 window.MDS.log(JSON.stringify(resp));
             } else if (resp.status === true) {
                 resolve(resp.response.mlsresponse.address);

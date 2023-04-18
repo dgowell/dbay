@@ -39,6 +39,9 @@ export default function InfoPage() {
     console.log(msg, status);
     setStatus(status);
     setMsg(msg);
+    if(status=="success"){
+      setIsFriend(true);
+    }
   }
 if(listing){
   return (

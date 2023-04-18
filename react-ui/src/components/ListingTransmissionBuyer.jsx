@@ -119,8 +119,8 @@ function ListingCollectionBuyer(props) {
                         amount: listing.price,
                         transmissionType: listing.transmission_type,
                     }).then(
-                        () =>setTimeout(navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}), 1000),
-                        error => setError(error)
+                        () =>console.log("inside"),//setTimeout(navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}), 1000),
+                        error =>navigate('/info',{state:{action:"error",main:"Payment Failed!",sub:`This has happened either because dbay has not been given WRITE permission, or your wallet is password protected. Or both.`}}) //setError(error.message)
                     )
                  }
          }
@@ -174,7 +174,7 @@ function ListingCollectionBuyer(props) {
                 </ListItemAvatar>
                 <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
             </ListItem>
-            <ListItem>
+           {listing.delivery ==="true" && <><ListItem>
             <Typography gutterBottom variant="h6" component="div">Seller will deliver your item to:</Typography>
             </ListItem>
             <ListItem>
@@ -184,7 +184,7 @@ function ListingCollectionBuyer(props) {
                 return <p key={key}>{i}</p>;
                 })}
                 </Typography></> : "You have missed the delivery details , you can contact seller via maxSolo for missing details"}
-            </ListItem>
+            </ListItem></>}
         </List>
         </AccordionDetails>
       </Accordion>

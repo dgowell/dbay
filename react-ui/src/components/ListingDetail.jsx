@@ -30,6 +30,7 @@ import ListItemText from '@mui/material/ListItemText';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
+import LoadingButton from "@mui/lab/LoadingButton";
 
 function AvailabilityCheckScreen() {
   return (
@@ -143,7 +144,9 @@ function ListingDetail() {
         listingId: listing.listing_id,
       }).catch(error => {
         console.log(`Item is not available ${error}`);
-        navigate(`/info`, { state: { action: "error", main: "Not available", sub: "It looks like someone has recently bought this item or the seller has removed it from sale" } });
+        updateListing(listing.listing_id, "status", "available")
+        .catch((e) => console.error(`Error resetting listing status to available: ${e}`));
+        navigate(`/info`, { state: { action: "error", main:(error ? "Not available" : "Seller not available"), sub:(error ?  "It looks like someone has recently bought this item or the seller has removed it from sale":`the seller is not one of your contacts, and does not currently have a MAX#, try getting in touch with @${listing.sent_by_name} to see if they can put you in touch`) } });
         setError(`Not available`);
         setLoading(false);
       });
@@ -251,14 +254,15 @@ function ListingDetail() {
             <Stack spacing={2} mt={4} mb={10}>
               {listing.status === "purchased"
                 ? null
-                : <Button
+                : <LoadingButton
                   className={"custom-loading"}
                   color="secondary"
                   variant="contained"
                   onClick={handleBuy}
+                  loading={loading}
                 >
                   I WANT IT
-                </Button>}
+                </LoadingButton>}
             </Stack>
           </div>
         ) : <ListingDetailSkeleton />
