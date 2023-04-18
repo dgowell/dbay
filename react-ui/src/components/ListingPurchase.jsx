@@ -25,15 +25,112 @@ import { sendPurchaseReceipt } from '../minima/buyer-processes';
 import Alert from '@mui/material/Alert';
 import InfoIcon from '@mui/icons-material/Info';
 import { Divider } from '@mui/material';
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import Avatar from "@mui/material/Avatar";
+import BungalowIcon from "@mui/icons-material/Bungalow";
+
+function DeliveryConfirmation({
+  total,
+  listing,
+  transmissionType,
+  message
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  function handlePay() {
+    setLoading(true);
+    setError(false);
+
+    if (process.env.REACT_APP_MODE === "mainnet") {
+      //update local db
+      updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
+      updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e) => console.error(e));
+
+      //update the seller
+      sendPurchaseReceipt({
+        message: message,
+        listingId: listing.listing_id,
+        coinId: "0x1asd234", seller: listing.created_by_pk,
+        transmissionType: transmissionType
+      })
+
+      //navigate user to confirmation page
+      navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } });
+    } else {
+
+      purchaseListing({
+        listingId: listing.listing_id,
+        seller: listing.created_by_pk,
+        walletAddress: listing.wallet_address,
+        purchaseCode: listing.purchase_code,
+        message: message,
+        amount: (listing.price + listing.shipping_cost),
+        transmissionType: transmissionType,
+      }).then(
+        () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
+        error => navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: `This has happened either because dbay has not been given WRITE permissions, or your wallet is password protected. Or both.` } })
+      ).catch((e) => {
+        console.log("error", e);
+      })
+    }
+  }
+  return (
+    <Box sx={{
+      width: '100%',
+      pb:18,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+    }}>
+      <Typography variant="h1" sx={{ fontSize: '24px', textAlign: 'center', pt:4 }} gutterBottom>
+        Confirm purchase
+      </Typography>
+      <Box sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: 'space-between',
+        p: 2,
+        gap: 3,
+      }}>
+        <ListItem disablePadding>
+
+          <ListItemAvatar>
+            {listing?.image ? (
+              <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
+            ) : (
+              <Avatar>
+                <BungalowIcon />
+              </Avatar>
+            )}
+          </ListItemAvatar>
+
+          <ListItemText
+            primary={listing.title}
+            secondary={listing.price ? `$M${listing.price}` : null}
+          />
+
+        </ListItem >
+        <Divider />
+        <Typography variant="h6">Delivery address</Typography>
+        <Typography>{message ? message : 'It looks like you forgot to supply an address' }</Typography>
+        <Typography variant="h6">Total: M${total}</Typography>
+        <LoadingButton xs={{flex:1}} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay</LoadingButton>
+      </Box>
+    </Box>
+  );
+}
 
 function ListingPurchase(props) {
   const [listing, setListing] = useState();
   const [message, setMessage] = useState('');
-  const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [distance, setDistance] = useState(0);
   const [total, setTotal] = useState(0);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [transmissionType, setTransmissionType] = useState('');
   const params = useParams();
   const navigate = useNavigate();
@@ -102,7 +199,7 @@ function ListingPurchase(props) {
     collectListing({
       listingId: listing.listing_id,
       seller: listing.created_by_pk,
-      message: message !== '' ? message : phone,
+      message: message,
       transmissionType: transmissionType,
     }).then(
       () => {
@@ -115,36 +212,11 @@ function ListingPurchase(props) {
     )
   }
 
-  function handleSend() {
-
-
-    setLoading(true);
-    setError(false);
-    if(process.env.REACT_APP_MODE==="mainnet"){
-      updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
-      updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e)=>console.error(e));
-      sendPurchaseReceipt({
-        message:message !== '' ? message : phone,
-        listingId: listing.listing_id,
-        coinId:"0x1asd234", seller: listing.created_by_pk,
-        transmissionType: transmissionType })
-      navigate('/info',{state:{main:"Payment Successfull!",sub:`@${listing.created_by_name} has received your order and will post your item to the address provided. `}});
-    }else{
-      purchaseListing({
-        listingId: listing.listing_id,
-        seller: listing.created_by_pk,
-        walletAddress: listing.wallet_address,
-        purchaseCode: listing.purchase_code,
-        message: message !== '' ? message : phone,
-        amount: (listing.price + listing.shipping_cost),
-        transmissionType: transmissionType,
-      }).then(
-        () => navigate('/info',{state:{main:"Payment Successfull!",sub:`@${listing.created_by_name} has received your order and will post your item to the address provided. `}}),
-        error =>navigate('/info',{state:{action:"error",main:"Payment Failed!",sub:`This has happened either because dbay has not been given WRITE permission, or your wallet is password protected. Or both.`}})
-      ).catch((e)=>{
-        console.log("error",e);
-      })
-    }
+  /*
+  * Take user to confirmation page before they confirm to pay for the item
+  */
+  function handleDelivery() {
+    setShowConfirmation(true);
   }
   const handleMessageChange = (event) => {
     setMessage(event.target.value);
@@ -155,23 +227,31 @@ function ListingPurchase(props) {
     const { latitude, longitude } = JSON.parse(listing.location);
 
     if (!error) {
+      if (showConfirmation) {
+        return <DeliveryConfirmation 
+          total={total} 
+          listing={listing}
+          transmissionType={transmissionType}
+          message={message}
+       />
+      }
       return (
         <Box sx={{
           pt: 4,
-          pb:10,
+          pb: 10,
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
         }}>
-        <Typography variant="h1" sx={{fontSize:'24px', textAlign:'center'}}  gutterBottom>
-          Shipping
-        </Typography>
+          <Typography variant="h1" sx={{ fontSize: '24px', textAlign: 'center' }} gutterBottom>
+            Shipping
+          </Typography>
           <List >
             <ListItem>
-              <Alert sx={{width:"100%"}} severity='success' variant="outlined">Item is available</Alert>
+              <Alert sx={{ width: "100%" }} severity='success' variant="outlined">Item is available</Alert>
             </ListItem>
             <ListItem>
-            <Alert sx={{width:"100%"}} severity='success' variant="outlined">You have sufficient funds</Alert>
+              <Alert sx={{ width: "100%" }} severity='success' variant="outlined">You have sufficient funds</Alert>
             </ListItem>
           </List>
           <Box sx={{
@@ -181,14 +261,14 @@ function ListingPurchase(props) {
             gap: 3,
           }}>
 
-              <FormControl>
-              {listing.delivery === "true" && listing.collection === "true" ? <FormLabel>Choose preferred option</FormLabel> :null }
-                <RadioGroup
-                  aria-labelledby="receive-item-label"
-                  name="receieve-item-group"
-                  value={transmissionType}
-                  onChange={handleChange}
-                >
+            <FormControl>
+              {listing.delivery === "true" && listing.collection === "true" ? <FormLabel>Choose preferred option</FormLabel> : null}
+              <RadioGroup
+                aria-labelledby="receive-item-label"
+                name="receieve-item-group"
+                value={transmissionType}
+                onChange={handleChange}
+              >
                 {listing.collection === "true" && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
                   <Typography variant="caption" color="grey" mt='-12px'>{distance ? `${distance}km` : null}</Typography>
                   {transmissionType === 'collection'
@@ -204,18 +284,18 @@ function ListingPurchase(props) {
                       </List>
                     </Box>
                     : null}</>}
-                    <Divider />
-                    {listing.delivery === "true" && 
-                  <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0}} labelPlacement="start" value="delivery" control={<Radio  />} label={`Delivery`} />
-                  <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
-                  {listing.collection === "false" ?
-                    <>
-                      <Typography variant="h6">The seller will deliver the item to you</Typography>
-                      <Typography>Delivery Cost: M${listing.shipping_cost}</Typography>
-                    </>
-                    : null}</>}
-                </RadioGroup>
-              </FormControl>
+                <Divider />
+                {listing.delivery === "true" &&
+                  <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="delivery" control={<Radio />} label={`Delivery`} />
+                    <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
+                    {listing.collection === "false" ?
+                      <>
+                        <Typography variant="h6">The seller will deliver the item to you</Typography>
+                        <Typography>Delivery Cost: M${listing.shipping_cost}</Typography>
+                      </>
+                      : null}</>}
+              </RadioGroup>
+            </FormControl>
 
             {transmissionType === 'delivery'
               ? <FormControl sx={{ gap: 1 }}>
@@ -241,12 +321,11 @@ function ListingPurchase(props) {
             alignItems="center"
           >
             {transmissionType === 'delivery' &&
-            <>
-            {/* <Typography variant="h6">Total: M${total}</Typography> */}
-              <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleSend} variant="contained">
-                Pay & Continue
-              </LoadingButton>
-            </>}
+              <>
+                <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleDelivery} variant="contained">
+                  Continue
+                </LoadingButton>
+              </>}
             {transmissionType === 'collection' &&
               <>
                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleCollection} variant="contained">

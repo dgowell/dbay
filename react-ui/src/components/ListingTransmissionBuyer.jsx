@@ -287,9 +287,9 @@ function ListingCollectionBuyer(props) {
                             <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                             {`Pay $M${listing.price} from your Minima wallet?`}
                             </Typography>
-                            <Stack mt={15} direction="row" spacing={2} width={"100%"} sx={{justifyContent:"center",textAlign:"center"}} >
+                            <Stack mt={15} direction="column" spacing={2} width={"100%"} sx={{justifyContent:"center",textAlign:"center"}} >
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleSend} variant="contained">
-                                     PAY NOW
+                                     PAY
                                 </LoadingButton>
                                 <Button sx={{borderRadius:"510px"}} variant="outlined" onClick={handleClose}>Cancel</Button>
                             </Stack>

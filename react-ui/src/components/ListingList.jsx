@@ -8,7 +8,6 @@ import BungalowIcon from "@mui/icons-material/Bungalow";
 import { ListItemButton, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Badge from '@mui/material/Badge';
-import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';

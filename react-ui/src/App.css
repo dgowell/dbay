@@ -100,3 +100,6 @@ width: 100%;
 .select-sort:before {
   border-bottom: 0!important;
 }
+#sort-marketplace {
+  background: #FFF;
+}
