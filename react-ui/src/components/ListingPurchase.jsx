@@ -112,7 +112,9 @@ function DeliveryConfirmation({
         </ListItem >
         <Divider />
         <Typography variant="h6">Delivery address</Typography>
-        <Typography>{message ? message : 'It looks like you forgot to supply an address'}</Typography>
+        <Typography gutterBottom sx={{ textAlign: "left" }} component="p">{message.split("\n").map((i, key) => {
+          return <p key={key}>{i}</p>;
+        })}</Typography>
       </Box>
 
       <Box sx={{

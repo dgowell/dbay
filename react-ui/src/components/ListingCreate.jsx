@@ -32,6 +32,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { styled } from '@mui/material/styles';
 
 const validationSchema = yup.object({
   title: yup
@@ -46,6 +47,17 @@ const validationSchema = yup.object({
     .required('Price is required'),
   ///description: yup.string('Description').required('Description is required'),
 });
+
+
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: '#F5F5F5',
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'center',
+  textTransform: 'none',
+  color: theme.palette.text.secondary,
+  width: '100%'
+}));
 
 export default function ListingCreate() {
   const navigate = useNavigate();
@@ -63,6 +75,7 @@ export default function ListingCreate() {
   const [location, setLocation] = useState({ latitude: '', longitude: '' });
   const fullScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const options = useMemo(() => countryList().getData(), []);
+  const [catSelected, setCatSelected] = useState(false);
 
   const handleModalOpen = (i) => {
     console.log("photo clicked!");
@@ -185,6 +198,10 @@ export default function ListingCreate() {
     navigate(-1);
   }
 
+  function handleMatter() {
+    setCatSelected(true);
+  }
+
   function handleLocation() {
     setLoadingCoorindates(true);
     if (navigator.geolocation) {
@@ -235,9 +252,293 @@ export default function ListingCreate() {
     }
   }
 
+  if (catSelected) {
+    if (walletAddress && host) {
+      // This following section will display the form that takes the input from the user.
+      return (
+        <Box
+          sx={{
+            marginTop: 4,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Typography sx={{ fontSize: '24px' }} gutterBottom>
+            Create new listing
+          </Typography>
+          <Box
+            component="form"
+            sx={{ mt: 3 }}
+            noValidate
+            autoComplete="off"
+            onSubmit={formik.handleSubmit}
+          >
 
-  if (walletAddress && host) {
-    // This following section will display the form that takes the input from the user.
+            <Box sx={{ flexGrow: 1 }}>
+              <Grid container spacing={2} style={{ marginBottom: "2rem" }}>
+                <Grid item xs={6} onClick={() => { handleModalOpen(0) }}>
+                  {images[0] ? <img src={images[0]} alt="" style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "15px",
+                    left: "0",
+                    right: "0",
+                    top: "0",
+                    bottom: "0",
+                    objectFit: "cover"
+                  }} /> : <Box style={{ display: 'flex', flexDirection: "column", textAlign: "center", padding: "1.5rem", borderRadius: "15px", border: "0.25px solid rgba(30, 51, 238, 0.47)", height: "100%" }}>
+                    <Box ><PhotoCamera /></Box>
+                    <Box>
+                      <span>Image Upload</span>
+                      <p style={{ margin: "0", color: "#4B4949", fontSize: "12px" }}>Primary Photo</p>
+                    </Box>
+                  </Box>}
+                  {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,0)}} hidden/> */}
+                </Grid>
+                <Grid item xs={6} onClick={() => handleModalOpen(1)}>
+                  {images[1] ? <img src={images[1]} alt="" style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "15px",
+                    left: "0",
+                    right: "0",
+                    top: "0",
+                    bottom: "0",
+                    objectFit: "cover"
+                  }} /> : <Box style={{ display: "flex", textAlign: "center", padding: "2rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE", height: "100%" }}>
+                    <Box style={{ margin: "auto", display: "flex", justifyContent: "center", color: "white", fontSize: '2.5rem', fontWeight: '800' }}>
+                      2
+                    </Box>
+                  </Box>}
+                  {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,1)}} hidden/> */}
+                </Grid>
+                <Grid item xs={6} onClick={() => handleModalOpen(2)}>
+                  {images[2] ? <img src={images[2]} alt="" style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "15px",
+                    left: "0",
+                    right: "0",
+                    top: "0",
+                    bottom: "0",
+                    objectFit: "cover"
+                  }} /> : <Box style={{ display: "flex", textAlign: "center", padding: "2rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE ", height: "100%" }}>
+                    <Box style={{ margin: "auto", display: "flex", justifyContent: "center", color: "white", fontSize: '2.5rem', fontWeight: '800' }}>
+                      3
+                    </Box>
+                  </Box>}
+                  {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,2)}} hidden/> */}
+                </Grid>
+                <Grid item xs={6} onClick={() => handleModalOpen(3)}>
+                  {images[3] ? <img src={images[3]} alt="" style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "15px",
+                    left: "0",
+                    right: "0",
+                    top: "0",
+                    bottom: "0",
+                    objectFit: "cover"
+                  }} /> : <Box style={{ display: "flex", textAlign: "center", padding: "2rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE ", height: "100%" }}>
+                    <Box style={{ margin: "auto", display: "flex", justifyContent: "center", color: "white", fontSize: '2.5rem', fontWeight: '800' }}>
+                      4
+                    </Box>
+                  </Box>}
+                  {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,3)}} hidden/> */}
+                </Grid>
+              </Grid>
+            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Listing Title"
+                  id="title"
+                  name="title"
+                  className="form-field"
+                  type="text"
+                  required
+                  fullWidth
+                  value={formik.values.title}
+                  onChange={formik.handleChange}
+                  variant="outlined"
+                  error={formik.touched.title}
+                  helperText={formik.touched.title && formik.errors.title}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel htmlFor="asking-price">Asking Price *</InputLabel>
+                  <OutlinedInput
+                    label="Asking Price"
+                    id="askingPrice"
+                    name="askingPrice"
+                    // value={formik.values.askingPrice}
+                    required
+                    onChange={formik.handleChange}
+                    startAdornment={
+                      <InputAdornment position="start">$M</InputAdornment>
+                    }
+                    error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}
+                  />
+                  <FormHelperText error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}>
+                    {formik.touched.askingPrice && formik.errors.askingPrice}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl sx={{ gap: 1, width: '100%' }}>
+                  <TextField
+                    id="description"
+                    name="description"
+                    label="Description"
+                    multiline
+                    rows={4}
+                    value={formik.values.description}
+                    onChange={formik.handleChange}
+                    sx={{ width: '100%' }}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl required
+                  fullwidth
+                  component="fieldset"
+                  error={formik.touched.delivery && Boolean(formik.errors.delivery)}
+                  sx={{ m: 3 }}
+                  variant="standard">
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Switch checked={formik.values.collection} onChange={formik.handleChange} name="collection" />
+                      }
+                      label="Collection"
+                    />
+                    {formik.values.collection ?
+
+                      <Paper sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: 2,
+                        gap: 2,
+                        mt: 3,
+                        mb: 3
+                      }} elevation={2}>
+                        <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
+                        <LoadingButton className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
+                        {location.latitude !== ''
+                          ? <Alert variant="success">coordinates added!</Alert>
+                          : null}
+                      </Paper>
+
+                      : null}
+                    <FormControlLabel
+                      control={
+                        <Switch checked={formik.values.delivery} onChange={formik.handleChange} name="delivery" />
+                      }
+                      label="Delivery"
+                    />
+                    {formik.values.delivery ?
+                      <Paper sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: 2,
+                        gap: 2,
+                        mt: 3,
+                        mb: 3,
+                        maxWidth: 367
+                      }} elevation={2}>
+                        <FormControl fullWidth>
+                          <InputLabel htmlFor="delivery-cost">Delivery Cost</InputLabel>
+                          <OutlinedInput
+                            label="Delivery Cost"
+                            id="deliveryCost"
+                            name="deliveryCost"
+                            // value={formik.values.deliveryCost}
+                            onChange={formik.handleChange}
+                            startAdornment={
+                              <InputAdornment position="start">$M</InputAdornment>
+                            }
+                            error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}
+                          />
+                          <FormHelperText error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}>
+                            {formik.touched.deliveryCost && formik.errors.deliveryCost}
+                          </FormHelperText>
+                        </FormControl>
+                        <FormControl fullWidth>
+                          <InputLabel htmlFor="delivery-countries">Which Countries?</InputLabel>
+                          <Select
+                            labelId="Deliverable countries"
+                            id="shippingCountries"
+                            multiple
+                            value={countries}
+                            onChange={handleChange}
+                            input={<OutlinedInput label="Which countries?" />}
+                            MenuProps={MenuProps}
+                          >
+                            {options.map((country) => (
+                              <MenuItem
+                                key={country.value}
+                                value={country.label}
+                              >
+                                {country.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Paper>
+                      : null}
+                  </FormGroup>
+                </FormControl>
+              </Grid>
+            </Grid>
+            <Grid style={{ marginBottom: "20%" }}>
+              <LoadingButton className={"custom-loading"}
+                fullWidth
+                variant="contained"
+                type="submit"
+                color="secondary"
+                value="Create Token"
+                loading={loading}
+                loadingPosition="end"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                Publish
+              </LoadingButton>
+              {error ? <Alert severity="error">{error}</Alert> : null}
+              {success ? <Alert action={
+                <Button color="inherit" size="small" onClick={handleGoHome}>
+                  OK
+                </Button>
+              } severity="success">Listing created and shared!</Alert> : null}
+            </Grid>
+          </Box>
+          <Dialog
+            fullScreen={fullScreen}
+            open={openModal}
+            onClose={handleModalClose}
+            aria-labelledby="responsive-dialog-title"
+          >
+            <Box alignContent="center">
+              <UserWebCam handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} />
+            </Box>
+          </Dialog>
+        </Box>
+      );
+    }
+    else {
+      return (
+        <Stack mt={4} spacing={1}>
+          {/* For variant="text", adjust the height via font-size */}
+          <Skeleton variant="text" sx={{ fontSize: '2rem' }} />
+          {/* For other variants, adjust the size with `width` and `height` */}
+          <Skeleton variant="rounded" width='100%' height={60} />
+          <Skeleton variant="rounded" width='100%' height={60} />
+          <Skeleton variant="rounded" width='100%' height={60} />
+        </Stack>
+      );
+    }
+  } else {
     return (
       <Box
         sx={{
@@ -248,277 +549,37 @@ export default function ListingCreate() {
         }}
       >
         <Typography sx={{ fontSize: '24px' }} gutterBottom>
-          Create new listing
+          Create a listing
         </Typography>
-        <Box
-          component="form"
-          sx={{ mt: 3 }}
-          noValidate
-          autoComplete="off"
-          onSubmit={formik.handleSubmit}
-        >
-
-          <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={2} style={{ marginBottom: "2rem" }}>
-              <Grid item xs={6} onClick={() => { handleModalOpen(0) }}>
-                {images[0] ? <img src={images[0]} alt="" style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "15px",
-                  left: "0",
-                  right: "0",
-                  top: "0",
-                  bottom: "0",
-                  objectFit: "cover"
-                }} /> : <Box style={{ display: 'flex', flexDirection: "column", textAlign: "center", padding: "1.5rem", borderRadius: "15px", border: "0.25px solid rgba(30, 51, 238, 0.47)", height: "100%" }}>
-                  <Box ><PhotoCamera /></Box>
-                  <Box>
-                    <span>Image Upload</span>
-                    <p style={{ margin: "0", color: "#4B4949", fontSize: "12px" }}>Primary Photo</p>
-                  </Box>
-                </Box>}
-                {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,0)}} hidden/> */}
-              </Grid>
-              <Grid item xs={6} onClick={() => handleModalOpen(1)}>
-                {images[1] ? <img src={images[1]} alt="" style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "15px",
-                  left: "0",
-                  right: "0",
-                  top: "0",
-                  bottom: "0",
-                  objectFit: "cover"
-                }} /> : <Box style={{ display: "flex", textAlign: "center", padding: "2rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE", height: "100%" }}>
-                  <Box style={{ margin: "auto", display: "flex", justifyContent: "center", color: "white", fontSize: '2.5rem', fontWeight: '800' }}>
-                    2
-                  </Box>
-                </Box>}
-                {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,1)}} hidden/> */}
-              </Grid>
-              <Grid item xs={6} onClick={() => handleModalOpen(2)}>
-                {images[2] ? <img src={images[2]} alt="" style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "15px",
-                  left: "0",
-                  right: "0",
-                  top: "0",
-                  bottom: "0",
-                  objectFit: "cover"
-                }} /> : <Box style={{ display: "flex", textAlign: "center", padding: "2rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE ", height: "100%" }}>
-                  <Box style={{ margin: "auto", display: "flex", justifyContent: "center", color: "white", fontSize: '2.5rem', fontWeight: '800' }}>
-                    3
-                  </Box>
-                </Box>}
-                {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,2)}} hidden/> */}
-              </Grid>
-              <Grid item xs={6} onClick={() => handleModalOpen(3)}>
-                {images[3] ? <img src={images[3]} alt="" style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "15px",
-                  left: "0",
-                  right: "0",
-                  top: "0",
-                  bottom: "0",
-                  objectFit: "cover"
-                }} /> : <Box style={{ display: "flex", textAlign: "center", padding: "2rem", borderRadius: "15px", background: "#EFEEEE", border: "0.25px solid #EEEEEE ", height: "100%" }}>
-                  <Box style={{ margin: "auto", display: "flex", justifyContent: "center", color: "white", fontSize: '2.5rem', fontWeight: '800' }}>
-                    4
-                  </Box>
-                </Box>}
-                {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,3)}} hidden/> */}
-              </Grid>
-            </Grid>
-          </Box>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                label="Listing Title"
-                id="title"
-                name="title"
-                className="form-field"
-                type="text"
-                required
-                fullWidth
-                value={formik.values.title}
-                onChange={formik.handleChange}
-                variant="outlined"
-                error={formik.touched.title}
-                helperText={formik.touched.title && formik.errors.title}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel htmlFor="asking-price">Asking Price *</InputLabel>
-                <OutlinedInput
-                  label="Asking Price"
-                  id="askingPrice"
-                  name="askingPrice"
-                  // value={formik.values.askingPrice}
-                  required
-                  onChange={formik.handleChange}
-                  startAdornment={
-                    <InputAdornment position="start">$M</InputAdornment>
-                  }
-                  error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}
-                />
-                <FormHelperText error={formik.touched.askingPrice && Boolean(formik.errors.askingPrice)}>
-                  {formik.touched.askingPrice && formik.errors.askingPrice}
-                </FormHelperText>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl sx={{ gap: 1, width: '100%' }}>
-                <TextField
-                  id="description"
-                  name="description"
-                  label="Description"
-                  multiline
-                  rows={4}
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  sx={{ width: '100%' }}
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl required
-                fullwidth
-                component="fieldset"
-                error={formik.touched.delivery && Boolean(formik.errors.delivery)}
-                sx={{ m: 3 }}
-                variant="standard">
-                <FormGroup>
-                  <FormControlLabel
-                    control={
-                      <Switch checked={formik.values.collection} onChange={formik.handleChange} name="collection" />
-                    }
-                    label="Collection"
-                  />
-                  {formik.values.collection ?
-
-                    <Paper sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      p: 2,
-                      gap: 2,
-                      mt: 3,
-                      mb: 3
-                    }} elevation={2}>
-                      <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
-                      <LoadingButton className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
-                      {location.latitude !== ''
-                        ? <Alert variant="success">coordinates added!</Alert>
-                        : null}
-                    </Paper>
-
-                    : null}
-                  <FormControlLabel
-                    control={
-                      <Switch checked={formik.values.delivery} onChange={formik.handleChange} name="delivery" />
-                    }
-                    label="Delivery"
-                  />
-                  {formik.values.delivery ?
-                    <Paper sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      p: 2,
-                      gap: 2,
-                      mt: 3,
-                      mb: 3,
-                      maxWidth: 367
-                    }} elevation={2}>
-                      <FormControl fullWidth>
-                        <InputLabel htmlFor="delivery-cost">Delivery Cost</InputLabel>
-                        <OutlinedInput
-                          label="Delivery Cost"
-                          id="deliveryCost"
-                          name="deliveryCost"
-                          // value={formik.values.deliveryCost}
-                          onChange={formik.handleChange}
-                          startAdornment={
-                            <InputAdornment position="start">$M</InputAdornment>
-                          }
-                          error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}
-                        />
-                        <FormHelperText error={formik.touched.deliveryCost && Boolean(formik.errors.deliveryCost)}>
-                          {formik.touched.deliveryCost && formik.errors.deliveryCost}
-                        </FormHelperText>
-                      </FormControl>
-                      <FormControl fullWidth>
-                        <InputLabel htmlFor="delivery-countries">Which Countries?</InputLabel>
-                        <Select
-                          labelId="Deliverable countries"
-                          id="shippingCountries"
-                          multiple
-                          value={countries}
-                          onChange={handleChange}
-                          input={<OutlinedInput label="Which countries?" />}
-                          MenuProps={MenuProps}
-                        >
-                          {options.map((country) => (
-                            <MenuItem
-                              key={country.value}
-                              value={country.label}
-                            >
-                              {country.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Paper>
-                    : null}
-                </FormGroup>
-              </FormControl>
-            </Grid>
-          </Grid>
-          <Grid style={{ marginBottom: "20%" }}>
-            <LoadingButton className={"custom-loading"}
-              fullWidth
-              variant="contained"
-              type="submit"
-              color="secondary"
-              value="Create Token"
-              loading={loading}
-              loadingPosition="end"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Publish
-            </LoadingButton>
-            {error ? <Alert severity="error">{error}</Alert> : null}
-            {success ? <Alert action={
-              <Button color="inherit" size="small" onClick={handleGoHome}>
-                OK
-              </Button>
-            } severity="success">Listing created and shared!</Alert> : null}
-          </Grid>
+        <Typography>dBay is an open exchange protocol, what you exchange is up to you. Choose a category to create your listing.</Typography>
+        <Box mt={2} sx={{ width: '100%' }}>
+          <Stack spacing={0}>
+            <Button onClick={handleMatter} xs={{ width: '100%' }}>
+              <Item>
+                <Typography variant="h6">MATTER</Typography>
+                <Typography>things</Typography>
+                <Typography>items</Typography>
+              </Item>
+            </Button>
+            <Button xs={{ width: '100%' }}>
+              <Item>
+                <Typography variant="h6">SPACE</Typography>
+                <Typography>room</Typography>
+                <Typography>tree house</Typography>
+                <Typography>parking space</Typography>
+              </Item>
+            </Button>
+            <Button xs={{ width: '100%' }}>
+              <Item>
+                <Typography variant="h6">TIME</Typography>
+                <Typography>services</Typography>
+                <Typography>tutoros</Typography>
+                <Typography>teachers</Typography>
+              </Item>
+            </Button>
+          </Stack>
         </Box>
-        <Dialog
-          fullScreen={fullScreen}
-          open={openModal}
-          onClose={handleModalClose}
-          aria-labelledby="responsive-dialog-title"
-        >
-          <Box alignContent="center">
-            <UserWebCam handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} />
-          </Box>
-        </Dialog>
       </Box>
-    );
-  }
-  else {
-    return (
-      <Stack mt={4} spacing={1}>
-        {/* For variant="text", adjust the height via font-size */}
-        <Skeleton variant="text" sx={{ fontSize: '2rem' }} />
-        {/* For other variants, adjust the size with `width` and `height` */}
-        <Skeleton variant="rounded" width='100%' height={60} />
-        <Skeleton variant="rounded" width='100%' height={60} />
-        <Skeleton variant="rounded" width='100%' height={60} />
-      </Stack>
     );
   }
 }
