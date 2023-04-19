@@ -87,7 +87,7 @@ export function processPurchaseReceipt(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
     console.log(`Message received for purchased listing, updating..`);
     if (entity.transmission_type === 'delivery') {
-        updateListing(entity.listing_id, 'buyer_message', entity.message).then(
+        updateListing(entity.listing_id, 'buyer_message', entity.buyer_message).then(
             () => console.log('customer message added succesfully'),
             error => console.error(`Couldn't add message to listing ${error}`)
         );

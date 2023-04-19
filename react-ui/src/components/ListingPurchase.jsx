@@ -79,15 +79,12 @@ function DeliveryConfirmation({
   return (
     <Box sx={{
       width: '100%',
-      pb:18,
+      pb: 16,
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
     }}>
-      <Typography variant="h1" sx={{ fontSize: '24px', textAlign: 'center', pt:4 }} gutterBottom>
-        Confirm purchase
-      </Typography>
       <Box sx={{
         display: "flex",
         flexDirection: "column",
@@ -95,8 +92,10 @@ function DeliveryConfirmation({
         p: 2,
         gap: 3,
       }}>
+        <Typography variant="h1" sx={{ fontSize: '24px', textAlign: 'center', pt: 4 }} gutterBottom>
+          Confirm purchase
+        </Typography>
         <ListItem disablePadding>
-
           <ListItemAvatar>
             {listing?.image ? (
               <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
@@ -106,18 +105,25 @@ function DeliveryConfirmation({
               </Avatar>
             )}
           </ListItemAvatar>
-
           <ListItemText
             primary={listing.title}
             secondary={listing.price ? `$M${listing.price}` : null}
           />
-
         </ListItem >
         <Divider />
         <Typography variant="h6">Delivery address</Typography>
-        <Typography>{message ? message : 'It looks like you forgot to supply an address' }</Typography>
+        <Typography>{message ? message : 'It looks like you forgot to supply an address'}</Typography>
+      </Box>
+
+      <Box sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: 'space-between',
+        p: 2,
+        gap: 3,
+      }}>
         <Typography variant="h6">Total: M${total}</Typography>
-        <LoadingButton xs={{flex:1}} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay</LoadingButton>
+        <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>
   );
@@ -228,12 +234,12 @@ function ListingPurchase(props) {
 
     if (!error) {
       if (showConfirmation) {
-        return <DeliveryConfirmation 
-          total={total} 
+        return <DeliveryConfirmation
+          total={total}
           listing={listing}
           transmissionType={transmissionType}
           message={message}
-       />
+        />
       }
       return (
         <Box sx={{
