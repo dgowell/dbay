@@ -57,7 +57,13 @@ function Purchases() {
     getMyPurchases()
       .then((data) => {
         setListings(data);
-        console.log(`results: ${data}`);
+        let latest = [...data].sort((a, b) => b.created_at - a.created_at)[0];
+       if(latest.status === 'in progress'){
+          setValue(0);
+        }else if(latest.status === 'purchased'){
+          setValue(1);
+        }
+        console.log(`results:`,latest.status);
       })
       .catch((e) => {
         console.error(e);

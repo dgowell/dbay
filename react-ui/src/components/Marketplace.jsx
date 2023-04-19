@@ -50,8 +50,9 @@ export default function Marketplace() {
     setLoading(true);
     getListings()
       .then((data) => {
-        console.log(`results: ${data}`);
-        return setListings(data);
+        console.log(`results:`,data);
+       const sort = [...data].sort((a, b) => b.created_at - a.created_at)
+        return setListings(sort);
       })
       .catch((e) => {
         console.error(`Couldn't get listings: ${e}`);
