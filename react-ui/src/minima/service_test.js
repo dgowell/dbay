@@ -306,7 +306,7 @@ function processPurchaseReceipt(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
     MDS.log(`Message received for purchased listing, updating..`);
     if (entity.transmission_type === 'delivery') {
-        updateListing(entity.listing_id, 'buyer_message', entity.message)
+        updateListing(entity.listing_id, 'buyer_message', entity.buyer_message)
         updateListing(entity.listing_id, 'status', 'sold')
     } else {
         updateListing(entity.listing_id, 'status', 'completed')

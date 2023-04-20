@@ -8,7 +8,6 @@ import CardMedia from "@mui/material/CardMedia";
 import IconButton from "@mui/material/IconButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
-import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
 import { sendListingToContacts, getMaximaContactAddress } from "../minima";
@@ -20,10 +19,8 @@ import ListItem from "@mui/material/ListItem";
 import Box from "@mui/material/Box";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
-import { useErrorHandler } from 'react-error-boundary'
 import Carousel from 'react-material-ui-carousel';
 import haversine from 'haversine-distance';
-import Alert from '@mui/material/Alert';
 import PersonPinCircleOutlinedIcon from '@mui/icons-material/PersonPinCircleOutlined';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -31,6 +28,12 @@ import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import LoadingButton from "@mui/lab/LoadingButton";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} {...props} />;
+});
 
 function AvailabilityCheckScreen() {
   return (
@@ -59,13 +62,29 @@ function ListingDetail() {
   const [alert, setAlert] = useState(false);
   const [images, setImages] = useState([]);
   const [distance, setDistance] = useState(0);
+  const [sent, setSent] = useState(false);
   const navigate = useNavigate();
   const params = useParams();
-  const handleError = useErrorHandler();
   const [coordinates, setCoordinates] = useState({
     latitude: '',
     longitude: ''
   })
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setSent(false);
+  };
+
+  function handleShare() {
+    sendListingToContacts(listing.listing_id)
+      .then(() => {
+        console.log('sent to all contacts!');
+        setSent(true);
+      }).catch((e) => console.error(e));
+  }
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -158,12 +177,6 @@ function ListingDetail() {
     }
   }
 
-  async function handleShare() {
-    await sendListingToContacts(listing.listing_id);
-    setAlert(true);
-    //TODO:show to user that the listing has been shared
-  }
-
   function handleContact() {
     console.log('contact seller clicked!');
   }
@@ -250,7 +263,11 @@ function ListingDetail() {
                 </ListItem>
               </List>
             </Card>
-            {alert && <Alert sx={{ width: "100%" }} severity={'success'} variant="outlined">{"Success fully shared with contacts!"}</Alert>}
+            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'button', horizontal: 'center'}}>
+              <Alert onClose={handleClose} variant="outlined" severity="success" sx={{ width: '100%', backgroundColor: 'white' }}>
+                Item shared with contacts
+              </Alert>
+            </Snackbar>
             <Stack spacing={2} mt={4} mb={10}>
               {listing.status === "purchased"
                 ? null

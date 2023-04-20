@@ -6,16 +6,8 @@ import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import Card from "@mui/material/Card";
 import LoadingButton from "@mui/lab/LoadingButton";
-import Button from "@mui/material/Button";
-import BackButton from "./BackButton";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
 import Alert from '@mui/material/Alert';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import Person4Icon from '@mui/icons-material/Person4';
 import Box from '@mui/material/Box';
 import { useNavigate } from "react-router";
 import { isContactByName } from "../minima";
@@ -28,23 +20,23 @@ function ListingDeliverySeller() {
     const [intro, setIntro] = useState('');
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [isFriend,setIsFriend]=useState(false);
+    const [isFriend, setIsFriend] = useState(false);
     const [status, setStatus] = useState();
     const [msg, setMsg] = useState();
-    
 
-    function handleAdd(){
+
+    function handleAdd() {
         setStatus('success');
         setMsg("Contact added successfully!");
         setIsFriend(true);
-        
+
     }
     useEffect(() => {
         getListingById(params.id).then(function (result) {
             setListing(result);
-            console.log("listing",result);
-            isContactByName(result.buyer_name).then((res)=>{
-                console.log("isfriend",res)
+            console.log("listing", result);
+            isContactByName(result.buyer_name).then((res) => {
+                console.log("isfriend", res)
                 setIsFriend(res)
             })
         });
@@ -72,81 +64,54 @@ function ListingDeliverySeller() {
         <div>
             {listing ? (
                 <div>
-                    <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8,boxShadow:"none" }}>
+                    <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8, boxShadow: "none" }}>
                         <CardHeader
-                            sx={{textAlign:"center"}}
-                            title={listing.transmission_type=="collection" ? "Collection" : "Delivery"}
+                            sx={{ textAlign: "center" }}
+                            title={listing.transmission_type == "collection" ? "Collection" : "Delivery"}
                             subheader={`${listing.title} $M${listing.price}`}
-                            // avatar={
-                            //     <BackButton />
-                            // }
                         />
                         <CardContent>
-                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center',boxShadow:"none" }}>
-                            <Alert  sx={{width:"100%"}} severity='success' variant="outlined">
-                                   {listing.transmission_type === "collection" ? `@${listing.buyer_name} has agreed to collect your item` :`@${listing.buyer_name} is waiting for the item to be sent` }
+                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', boxShadow: "none" }}>
+                                <Alert sx={{ width: "100%" }} severity='success' variant="outlined">
+                                    {listing.transmission_type === "collection" ? `@${listing.buyer_name} has agreed to collect your item` : `@${listing.buyer_name} is waiting for the item to be sent`}
                                 </Alert>
                                 {listing.transmission_type === "collection" &&
                                     <>
-                                        <Stack spacing={2} sx={{paddingLeft: 2, paddingRight: 2}}>
-                                                <Typography sx={{  }} variant="h3">MaxSolo</Typography>
-                                                <Typography sx={{  fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add the @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` :`Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
-                                                {!isFriend && <><LoadingButton className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
+                                        <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
+                                            <Typography sx={{}} variant="h3">MaxSolo</Typography>
+                                            <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
+                                            {!isFriend &&
+                                            <>
+                                                <LoadingButton className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
                                                 {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-                                                <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">The @{listing.buyer_name} is expecting you to get in touch.</Typography></>}
-                                            </Stack>
-                                            <LoadingButton className={"custom-loading"} sx={{marginTop:"60%"}} color="secondary" onClick={() => navigate("/")} variant="outlined">
-                                                Close
-                                            </LoadingButton>
-
-
-
-
-
-
-
-
-
-                                        {/* {listing.buyer_message
-                                            ? <Box>
-                                                <Typography gutterBottom component="div">Please contact them to arrange collection:</Typography>
-                                                <ListItem disablePadding>
-                                                    <ListItemButton>
-                                                        <ListItemIcon>
-                                                            <Person4Icon />
-                                                        </ListItemIcon>
-                                                        <ListItemText primary={listing.buyer_message} secondary={listing.buyer_name} />
-                                                    </ListItemButton>
-                                                </ListItem>
-                                                <Button fullWidth target="_blank" variant="outlined" startIcon={<WhatsAppIcon />} href={`https://api.whatsapp.com/send?phone=${listing.buyer_message}&text=${intro}`}>Send Message</Button>
-                                            </Box>
-                                            : "No details supplied! Not really sure what you can do now sorry!"
-                                        } */}
+                                            </>}
+                                        </Stack>
+                                        <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} color="secondary" onClick={() => navigate("/")} variant="outlined">
+                                            Close
+                                        </LoadingButton>
                                     </>
                                 }
                                 {listing.transmission_type === "delivery" &&
                                     <>
                                         {listing.buyer_message
-                                            ?<>
+                                            ? <>
                                                 <Typography gutterBottom variant="h6" component="div">Please send the item to:</Typography>
-                                                <Typography gutterBottom sx={{textAlign:"left"}} component="p">{listing.buyer_message.split("\n").map((i, key) => {
-                                                                                            return <p key={key}>{i}</p>;
-                                                                                            })}</Typography>
+                                                <Typography gutterBottom sx={{ textAlign: "left" }} component="p">{listing.buyer_message.split("\n").map((i, key) => {
+                                                    return <p key={key}>{i}</p>;
+                                                })}</Typography>
                                             </>
                                             : "Buyer has missed the delivery details , you can contact buyer via maxSolo for missing details"
                                         }
-                                        <Divider/>
-                                        {!isFriend && <Stack spacing={2} sx={{paddingLeft: 2, paddingRight: 2}}>
-                                                <Typography sx={{  }} variant="h3">MaxSolo</Typography>
-                                                <Typography sx={{  fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add the @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` :`Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name}`}</Typography>
-                                                {!isFriend && <><LoadingButton className={"custom-loading"} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
+                                        <Divider />
+                                        {!isFriend && <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
+                                            <Typography sx={{}} variant="h3">MaxSolo</Typography>
+                                            <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add the @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name}`}</Typography>
+                                            {!isFriend && <><LoadingButton className={"custom-loading"} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
                                                 {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
                                                 <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">The @{listing.buyer_name} is expecting you to get in touch.</Typography></>}
-                                            </Stack>}
-                                        {/* <Alert severity="info">Let the buyer know you've sent the item</Alert> */}
-                                        <LoadingButton className={"custom-loading"}  sx={{marginTop:"60%"}} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Item Sent</LoadingButton>
+                                        </Stack>}
+                                        <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Item Sent</LoadingButton>
                                     </>
-                                   
                                 }
                             </Box>
                         </CardContent>
