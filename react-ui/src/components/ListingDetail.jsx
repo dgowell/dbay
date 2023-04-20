@@ -32,7 +32,7 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+  return <MuiAlert elevation={6} ref={ref} {...props} />;
 });
 
 function AvailabilityCheckScreen() {
@@ -263,8 +263,8 @@ function ListingDetail() {
                 </ListItem>
               </List>
             </Card>
-            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose}>
-              <Alert onClose={handleClose} color="secondary" severity="success" sx={{ width: '100%' }}>
+            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'button', horizontal: 'center'}}>
+              <Alert onClose={handleClose} variant="outlined" severity="success" sx={{ width: '100%', backgroundColor: 'white' }}>
                 Item shared with contacts
               </Alert>
             </Snackbar>
