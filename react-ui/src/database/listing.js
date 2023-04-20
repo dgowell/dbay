@@ -333,8 +333,8 @@ resetListingState.proptypes = {
 export function getStatus(listingId) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
-            if (res) {
-                resolve(res);
+            if (res.status) {
+                resolve(res.rows[0]);
             }
             else {
                 reject(`MDS.SQL ERROR, could get status of listing ${res.error}`);

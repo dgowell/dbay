@@ -156,6 +156,7 @@ function ListingDetail() {
       return false;
     });
     console.log("hasFunds",hasFunds);
+
     if (hasFunds || (process.env.REACT_APP_MODE === "mainnet")) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,
@@ -163,8 +164,12 @@ function ListingDetail() {
         listingId: listing.listing_id,
       }).catch(error => {
         console.log(`Item is not available ${error}`);
-        updateListing(listing.listing_id, "status", "available")
-        .catch((e) => console.error(`Error resetting listing status to available: ${e}`));
+        debugger;
+
+        //why set available?
+        //updateListing(listing.listing_id, "status", "available")
+        //  .catch((e) => console.error(`Error resetting listing status to available: ${e}`));
+
         navigate(`/info`, { state: { action: "error", main:(error ? "Not available" : "Seller not available"), sub:(error ?  "It looks like someone has recently bought this item or the seller has removed it from sale":`the seller is not one of your contacts, and does not currently have a MAX#, try getting in touch with @${listing.sent_by_name} to see if they can put you in touch`) } });
         setError(`Not available`);
         setLoading(false);
@@ -174,7 +179,7 @@ function ListingDetail() {
         //take the user to pay for the item
         navigate(`/listing/${listing.listing_id}/purchase`)
       }
-    }
+    }//close if
   }
 
   function handleContact() {

@@ -93,7 +93,7 @@ function cg(length) {
 }
 
 function processAvailabilityCheck(entity) {
-    MDS.log(`received availability check for listing: ${entity.listing_id}`);
+    MDS.log(`received availability check for listing: ${JSON.stringify(entity)}`);
 
     const data = {
         "type": "availability_response",
@@ -103,18 +103,23 @@ function processAvailabilityCheck(entity) {
 
     try {
         //is listing available
-        const available = getStatus(entity.listing_id);
-        if (available) {
-            data.status = "available";
-        }
-        //generate unique identifier for transaction
-        const purchaseCode = cg(20);
-        data.purchase_code = purchaseCode;
-
-        send(data, entity.buyer_pk);
-        updateListing(entity.listing_id, "purchase_code", purchaseCode);
-        updateListing(entity.listing_id, "status", "pending");
-        //resetListingStatusTimeout(entity.listing_id);
+        const listingStatus = getStatus(entity.listing_id);
+        MDS.log(`status of listing is: ${JSON.stringify(listingStatus)}`);
+        if (listingStatus){
+            data.status = listingStatus;
+            //generate unique identifier for transaction
+            //generate unique identifier for transaction
+            const purchaseCode = cg(20);
+            data.purchase_code = purchaseCode;
+            MDS.log(`sending the responose to buyer..`); 
+            send(data, entity.buyer_pk);
+            MDS.log(`updating listing in db to pending`); 
+            updateListing(entity.listing_id, "purchase_code", purchaseCode);
+            //if listing available change to pending to stop other users buying it
+            if (listingStatus === 'available') {
+                updateListing(entity.listing_id, "status", "pending");
+            }
+        };
     } catch (error) {
         MDS.log(`There was an error processing availability check: ${error}`);
     };
@@ -124,7 +129,8 @@ function getStatus(listingId) {
     var st = '';
     MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
         if (res) {
-            st = res;
+            MDS.log(`Response from get status is: ${JSON.stringify(res)}`);
+            st = res.rows[0].status;
         }
         else {
             MDS.log(`MDS.SQL ERROR, could get status of listing ${res.error}`);
@@ -188,9 +194,9 @@ function updateListing(listingId, key, value) {
 }
 
 function processAvailabilityResponse(entity) {
-    MDS.log("processing availability response...");
-    updateListing(entity.listing_id, "status", entity.status)
-    updateListing(entity.listing_id, "purchase_code", entity.purchase_code)
+    MDS.log(`processing availability response...${entity}`);
+    updateListing(entity.listing_id, "status", entity.status);
+    updateListing(entity.listing_id, "purchase_code", entity.purchase_code);
 }
 
 function getHost() {

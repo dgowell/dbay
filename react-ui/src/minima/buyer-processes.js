@@ -211,7 +211,7 @@ export function checkAvailability({
             console.log(`Listing status check ${i}`);
             getStatus(listingId).then((response) => {
                 if (response) {
-                    const listing = response.rows[0];
+                    const listing = response;
                     console.log(listing);
                     switch (listing.status) {
                         case "unchecked":

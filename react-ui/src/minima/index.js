@@ -42,27 +42,27 @@ export function processMaximaEvent(msg) {
     switch (entity.type) {
         case 'availability_check':
             //buyer checks listing availability with seller
-            processAvailabilityCheck(entity);
+            //processAvailabilityCheck(entity);
             break;
         case 'availability_response':
             //seller sends status of listing to buyer
-            processAvailabilityResponse(entity);
+            //processAvailabilityResponse(entity);
             break;
         case 'listing':
             //a contact has shared a listing with you
-            processListing(entity);
+            //processListing(entity);
             break;
         case 'purchase_receipt':
             //buyer sends seller their address and coin id
-            processPurchaseReceipt(entity);
+            //processPurchaseReceipt(entity);
             break;
         case 'collection_confirmation':
             //buyer sends seller their number to arrange collection
-            processCollectionConfirmation(entity);
+            //processCollectionConfirmation(entity);
             break;
         case 'cancel_collection':
             //buyer sends seller their number to arrange collection
-            processCancelCollection(entity);
+            //processCancelCollection(entity);
             break;
         default:
             console.log(entity);

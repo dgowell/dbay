@@ -20,7 +20,7 @@ const ResponsiveAppBar = () => {
                     <IconButton sx={{color:"white"}} onClick={()=>navigate(-1)}>
                         <ArrowBackIcon/>
                     </IconButton>
-                    {process.env.REACT_APP_MODE=="mainnet" && <Typography>Test Mode</Typography>}
+                    {process.env.REACT_APP_MODE==="mainnet" && <Typography>Test Mode</Typography>}
                     <IconButton size='small' sx={{color:"white", height: "40px"}}>
                         <Logo />
                     </IconButton>

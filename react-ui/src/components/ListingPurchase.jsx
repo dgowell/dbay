@@ -214,7 +214,6 @@ function ListingPurchase(props) {
         console.log("successfully sent collection request")
         setLoading(false);
         navigate(`/arr-col/${listing.listing_id}`);
-        //setTimeout(navigate('/info',{state:{sub:"The seller has been notified and will be in contact to arrange the collection. "}}), 1000);
       },
       error => setError(error)
     )
@@ -337,7 +336,7 @@ function ListingPurchase(props) {
             {transmissionType === 'collection' &&
               <>
                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleCollection} variant="contained">
-                  Continue
+                  Confirm Collection
                 </LoadingButton>
               </>}
           </Box>

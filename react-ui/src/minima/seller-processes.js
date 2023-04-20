@@ -48,18 +48,18 @@ export async function processAvailabilityCheck(entity) {
 
     try {
         //is listing available
-        const available = await getStatus(entity.listing_id);
-        if (available) {
-            data.status = "available";
-        }
-        //generate unique identifier for transaction
-        const purchaseCode = generate({ length: 20, special: false });
-        data.purchase_code = purchaseCode;
+        const listingStatus = await getStatus(entity.listing_id);
+        if (listingStatus) {
+            data.status = listingStatus;
+            //generate unique identifier for transaction
+            const purchaseCode = generate({ length: 20, special: false });
+            data.purchase_code = purchaseCode;
 
-        await send(data, entity.buyer_pk);
-        await updateListing(entity.listing_id, "purchase_code", purchaseCode);
-        await updateListing(entity.listing_id, "status", "pending");
-        resetListingStatusTimeout(entity.listing_id);
+            await send(data, entity.buyer_pk);
+            await updateListing(entity.listing_id, "purchase_code", purchaseCode);
+            await updateListing(entity.listing_id, "status", "pending");
+            resetListingStatusTimeout(entity.listing_id);
+        }
     } catch (error) {
         console.error(`There was an error processing availability check: ${error}`);
     };
