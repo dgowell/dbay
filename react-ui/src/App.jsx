@@ -56,7 +56,13 @@ const theme = createTheme({
     },
     white: {
       main: '#FFFFFF',
-    }
+    },
+    black: {
+      main: '#000000',
+    },
+    clear: {
+      main: 'rgba(255,255,255,0.2)',
+    },
   }, overrides: {
     MuiButton: {
       root: {
