@@ -1,7 +1,13 @@
 import React, { useState } from 'react'
 import Webcam from 'react-webcam'
 import Button from '@mui/material/Button';
-import { PhotoCamera,CloudUpload,CloseTwoTone,ReplayCircleFilled,Check,Cameraswitch } from "@mui/icons-material";
+import { PhotoCamera, CloudUpload, CloseTwoTone, ReplayCircleFilled, Check } from "@mui/icons-material";
+import Fab from '@mui/material/Fab';
+import UploadIcon from '@mui/icons-material/Upload';
+import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import Stack from '@mui/material/Stack';
+
 const videoConstraints = {
   width: 1080,
   height: 720
@@ -18,7 +24,7 @@ const UserWebCam = (props) => {
           : "environment"
     );
   }, []);
-  const capture = React.useCallback(async() => {
+  const capture = React.useCallback(async () => {
     const pictureSrc = webcamRef.current.getScreenshot()
     setPicture(pictureSrc)
     let temp = [...props.images];
@@ -26,69 +32,70 @@ const UserWebCam = (props) => {
     props.setImages(temp);
   })
   return (
-    <div>
-      <div style={{textAlign:"center"}}>
+    <div style={{ backgroundColor: 'black' }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ padding: '30px' }}>
+        </div>
+        <div style={{ position: 'absolute', marginTop: '5px', right: '5px' }}>
+          <Fab style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} color="primary" onClick={() => { props.close(props.index) }}>
+            <CloseTwoTone />
+          </Fab>
+        </div>
         {picture === '' ? (
           <Webcam
             audio={false}
             height="100%"
-            minScreenshotHeight="500"
-            minScreenshotWidth="500"
+            minScreenshotHeight="360"
+            minScreenshotWidth="640"
             ref={webcamRef}
             width="100%"
             objectFit='cover'
             screenshotFormat="image/jpeg"
-            videoConstraints={{...videoConstraints,facingMode}}
+            videoConstraints={{ ...videoConstraints, facingMode }}
           />
         ) : (
-          <img src={picture} height={"100%"} width={"100%"} 
-          style={{
-          left: "0",
-          right: "0",
-          top: "0",
-          bottom: "0",
-          objectFit: "cover"}} alt=""/>
+          <img src={picture} height={"100%"} width={"100%"}
+            style={{
+              left: "0",
+              right: "0",
+              top: "0",
+              bottom: "0",
+              objectFit: "cover"
+            }} alt="" />
         )}
       </div>
-      <div style={{textAlign:"center"}}>
-        <Button color="primary" onClick={(e)=>{handleSwitch()}}><Cameraswitch/></Button>
-        {picture !== '' ? (
-          <Button
 
-            color="primary"
+      <Stack p={1} pb={2} direction="row" justifyContent={'space-around'}>
+        <Fab style={{backgroundColor: 'rgba(255,255,255,0.1)'}} color="primary" component="label">
+          <FolderOutlinedIcon />
+          <input type="file" accept="image/*" onChange={(e) => { props.close(-1); props.handleUpload(e, props.index) }} hidden />
+        </Fab>
+        {picture !== '' ? (
+          <Fab size="large"
+            color="rgb(255,255,255)"
+            aria-label="add"
             onClick={(e) => {
               e.preventDefault()
               setPicture('')
             }}
           >
             <ReplayCircleFilled />
-          </Button>
+          </Fab>
         ) : (
-          <Button
+          <Fab size="large"
+            color="white"
             onClick={(e) => {
               e.preventDefault()
               capture()
             }}
-            color="primary"
           >
-            <PhotoCamera/>
-          </Button>
+            <RadioButtonCheckedIcon />
+          </Fab>
         )}
-
-            <Button  color="primary" component="label">
-              <CloudUpload/>
-            <input type="file" accept="image/*" onChange={(e)=>{props.close(-1); props.handleUpload(e,props.index)}} hidden/>
-            </Button>
-            {picture ==='' ?
-            <Button  color="primary" onClick={()=>{props.close(props.index)}}>
-              <CloseTwoTone/>
-            </Button> : <Button  color="primary" onClick={()=>{props.close(-1)}}>
-              <Check/>
-            </Button> }
-      </div>
-      <div>
-          
-      </div>  
+        <Fab style={{ backgroundColor: picture ? '#6F83FF' : 'rgba(255,255,255,0.1)' }} disabled={!picture} color="priary" onClick={() => { props.close(-1) }}>
+          <Check color={picture ? 'white' : 'grey'}/>
+        </Fab>
+      </Stack>
     </div>
   )
 }
