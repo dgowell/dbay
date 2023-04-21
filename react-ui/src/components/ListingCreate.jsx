@@ -33,6 +33,25 @@ import FormHelperText from '@mui/material/FormHelperText';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { styled } from '@mui/material/styles';
+import { ReactComponent as MatterIcon } from '../assets/images/box.svg';
+import { ReactComponent as SpaceIcon } from '../assets/images/space.svg';
+import { ReactComponent as TimeIcon } from '../assets/images/time.svg';
+
+function ComingSoon() {
+  return (
+    <Box component="span" sx={{
+      border: '1px solid rgba(255, 74, 74, 0.6)',
+      display: 'inline-block',
+      p:'1px 6px',
+      float: 'right',
+      marginTop:'13px',
+      marginRight: '-15px',
+      marginBottom: '-27px'
+      }}>
+      <Typography color='error'>coming soon</Typography>
+    </Box>
+  )
+}
 
 const validationSchema = yup.object({
   title: yup
@@ -52,11 +71,13 @@ const validationSchema = yup.object({
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: '#F5F5F5',
   ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: 'center',
+  padding: theme.spacing(4),
+  minHeight: '180px',
+  textAlign: 'left',
   textTransform: 'none',
-  color: theme.palette.text.secondary,
-  width: '100%'
+  color: 'black',
+  width: '100%',
+  fontFamily: 'Karla',
 }));
 
 export default function ListingCreate() {
@@ -551,30 +572,36 @@ export default function ListingCreate() {
         <Typography sx={{ fontSize: '24px' }} gutterBottom>
           Create a listing
         </Typography>
-        <Typography>dBay is an open exchange protocol, what you exchange is up to you. Choose a category to create your listing.</Typography>
-        <Box mt={2} sx={{ width: '100%' }}>
-          <Stack spacing={0}>
+        <Typography >Choose a category to create your listing.</Typography>
+        <Box mt={2} sx={{ width: '100%', fontFamily: 'karla', textAlign: 'left' }}>
+          <Stack spacing={2}>
             <Button onClick={handleMatter} xs={{ width: '100%' }}>
               <Item>
-                <Typography variant="h6">MATTER</Typography>
-                <Typography>things</Typography>
-                <Typography>items</Typography>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="h6" mb={2} sx={{ fontWeight: 400, fontSize: '16px' }}>MATTER</Typography>
+                  <MatterIcon />
+                </Stack>
+                <Typography mr={5}>electronics, sports equipment, books, clothes, furniture, handmade, tools...</Typography>
               </Item>
             </Button>
             <Button xs={{ width: '100%' }}>
               <Item>
-                <Typography variant="h6">SPACE</Typography>
-                <Typography>room</Typography>
-                <Typography>tree house</Typography>
-                <Typography>parking space</Typography>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="h6" mb={2} sx={{ fontWeight: 400, fontSize: '16px' }}>SPACE</Typography>
+                  <SpaceIcon />
+                </Stack>
+                <Typography mr={5}>Spare room, treehouse, holiday home, parking space, storage space...</Typography>
+                <ComingSoon />
               </Item>
             </Button>
             <Button xs={{ width: '100%' }}>
               <Item>
-                <Typography variant="h6">TIME</Typography>
-                <Typography>services</Typography>
-                <Typography>tutoros</Typography>
-                <Typography>teachers</Typography>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="h6" mb={2} sx={{fontWeight: 400, fontSize: '16px'}}>TIME</Typography>
+                  <TimeIcon />
+                </Stack>
+                <Typography mr={5}>Web development, classes, handyman, design, personal assistance...</Typography>
+                <ComingSoon />
               </Item>
             </Button>
           </Stack>
