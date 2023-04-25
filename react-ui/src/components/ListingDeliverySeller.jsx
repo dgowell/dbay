@@ -64,7 +64,7 @@ function ListingDeliverySeller() {
         <div>
             {listing ? (
                 <div>
-                    <Card sx={{ maxWidth: 345, marginTop: 2, marginBottom: 8, boxShadow: "none" }}>
+                    <Card sx={{ marginTop: 2, marginBottom: 8, boxShadow: "none" }}>
                         <CardHeader
                             sx={{ textAlign: "center" }}
                             title={listing.transmission_type == "collection" ? "Collection" : "Delivery"}
@@ -79,7 +79,7 @@ function ListingDeliverySeller() {
                                     <>
                                         <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
                                             <Typography sx={{}} variant="h3">MaxSolo</Typography>
-                                            <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
+                                            <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `The buyer is already one of your contacts. Get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
                                             {!isFriend &&
                                             <>
                                                 <LoadingButton className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
@@ -107,7 +107,7 @@ function ListingDeliverySeller() {
                                             <Typography sx={{}} variant="h3">MaxSolo</Typography>
                                             <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add the @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name}`}</Typography>
                                             {!isFriend && <><LoadingButton className={"custom-loading"} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
-                                                {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
+                                                {msg && <Alert sx={{ width: "100%", backgroundColor: '#FFF' }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
                                                 <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">The @{listing.buyer_name} is expecting you to get in touch.</Typography></>}
                                         </Stack>}
                                         <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Item Sent</LoadingButton>

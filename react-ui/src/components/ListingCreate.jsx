@@ -24,9 +24,6 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import UserWebCam from "./UserWebCam";
 import Switch from '@mui/material/Switch';
 import Paper from '@mui/material/Paper';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import countryList from 'react-select-country-list'
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
@@ -45,8 +42,8 @@ function ComingSoon() {
       p:'1px 6px',
       float: 'right',
       marginTop:'13px',
-      marginRight: '-15px',
-      marginBottom: '-27px'
+      marginRight: '-20px',
+      marginBottom: '-20px'
       }}>
       <Typography color='error'>coming soon</Typography>
     </Box>
@@ -61,10 +58,13 @@ const validationSchema = yup.object({
   askingPrice: yup
     .number('Enter the price')
     .positive('Price must be at least 1 minima')
+    .integer('Price must be an integer')
     .min(1, 'Price should be at least 1 minima')
     .max(100000000000, 'Price should be below 100000000000 minima')
     .required('Price is required'),
-  ///description: yup.string('Description').required('Description is required'),
+  deliveryCost: yup
+    .number('Enter the delivery cost')
+    .integer('Price must be an integer')
 });
 
 
@@ -72,7 +72,7 @@ const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: '#F5F5F5',
   ...theme.typography.body2,
   padding: theme.spacing(4),
-  minHeight: '180px',
+  minHeight: '200px',
   textAlign: 'left',
   textTransform: 'none',
   color: 'black',
@@ -83,7 +83,6 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function ListingCreate() {
   const navigate = useNavigate();
   const theme = useTheme();
-  const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingCoordinates, setLoadingCoorindates] = useState(false);
   const [host, setHost] = useState();
@@ -95,7 +94,6 @@ export default function ListingCreate() {
   const [walletAddress, setWalletAddress] = useState("");
   const [location, setLocation] = useState({ latitude: '', longitude: '' });
   const fullScreen = useMediaQuery(theme.breakpoints.down('lg'));
-  const options = useMemo(() => countryList().getData(), []);
   const [catSelected, setCatSelected] = useState(false);
 
   const handleModalOpen = (i) => {
@@ -117,27 +115,6 @@ export default function ListingCreate() {
     setOpenModal(false);
   };
 
-  const handleChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setCountries(
-      // On autofill we get a stringified value.
-      typeof value === 'string' ? value.split(',') : value,
-    );
-  };
-
-  const ITEM_HEIGHT = 48;
-  const ITEM_PADDING_TOP = 8;
-  const MenuProps = {
-    PaperProps: {
-      style: {
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-        width: 250,
-      },
-    },
-  };
-
   const formik = useFormik({
     initialValues: {
       title: '',
@@ -145,12 +122,18 @@ export default function ListingCreate() {
       delivery: false,
       collection: false,
       deliveryCost: 0,
-      deliveryCountries: [''],
       description: ''
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
       onSubmit(values);
+    },
+    validate: (values) => {
+      const errors = {};
+      if (!Object.values(values).some((value) => value)) {
+        errors.checkbox = "At least one checkbox must be selected";
+      }
+      return errors;
     },
   });
 
@@ -188,7 +171,6 @@ export default function ListingCreate() {
       delivery: newListing.delivery,
       location: JSON.stringify(location),
       shippingCost: newListing.deliveryCost,
-      shippingCountries: countries.toString()
     }).then(function (listingId) {
       id = listingId;
       console.log(`Listing successfully added: ${listingId}`);
@@ -269,7 +251,6 @@ export default function ListingCreate() {
         console.log(error);
         setError('File is not Image');
       }
-      //handleModalClose(-1)console
     }
   }
 
@@ -383,7 +364,7 @@ export default function ListingCreate() {
                   value={formik.values.title}
                   onChange={formik.handleChange}
                   variant="outlined"
-                  error={formik.touched.title}
+                  error={formik.touched.title && formik.errors.title}
                   helperText={formik.touched.title && formik.errors.title}
                 />
               </Grid>
@@ -431,7 +412,7 @@ export default function ListingCreate() {
                   <FormGroup>
                     <FormControlLabel
                       control={
-                        <Switch checked={formik.values.collection} onChange={formik.handleChange} name="collection" />
+                        <Switch color="secondary" checked={formik.values.collection} onChange={formik.handleChange} name="collection" />
                       }
                       label="Collection"
                     />
@@ -446,7 +427,7 @@ export default function ListingCreate() {
                         mb: 3
                       }} elevation={2}>
                         <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
-                        <LoadingButton className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="contained" onClick={handleLocation}>Add Coordinates</LoadingButton>
+                        <LoadingButton color="secondary" className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="outlined" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
                           ? <Alert variant="success">coordinates added!</Alert>
                           : null}
@@ -455,7 +436,7 @@ export default function ListingCreate() {
                       : null}
                     <FormControlLabel
                       control={
-                        <Switch checked={formik.values.delivery} onChange={formik.handleChange} name="delivery" />
+                        <Switch color="secondary" checked={formik.values.delivery} onChange={formik.handleChange} name="delivery" />
                       }
                       label="Delivery"
                     />
@@ -486,34 +467,16 @@ export default function ListingCreate() {
                             {formik.touched.deliveryCost && formik.errors.deliveryCost}
                           </FormHelperText>
                         </FormControl>
-                        <FormControl fullWidth>
-                          <InputLabel htmlFor="delivery-countries">Which Countries?</InputLabel>
-                          <Select
-                            labelId="Deliverable countries"
-                            id="shippingCountries"
-                            multiple
-                            value={countries}
-                            onChange={handleChange}
-                            input={<OutlinedInput label="Which countries?" />}
-                            MenuProps={MenuProps}
-                          >
-                            {options.map((country) => (
-                              <MenuItem
-                                key={country.value}
-                                value={country.label}
-                              >
-                                {country.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
                       </Paper>
                       : null}
                   </FormGroup>
                 </FormControl>
               </Grid>
             </Grid>
-            <Grid style={{ marginBottom: "20%" }}>
+            <Grid >
+              {formik.errors.checkbox && (
+                <div className="error">{formik.errors.checkbox}</div>
+              )}
               <LoadingButton className={"custom-loading"}
                 fullWidth
                 variant="contained"
@@ -522,7 +485,7 @@ export default function ListingCreate() {
                 value="Create Token"
                 loading={loading}
                 loadingPosition="end"
-                sx={{ mt: 3, mb: 2 }}
+                sx={{ mt: 3 }}
               >
                 Publish
               </LoadingButton>
@@ -538,6 +501,8 @@ export default function ListingCreate() {
             fullScreen={fullScreen}
             open={openModal}
             onClose={handleModalClose}
+            maxWidth="100vw"
+            maxHeight="100vh"
             aria-labelledby="responsive-dialog-title"
           >
             <Box alignContent="center">
@@ -581,7 +546,7 @@ export default function ListingCreate() {
                   <Typography variant="h6" mb={2} sx={{ fontWeight: 400, fontSize: '16px' }}>MATTER</Typography>
                   <MatterIcon />
                 </Stack>
-                <Typography mr={5}>electronics, sports equipment, books, clothes, furniture, handmade, tools...</Typography>
+                <Typography mr={5}>Electronics, clothes, books, tools, comics, vehicles, consoles, old android....</Typography>
               </Item>
             </Button>
             <Button xs={{ width: '100%' }}>
@@ -600,7 +565,7 @@ export default function ListingCreate() {
                   <Typography variant="h6" mb={2} sx={{fontWeight: 400, fontSize: '16px'}}>TIME</Typography>
                   <TimeIcon />
                 </Stack>
-                <Typography mr={5}>Web development, classes, handyman, design, personal assistance...</Typography>
+                <Typography mr={5}>Web development, remote tutor, design, VA, minidapp development...</Typography>
                 <ComingSoon />
               </Item>
             </Button>
@@ -610,3 +575,4 @@ export default function ListingCreate() {
     );
   }
 }
+ 

@@ -18,7 +18,7 @@ const ResponsiveAppBar = () => {
                 <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
 
                     <IconButton sx={{color:"white"}} onClick={()=>navigate(-1)}>
-                        <ArrowBackIcon/>
+                        <ArrowBackIcon color="white" />
                     </IconButton>
                     {process.env.REACT_APP_MODE==="mainnet" && <Typography>Test Mode</Typography>}
                     <IconButton size='small' sx={{color:"white", height: "40px"}}>

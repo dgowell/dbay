@@ -104,7 +104,8 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
                     updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
                     console.log(`Sending purchase receipt to seller..`);
-                    return sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
+                    sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
+                        .then(()=>resolve(true))
                         .catch(Error(`Couldn't send purchase receipt`));
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);

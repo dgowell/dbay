@@ -63,6 +63,7 @@ function ListingCollectionBuyer(props) {
         bgcolor: 'white',
         border: 'none',
         boxShadow: 'none',
+        backgroundColor: '#FFFFFF',
         p: 4,
         justifyContent:'center',
         textAlign:'center'
@@ -119,7 +120,7 @@ function ListingCollectionBuyer(props) {
                         amount: listing.price,
                         transmissionType: listing.transmission_type,
                     }).then(
-                        () =>console.log("inside"),//setTimeout(navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}), 1000),
+                        () =>navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}),
                         error =>navigate('/info',{state:{action:"error",main:"Payment Failed!",sub:`This has happened either because dbay has not been given WRITE permission, or your wallet is password protected. Or both.`}}) //setError(error.message)
                     )
                  }
@@ -175,7 +176,6 @@ function ListingCollectionBuyer(props) {
                 <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
             </ListItem>
            {listing.delivery ==="true" && <><ListItem>
-            <Typography gutterBottom variant="h6" component="div">Seller will deliver your item to:</Typography>
             </ListItem>
             <ListItem>
             {listing.buyer_message
@@ -183,7 +183,7 @@ function ListingCollectionBuyer(props) {
                 {listing.buyer_message.split("\n").map((i, key) => {
                 return <p key={key}>{i}</p>;
                 })}
-                </Typography></> : "You have missed the delivery details , you can contact seller via maxSolo for missing details"}
+                </Typography></> : ""}
             </ListItem></>}
         </List>
         </AccordionDetails>
@@ -210,7 +210,7 @@ function ListingCollectionBuyer(props) {
                             // </Box>
                             <List>
                                 <ListItem>
-                                    <ListItemText primaryTypographyProps={{fontSize: 16,fontWeight:700}} primary={(!isFriend ?  `Add @${listing.created_by_name}.` : `@${listing.created_by_name} is already a contact`) +`Chat over MaxSolo, meet and pay when you are with the seller.`}/>                    
+                                    <ListItemText primaryTypographyProps={{fontSize: 16,fontWeight:700}} primary={(!isFriend ?  `Add @${listing.created_by_name}.` : `@${listing.created_by_name} is already a contact. `) +`Chat over MaxSolo, meet and pay when you are with the seller.`}/>                    
                                 </ListItem>
                                 <ListItem>
                                     {!isFriend && <><LoadingButton className={"custom-loading"} sx={{width:"100%"}} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>

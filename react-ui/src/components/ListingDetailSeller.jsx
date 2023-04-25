@@ -6,15 +6,11 @@ import { getListingById, deleteListing } from "../database/listing";
 import CardContent from "@mui/material/CardContent";
 import Button from '@mui/material/Button';
 import CardMedia from "@mui/material/CardMedia";
-import IconButton from "@mui/material/IconButton";
-import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
-import Tooltip from "@mui/material/Tooltip";
 import { sendListingToContacts } from "../minima";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
 import Carousel from 'react-material-ui-carousel'
 import DeleteIcon from '@mui/icons-material/Delete';
-import CardActions from "@mui/material/CardActions";
 import MuiAlert from '@mui/material/Alert';
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -38,7 +34,8 @@ function ListingDetailSeller() {
     const [sent, setSent] = useState(false);
     const params = useParams();
     const navigate = useNavigate();
-    
+    const [navButtonsVisible, setNavButtonsVisible] = useState(false);
+
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
             return;
@@ -50,6 +47,9 @@ function ListingDetailSeller() {
         getListingById(params.id).then(function (result) {
             setListing(result);
             setImages(result.image.split("(+_+)"))
+            if (result.image.split("(+_+)").length > 1) {
+                setNavButtonsVisible(true)
+            }
         });
     }, [params.id]);
 
@@ -81,8 +81,8 @@ function ListingDetailSeller() {
         <div>
             {listing ? (
                 <div>
-                    <Card sx={{ maxWidth: '100%', marginTop: 2, border: "none", boxShadow: "none", paddingBottom: '80px' }}>
-                        <Carousel height="350px" animation="slide" navButtonsAlwaysVisible={true}>
+                    <Card sx={{ maxWidth: '100%', marginTop: 2, border: "none", boxShadow: "none" }}>
+                        <Carousel indicators={false} height="350px" animation="slide" navButtonsAlwaysVisible={navButtonsVisible}>
                             {
                                 images.map((image, i) => (
                                     <CardMedia
@@ -94,12 +94,11 @@ function ListingDetailSeller() {
                                         objectFit="cover"
                                         position="center"
                                         image={image}
-                                        alt="Test Image"
                                     />))
                             }
                         </Carousel>
 
-                        <CardContent sx={{ padding: 0 }} >
+                        <CardContent sx={{ padding: '15px 0 0' }} >
                             <Stack direction="row" justifyContent="space-between" alignItems="center" mb="1rem">
                                 <Typography gutterBottom variant="h5" component="div" mb="0">
                                     $M{listing.price}

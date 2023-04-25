@@ -255,7 +255,6 @@ export function getSellersPubKey(permanentAddress) {
         console.log(func);
         //Send the message via Maxima!..
         window.MDS.cmd(func, function (resp) {
-            debugger;
             if (resp.status === false) {
                 reject(resp.error);
                 console.error(resp.error);
@@ -281,7 +280,6 @@ export function getSellersAddress(permanentAddress) {
         const func = `maxextra action:getaddress maxaddress:${permanentAddress}`;
         //Send the message via Maxima!..
         window.MDS.cmd(func, function (resp) {
-            debugger;
             if (resp.status === false) {
                 reject(resp.error);
                 console.error(resp.error);
@@ -334,6 +332,7 @@ export function send(data, address) {
                 console.error(resp.response.error);
                 window.MDS.log(JSON.stringify(resp));
             } else if (resp.status === true) {
+                console.log(`Sent to ${address}`);
                 resolve(true);
             }
         });
@@ -387,17 +386,17 @@ export  function  addContact(max){
                 const addCnt = `maxcontacts action:add contact:${res.response.mlsresponse.address}`;
                 window.MDS.cmd(addCnt,function (res){
                     if(res.status===true){
-                        msg="success fully added contact"
+                        msg="Successfully added contact"
                         status=true;
                         resolve({msg,status});
                     }else{
-                        msg="unable to add contact,Something went wrong";
+                        msg="Unable to add contact, something went wrong";
                         status=false;
                         reject({msg,status})
                     }
                 })
             }else{
-                msg="unable to add contact,Something went wrong";
+                msg="Unable to add contact, something went wrong";
                 status=false;
                 reject({msg,status})
             }

@@ -69,6 +69,7 @@ function ListingDetail() {
     latitude: '',
     longitude: ''
   })
+  const [navButtonsVisible, setNavButtonsVisible] = useState(false);
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -117,6 +118,9 @@ function ListingDetail() {
       setListing(result);
       console.log(result.description);
       setImages(result.image.split("(+_+)"))
+      if (result.image.split("(+_+)").length > 1) {
+        setNavButtonsVisible(true)
+      }
     }).catch((e) => console.error(e));
   }, [params.id]);
 
@@ -164,13 +168,7 @@ function ListingDetail() {
         listingId: listing.listing_id,
       }).catch(error => {
         console.log(`Item is not available ${error}`);
-        debugger;
-
-        //why set available?
-        //updateListing(listing.listing_id, "status", "available")
-        //  .catch((e) => console.error(`Error resetting listing status to available: ${e}`));
-
-        navigate(`/info`, { state: { action: "error", main:(error ? "Not available" : "Seller not available"), sub:(error ?  "It looks like someone has recently bought this item or the seller has removed it from sale":`the seller is not one of your contacts, and does not currently have a MAX#, try getting in touch with @${listing.sent_by_name} to see if they can put you in touch`) } });
+        navigate(`/info`, { state: { action: "error", main: (error ? "Not available" : "Seller not available"), sub: (error ? "It looks like someone has recently bought this item or the seller has removed it from sale" : `Seller is not a contact. Try contacting @${listing.sent_by_name} to see if they can put you in touch.`) } });
         setError(`Not available`);
         setLoading(false);
       });
@@ -195,7 +193,7 @@ function ListingDetail() {
         {listing && buyerAddress && buyerName ? (
           <div>
             <Card sx={{ maxWidth: '100%', marginTop: 2, border: "none", boxShadow: "none" }}>
-              <Carousel height="350px" animation="slide" navButtonsAlwaysVisible={false}>
+              <Carousel indicators={false} height="350px" animation="slide" navButtonsAlwaysVisible={navButtonsVisible}>
                 {
                   images.map((image, i) => (
                     <CardMedia
@@ -211,7 +209,7 @@ function ListingDetail() {
                     />))
                 }
               </Carousel>
-              <CardContent sx={{ padding: 0 }} >
+              <CardContent sx={{ marginTop: 2, padding: 0 }} >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb="1rem">
                   <Typography gutterBottom variant="h5" component="div" mb="0">
                     $M{listing.price}
@@ -231,7 +229,7 @@ function ListingDetail() {
                 </Typography>
                 <Typography gutterBottom component="div" mb="1.5rem">
                   {listing.description
-                    ? <pre style={{ fontFamily: 'inherit' }}>{listing.description}</pre>
+                    ? listing.description
                     : "This item has no description"}
                 </Typography>
               </CardContent>
@@ -264,16 +262,16 @@ function ListingDetail() {
                   <ListItemIcon>
                     <ForwardOutlinedIcon color="secondary" />
                   </ListItemIcon>
-                  <ListItemText primary="Sender" secondary={`@${listing.sent_by_name}`} />
+                  <ListItemText primary="Shared by" secondary={`@${listing.sent_by_name}`} />
                 </ListItem>
               </List>
             </Card>
-            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'button', horizontal: 'center'}}>
-              <Alert onClose={handleClose} variant="outlined" severity="success" sx={{ width: '100%', backgroundColor: 'white' }}>
+            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
+              <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
                 Item shared with contacts
               </Alert>
             </Snackbar>
-            <Stack spacing={2} mt={4} mb={10}>
+            <Stack spacing={2} mt={4}>
               {listing.status === "purchased"
                 ? null
                 : <LoadingButton

@@ -28,6 +28,12 @@ import { Divider } from '@mui/material';
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 
 function DeliveryConfirmation({
   total,
@@ -66,7 +72,7 @@ function DeliveryConfirmation({
         walletAddress: listing.wallet_address,
         purchaseCode: listing.purchase_code,
         message: message,
-        amount: (listing.price + listing.shipping_cost),
+        amount: (parseInt(listing.price) + parseInt(listing.shipping_cost)),
         transmissionType: transmissionType,
       }).then(
         () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
@@ -79,8 +85,7 @@ function DeliveryConfirmation({
   return (
     <Box sx={{
       width: '100%',
-      pb: 16,
-      minHeight: '100vh',
+      height: 'calc(100vh - 130px)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -112,8 +117,8 @@ function DeliveryConfirmation({
         </ListItem >
         <Divider />
         <Typography variant="h6">Delivery address</Typography>
-        <Typography gutterBottom sx={{ textAlign: "left" }} component="p">{message.split("\n").map((i, key) => {
-          return <p key={key}>{i}</p>;
+        <Typography gutterBottom sx={{ textAlign: "left" }} component="address">{message.split("\n").map((i, key) => {
+          return <span style={{display: 'block'}} key={key}>{i}</span>;
         })}</Typography>
       </Box>
 
@@ -124,7 +129,24 @@ function DeliveryConfirmation({
         p: 2,
         gap: 3,
       }}>
-        <Typography variant="h6">Total: M${total}</Typography>
+        <TableContainer >
+          <Table sx={{}} size="small" aria-label="a dense table">
+            <TableBody>
+                <TableRow key="1" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                  <TableCell component="th" scope="row">Item</TableCell>
+                  <TableCell align="right">M${listing.price}</TableCell>
+                </TableRow>
+              <TableRow key="2" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                <TableCell component="th" scope="row">Delivery</TableCell>
+                <TableCell align="right">M${listing.shipping_cost}</TableCell>
+              </TableRow>
+              <TableRow key="3" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                <TableCell component="th" scope="row"><b>Total</b></TableCell>
+                <TableCell align="right"><b>M${total}</b></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>
@@ -245,10 +267,10 @@ function ListingPurchase(props) {
       return (
         <Box sx={{
           pt: 4,
-          pb: 10,
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
+          alignContent: 'space-between',
         }}>
           <Typography variant="h1" sx={{ fontSize: '24px', textAlign: 'center' }} gutterBottom>
             Shipping

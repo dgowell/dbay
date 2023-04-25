@@ -134,7 +134,7 @@ function App() {
     return (
       <ThemeProvider theme={theme}>
         <ResponsiveAppBar />
-        <Container component="main" maxWidth="xs">
+        <Container component="main" maxWidth="xs" sx={{paddingBottom: '80px'}}>
           <CssBaseline />
           <Box>
             <Routes>

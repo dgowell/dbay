@@ -49,9 +49,9 @@ const UserWebCam = (props) => {
         </div>
         : null}
         {picture === '' ? (
-          <Webcam
+          <Webcam style={{objectFit: 'cover', height: 'calc(100vh - 200px)', width: '100%'}}
             audio={false}
-            height="100%"
+            height="calc(100vh - 200px)"
             minScreenshotHeight="360"
             minScreenshotWidth="640"
             ref={webcamRef}
@@ -61,7 +61,7 @@ const UserWebCam = (props) => {
             videoConstraints={{ ...videoConstraints, facingMode }}
           />
         ) : (
-          <img src={picture} height={"100%"} width={"100%"}
+          <img src={picture} height={"calc(100vh - 200px)"} width={"100%"}
             style={{
               left: "0",
               right: "0",
