@@ -8,8 +8,9 @@ import BungalowIcon from "@mui/icons-material/Bungalow";
 import { ListItemButton, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Badge from '@mui/material/Badge';
-import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 
 function Listing(props) {
   const navigate = useNavigate();
@@ -41,22 +42,23 @@ function Listing(props) {
 
         <ListItemText
           primary={listing.title}
-          secondary={listing.price ? `M$${listing.price}` : null}
+          secondary={listing.price ? `$M${listing.price}` : null}
         />
         <Stack direction="row" spacing={1}>
-
-          {listing.collection && (listing.status === 'available' || listing.status === 'pending')
-            ? <Chip size="small" label="Collection" color="primary" variant="outlined"/>
+        <ListItem sx={{color:"rgba(0, 0, 0, 0.54)"}}>
+          {listing.collection==='true' && (listing.status === 'available' || listing.status === 'pending' || listing.status === 'unchecked')
+            ? <LocationOnOutlinedIcon/>
             : null}
-          {listing.delivery && (listing.status === 'available' || listing.status === 'pending')
-            ? <Chip size="small" label="Delivery" color="secondary" variant="outlined"/>
+          {listing.delivery==='true' && (listing.status === 'available' || listing.status === 'pending' || listing.status === 'unchecked')
+            ? <LocalShippingOutlinedIcon/>
             : null}
           {listing.transmission_type === "collection" && (listing.status === 'sold' || listing.status === 'in progress')
-            ? <Chip size="small" label="Collection" color="primary" />
+            ? <LocationOnOutlinedIcon/>
             : null}
           {listing.transmission_type === "delivery" && (listing.status === 'sold' || listing.status === 'in progress')
-            ? <Chip size="small" label="Delivery" color="secondary" />
+            ?  <LocalShippingOutlinedIcon/>
             : null}
+            </ListItem>
 
           </Stack>
       </ListItemButton>

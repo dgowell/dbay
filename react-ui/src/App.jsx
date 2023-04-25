@@ -26,10 +26,14 @@ import ListingListSeller from "./components/ListingListSeller";
 import ListingDeliverySeller from "./components/ListingDeliverySeller";
 import ListingTransmissionBuyer from "./components/ListingTransmissionBuyer";
 import CollectionSuccess from "./components/CollectionSuccess";
+import InfoPage from "./components/InfoPage";
+import ArrangeCollection from "./components/ArrangeCollection";
+
+import "@fontsource/roboto";
 
 const theme = createTheme({
   typography: {
-    "fontFamily": `"Karla", "Arial", sans-serif`,
+    "fontFamily": `"Roboto", "Arial", sans-serif`,
     "fontSize": 14,
     "fontWeightRegular": 400,
     "fontWeightMedium": 700
@@ -37,6 +41,33 @@ const theme = createTheme({
   palette: {
     primary: {
       main: '#2e2e2e',
+    },
+    secondary: {
+      main: '#6F83FF',
+    },
+    success: {
+      main: '#6DDD89',
+    },
+    error: {
+      main: '#FF4A4A',
+    },
+    grey: {
+      main: '#8F8F8F',
+    },
+    white: {
+      main: '#FFFFFF',
+    },
+    black: {
+      main: '#000000',
+    },
+    clear: {
+      main: 'rgba(255,255,255,0.2)',
+    },
+  }, overrides: {
+    MuiButton: {
+      root: {
+        background: 'red'
+      }
     }
   }
 });
@@ -103,7 +134,7 @@ function App() {
     return (
       <ThemeProvider theme={theme}>
         <ResponsiveAppBar />
-        <Container component="main" maxWidth="xs">
+        <Container component="main" maxWidth="xs" sx={{paddingBottom: '80px'}}>
           <CssBaseline />
           <Box>
             <Routes>
@@ -122,6 +153,8 @@ function App() {
               <Route path="profile/" element={<Profile />} />
               <Route path="address/" element={<Profile />} />
               <Route path="name/" element={<Profile />} />
+              <Route path="info/" element={<InfoPage />} />
+              <Route path="arr-col/:id" element={<ArrangeCollection />} />
               <Route path="*" element={<NoMatch />} />
             </Routes>
             <BottomNavBar />

@@ -2,17 +2,16 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-import HomeIcon from "@mui/icons-material/Home";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import MailIcon from "@mui/icons-material/Mail";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Paper from "@mui/material/Paper";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from "../database/listing";
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+
 
 function BottomNavBar() {
-    const [activePage, setActivePage] = useState();
+    const [activePage, setActivePage] = useState(0);
     const [notification, setNotifcation] = useState(false);
 
 
@@ -25,8 +24,8 @@ function BottomNavBar() {
 
     return (
         <Paper
-            sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }}
-            elevation={3}
+            sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 3, backgroundColor: "#000"}}
+            elevation={6}
         >
             <BottomNavigation
                 showLabels
@@ -38,34 +37,19 @@ function BottomNavBar() {
                 <BottomNavigationAction
                     component={Link}
                     to="/"
-                    label="Home"
-                    icon={<HomeIcon />}
-                />
-                <BottomNavigationAction
-                    component={Link}
-                    to="/"
-                    label="Favourites"
-                    icon={<FavoriteIcon />}
+                    icon={<HomeOutlinedIcon color="grey" />}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/listing/create"
-                    label="Sell"
-                    icon={<AddCircleIcon />}
-                />
-                <BottomNavigationAction
-                    component={Link}
-                    to="/"
-                    label="Inbox"
-                    icon={<MailIcon />}
+                    icon={<AddCircleOutlineOutlinedIcon color="grey" fontSize="large"/>}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/profile"
-                    label="Me"
                     icon={
-                        <Badge color="secondary" variant="dot" invisible={!notification}>
-                            <AccountCircleIcon />
+                        <Badge color="error" variant="dot" size="large" invisible={!notification}>
+                            <SwapHorizIcon color="grey" />
                         </Badge>
                     }
                 />

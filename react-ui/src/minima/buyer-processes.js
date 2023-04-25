@@ -1,28 +1,51 @@
 import PropTypes from 'prop-types';
-import { send, sendMoney } from './index';
-import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
+import { getSellersAddress, send, sendMoney, isContact } from './index';
+import { updateListing, getStatus, removeListing, resetListingState, getCreatedByNameById } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
 import { getHost } from '../database/settings';
 
+async function getSellerAddress(address) {
+    //get name of node that create item
+    const e = address.split('#');
+    const pk = e[1];
+    var currentAddress ="";
+    return new Promise(async function (resolve, reject) {
+        //find out if they're a contact
+         currentAddress = await isContact(pk);
+         console.log("iscontact",currentAddress);
+        if (currentAddress && currentAddress.includes('@')) {
+            resolve(currentAddress);
+        } else {
+             currentAddress = await getSellersAddress(address).catch(e=>console.log("inside",e));
+            console.log("here",currentAddress);
+            if(currentAddress){
+            resolve(currentAddress);
+            }else{
+                reject(currentAddress);
+            }
+        }
+    });
+}
 
-
-async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType}) {
+export async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType }) {
     const host = await getHost();
     const data = {
         "type": "purchase_receipt",
-        "message": message,
+        "buyer_message": message,
         "listing_id": listingId,
         "coin_id": coinId,
         "transmission_type": transmissionType,
         "buyer_name": host.name
     }
+    const sellerAddress = await getSellerAddress(seller);
+
     return new Promise(function (resolve, reject) {
-        send(data, seller).then(
+        send(data, sellerAddress).then(
             () => {
                 console.log(`sent customer message to seller: ${message}`);
                 resolve(true);
-            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+            }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
     });
 }
 
@@ -35,15 +58,16 @@ async function sendCollectionConfirmation({ message, listingId, seller, transmis
         "transmission_type": transmissionType,
         "buyer_name": host.name
     }
+    const sellerAddress = await getSellerAddress(seller);
+
     return new Promise(function (resolve, reject) {
-        send(data, seller).then(
+        send(data, sellerAddress).then(
             () => {
                 console.log(`sent customer message to seller: ${message}`);
                 return resolve(true);
-            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+            }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
     });
 }
-
 
 async function sendCancellationNotification({ listingId, seller }) {
     const host = await getHost();
@@ -52,8 +76,9 @@ async function sendCancellationNotification({ listingId, seller }) {
         "listing_id": listingId,
         "buyer_name": host.name
     }
+    const sellerAddress = await getSellerAddress(seller);
     return new Promise(function (resolve, reject) {
-        send(data, seller).then(
+        send(data, sellerAddress).then(
             () => {
                 console.log(`sent cancellation to seller.`);
                 resolve(true);
@@ -76,10 +101,11 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
             .then((coinId) => {
                 if (coinId.includes('0x')) {
                     updateListing(listingId, 'status', 'purchased').catch((e) => console.error(e));
-                    updateListing(listingId, 'transmission_type', transmissionType).catch((e)=>console.error(e));
+                    updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
                     console.log(`Sending purchase receipt to seller..`);
-                    return sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
+                    sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
+                        .then(()=>resolve(true))
                         .catch(Error(`Couldn't send purchase receipt`));
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
@@ -97,9 +123,9 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
                         .then(() => console.log('listing state reset because of error'))
                         .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
                     console.error(error);
-                    reject(Error(error));
+                    reject(error);
                 }
-            }).then(resolve(true));
+            });//.then(resolve(true));
     })
 }
 purchaseListing.proptypes = {
@@ -170,9 +196,12 @@ export function checkAvailability({
     };
     console.log(`checking availability`);
 
-    return new Promise(function (resolve, reject) {
+    return new Promise(async function (resolve, reject) {
+        //get sellers address from permanent address
+        let sellerAddress = await getSellerAddress(seller).catch(e => {reject(e); Error(console.error(e))});
+
         //send request to seller
-        send(data, seller)
+        send(data, sellerAddress)
             .then(() => console.log(`successfully sent check request to seller`))
             .catch(error => reject(Error(error)));
 
@@ -183,7 +212,7 @@ export function checkAvailability({
             console.log(`Listing status check ${i}`);
             getStatus(listingId).then((response) => {
                 if (response) {
-                    const listing = response.rows[0];
+                    const listing = response;
                     console.log(listing);
                     switch (listing.status) {
                         case "unchecked":

@@ -71,7 +71,15 @@ function ListingListSeller() {
       getListings(host.pk)
         .then((data) => {
           setListings(data);
-          console.log(`results: ${data}`);
+          let latest = [...data].sort((a, b) => b.created_at - a.created_at)[0];
+          if(latest.status === 'available' || latest.status === 'pending'){
+            setValue(0);
+          }else if(latest.status === 'sold'){
+            setValue(1);
+          }else if(latest.status === 'completed'){
+            setValue(2);
+          }
+          console.log(`results:`,latest.status);
         })
         .catch((e) => {
           console.error(e);
@@ -83,10 +91,10 @@ function ListingListSeller() {
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" centered variant="fullWidth">
           <Tab label="For Sale" {...a11yProps(0)} />
           <Tab label="In Progress" {...a11yProps(1)} />
-          <Tab label="Sent" {...a11yProps(2)} />
+          <Tab label="Completed" {...a11yProps(2)} />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>

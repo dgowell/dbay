@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { getHost } from "./settings";
+import { getPublicKey } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
 
@@ -9,9 +10,9 @@ export function createListingTable() {
         "listing_id" varchar(343) primary key,
         "title" varchar(50) NOT NULL,
         "price" INT NOT NULL,
-        "created_by_pk" varchar(330) NOT NULL,
+        "created_by_pk" varchar(640) NOT NULL,
         "created_by_name" char(50),
-        "sent_by_pk" varchar(330),
+        "sent_by_pk" varchar(640),
         "sent_by_name" char(50),
         "created_at" int not null,
         "wallet_address" varchar(80) not null,
@@ -31,7 +32,6 @@ export function createListingTable() {
         "shipping_countries" varchar(150),
         "transmission_type" varchar(10),
         constraint UQ_listing_id unique("listing_id")
-        
         )`;
 
     return new Promise((resolve, reject) => {
@@ -47,8 +47,10 @@ export function createListingTable() {
     })
 }
 
+
 /* adds a listing to the database */
-export function createListing({
+
+export async function createListing({
     title,
     price,
     createdByPk,
@@ -66,8 +68,12 @@ export function createListing({
     shippingCost,
     shippingCountries
 }) {
-    const randomId = Math.trunc(Math.random() * 10000000000000000);
-    const id = `${randomId}${createdByPk}`;
+    let id = '';
+    if (!listingId) {
+        const randomId = Math.trunc(Math.random() * 10000000000000000);
+        const pk = await getPublicKey();
+        id = `${randomId}${pk}`;
+    }
     const timestamp = Math.floor(Date.now() / 1000);
 
     return new Promise(function (resolve, reject) {
@@ -142,6 +148,7 @@ createListing.propTypes = {
     shippingCountries:PropTypes.string
 }
 
+
 /**
 * Fetches all listings listings using a particular Id
 * @param {string} storeId - The Id of the store/creator
@@ -197,6 +204,30 @@ export function getListingById(id) {
             } else {
                 reject(Error(`MDS.SQL ERROR, could get listing by Id ${res.error}`));
                 window.MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`);
+            }
+        });
+    });
+}
+getListingById.propTypes = {
+    id: PropTypes.string.isRequired,
+}
+
+/**
+* Fetches created_by_name from listing
+* @param {string} id - The id of the listing
+*/
+export function getCreatedByNameById(id) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT 'created_by_name' FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
+            if (res.status) {
+                if (res.count > 1) {
+                    reject(`More than one listing with id ${id}`, null);
+                } else {
+                    resolve(res.rows[0]);
+                }
+            } else {
+                reject(Error(`MDS.SQL ERROR, could not get created by name by Id ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could not get create by name by Id ${res.error}`);
             }
         });
     });
@@ -302,8 +333,8 @@ resetListingState.proptypes = {
 export function getStatus(listingId) {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
-            if (res) {
-                resolve(res);
+            if (res.status) {
+                resolve(res.rows[0]);
             }
             else {
                 reject(`MDS.SQL ERROR, could get status of listing ${res.error}`);

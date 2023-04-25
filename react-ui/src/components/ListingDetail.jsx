@@ -2,40 +2,38 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import { getListingById, updateListing } from "../database/listing";
-import CardHeader from "@mui/material/CardHeader";
 import CircularProgress from "@mui/material/CircularProgress";
-import LoadingButton from "@mui/lab/LoadingButton";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import IconButton from "@mui/material/IconButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
-import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
-import { sendListingToContacts, getPublicKey } from "../minima";
+import { sendListingToContacts, getMaximaContactAddress } from "../minima";
 import { checkAvailability, hasSufficientFunds } from '../minima/buyer-processes';
 import { useNavigate } from "react-router";
-import Divider from "@mui/material/Divider";
 import { Stack } from "@mui/system";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import StorefrontIcon from "@mui/icons-material/Storefront";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import ForwardIcon from "@mui/icons-material/Forward";
-import SendIcon from "@mui/icons-material/Send";
-import PaymentIcon from "@mui/icons-material/Payment";
 import Box from "@mui/material/Box";
-import BackButton from "./BackButton";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
-import { useErrorHandler } from 'react-error-boundary'
 import Carousel from 'react-material-ui-carousel';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import haversine from 'haversine-distance';
+import PersonPinCircleOutlinedIcon from '@mui/icons-material/PersonPinCircleOutlined';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
+import LoadingButton from "@mui/lab/LoadingButton";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} {...props} />;
+});
 
 function AvailabilityCheckScreen() {
   return (
@@ -61,15 +59,33 @@ function ListingDetail() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(false);
   const [images, setImages] = useState([]);
   const [distance, setDistance] = useState(0);
+  const [sent, setSent] = useState(false);
   const navigate = useNavigate();
   const params = useParams();
-  const handleError = useErrorHandler();
   const [coordinates, setCoordinates] = useState({
     latitude: '',
     longitude: ''
   })
+  const [navButtonsVisible, setNavButtonsVisible] = useState(false);
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setSent(false);
+  };
+
+  function handleShare() {
+    sendListingToContacts(listing.listing_id)
+      .then(() => {
+        console.log('sent to all contacts!');
+        setSent(true);
+      }).catch((e) => console.error(e));
+  }
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -80,8 +96,8 @@ function ListingDetail() {
 
     function showPosition(position) {
       setCoordinates({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
+        latitude: (position.coords.latitude.toFixed(3)),
+        longitude: (position.coords.longitude.toFixed(3))
       });
       console.log(JSON.stringify(coordinates));
     };
@@ -93,19 +109,23 @@ function ListingDetail() {
       const location = JSON.parse(listing.location);
       console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`)
       window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`)
-      setDistance((haversine(coordinates, location)/1000).toFixed(1));
+      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
     }
-  },[coordinates, listing])
+  }, [coordinates, listing])
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
+      console.log(result.description);
       setImages(result.image.split("(+_+)"))
+      if (result.image.split("(+_+)").length > 1) {
+        setNavButtonsVisible(true)
+      }
     }).catch((e) => console.error(e));
   }, [params.id]);
 
   useEffect(() => {
-    getPublicKey().then((address) => {
+    getMaximaContactAddress().then((address) => {
       setBuyerAddress(address);
     }).catch((e) => console.error(e))
   }, []);
@@ -131,18 +151,24 @@ function ListingDetail() {
 
     //check there is money to pay for the item first
     const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
-      setError('Insufficient Funds');
-      setLoading(false);
+      if (process.env.REACT_APP_MODE !== "mainnet") {
+        navigate(`/info`, { state: { action: "error", main: "Insufficient Funds!", sub: "It looks like you don't have enough $M to purchase this item" } });
+        // setError('Insufficient Funds');
+        setLoading(false);
+      }
       console.log(`Insufficient funds: ${error}`);
+      return false;
     });
+    console.log("hasFunds",hasFunds);
 
-    if (hasFunds) {
+    if (hasFunds || (process.env.REACT_APP_MODE === "mainnet")) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,
         buyerPk: buyerAddress,
         listingId: listing.listing_id,
       }).catch(error => {
         console.log(`Item is not available ${error}`);
+        navigate(`/info`, { state: { action: "error", main: (error ? "Not available" : "Seller not available"), sub: (error ? "It looks like someone has recently bought this item or the seller has removed it from sale" : `Seller is not a contact. Try contacting @${listing.sent_by_name} to see if they can put you in touch.`) } });
         setError(`Not available`);
         setLoading(false);
       });
@@ -151,12 +177,7 @@ function ListingDetail() {
         //take the user to pay for the item
         navigate(`/listing/${listing.listing_id}/purchase`)
       }
-    }
-  }
-
-  function handleShare() {
-    sendListingToContacts(listing.listing_id);
-    //TODO:show to user that the listing has been shared
+    }//close if
   }
 
   function handleContact() {
@@ -171,12 +192,28 @@ function ListingDetail() {
       : <div>
         {listing && buyerAddress && buyerName ? (
           <div>
-            <Card sx={{ maxWidth: '100%', marginTop: 2 }}>
-              <CardHeader
-                avatar={
-                  <BackButton />
+            <Card sx={{ maxWidth: '100%', marginTop: 2, border: "none", boxShadow: "none" }}>
+              <Carousel indicators={false} height="350px" animation="slide" navButtonsAlwaysVisible={navButtonsVisible}>
+                {
+                  images.map((image, i) => (
+                    <CardMedia
+                      component="img"
+                      width="100%"
+                      height="100%"
+                      minHeight="100%"
+                      minWidth="100%"
+                      objectFit="cover"
+                      position="center"
+                      image={image}
+                      alt="Test Image"
+                    />))
                 }
-                action={
+              </Carousel>
+              <CardContent sx={{ marginTop: 2, padding: 0 }} >
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb="1rem">
+                  <Typography gutterBottom variant="h5" component="div" mb="0">
+                    $M{listing.price}
+                  </Typography>
                   <Tooltip title="Share to all your contacts" placement="top">
                     <IconButton
                       onClick={() => handleShare()}
@@ -185,103 +222,72 @@ function ListingDetail() {
                       <ShareIcon />
                     </IconButton>
                   </Tooltip>
-                }
-              />
-              <Carousel animation="slide" navButtonsAlwaysVisible={true}>
-                {
-                  images.map((image, i) => (
-                    <CardMedia
-                      component="img"
-                      width="100%"
-                      image={image}
-                      alt="Test Image"
-                    />))
-                }
-              </Carousel>
-              <CardContent>
-                <Typography gutterBottom variant="h4" component="div">
-                  £{listing.price}
-                </Typography>
+                </Stack>
+
                 <Typography gutterBottom variant="h6" component="div">
                   {listing.title}
                 </Typography>
-                <Typography gutterBottom component="div">
+                <Typography gutterBottom component="div" mb="1.5rem">
                   {listing.description
                     ? listing.description
-                    : "This is a temporary description."}
+                    : "This item has no description"}
                 </Typography>
               </CardContent>
-              <Divider />
               <List>
                 {listing.collection === "true"
                   ?
                   <ListItem disablePadding>
-                    <ListItemButton>
-                      <ListItemIcon>
-                        <LocationOnIcon />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary="Collection"
-                        secondary={distance ? `${distance} km from me ${JSON.stringify(coordinates)}` : null}
-                      />
-                    </ListItemButton>
+                    <ListItemIcon>
+                      <PersonPinCircleOutlinedIcon color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Collection" secondary={distance ? `${distance} km away` : null} />
                   </ListItem>
                   : null}
                 {listing.delivery === "true"
                   ?
                   <ListItem disablePadding>
-                    <ListItemButton>
-                      <ListItemIcon>
-                        <LocalShippingIcon />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`Shipping £${listing.shipping_cost}`}
-                        secondary={listing.shipping_countries}
-                      />
-                    </ListItemButton>
+                    <ListItemIcon>
+                      <LocalShippingOutlinedIcon color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Shipping" secondary={`$M${listing.shipping_cost}`} />
                   </ListItem>
                   : null}
                 <ListItem disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>
-                      <StorefrontIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={`${listing.created_by_name}`}
-                      secondary={'Seller of item'}
-                    />
-                  </ListItemButton>
+                  <ListItemIcon>
+                    <StorefrontOutlinedIcon color="secondary" />
+                  </ListItemIcon>
+                  <ListItemText primary="Seller" secondary={`@${listing.created_by_name}`} />
                 </ListItem>
                 <ListItem disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>
-                      <ForwardIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={`${listing.sent_by_name}`}
-                      secondary={'Sender of item'}
-                    />
-                  </ListItemButton>
+                  <ListItemIcon>
+                    <ForwardOutlinedIcon color="secondary" />
+                  </ListItemIcon>
+                  <ListItemText primary="Shared by" secondary={`@${listing.sent_by_name}`} />
                 </ListItem>
               </List>
             </Card>
-            <Stack spacing={2} mt={4} mb={8}>
+            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
+              <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
+                Item shared with contacts
+              </Alert>
+            </Snackbar>
+            <Stack spacing={2} mt={4}>
               {listing.status === "purchased"
                 ? null
-                : <Button
+                : <LoadingButton
+                  className={"custom-loading"}
+                  color="secondary"
                   variant="contained"
                   onClick={handleBuy}
-                  startIcon={<PaymentIcon />}
+                  loading={loading}
                 >
-                  I want it
-                </Button>}
-              <LoadingButton loading={loading} variant="outlined" onClick={handleContact} endIcon={<SendIcon />} >
-                Contact Seller
-              </LoadingButton>
+                  I WANT IT
+                </LoadingButton>}
             </Stack>
           </div>
-        ) : <ListingDetailSkeleton />}
-      </div>
+        ) : <ListingDetailSkeleton />
+        }
+      </div >
   );
 }
 export default ListingDetail;
