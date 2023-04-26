@@ -118,14 +118,9 @@ function App() {
           }
           break;
         case "MAXIMA":
-          //console.log(`recieved maxima message:${JSON.stringify(msg)}`);
           processMaximaEvent(msg);
           break;
-        case "NEWBLOCK":
-          //processNewBlock(msg.data);
-          break;
         default:
-          //console.log(msg.event);
       }
     });
   }, [host.name]);
