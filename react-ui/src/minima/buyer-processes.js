@@ -235,9 +235,20 @@ export function checkAvailability({
                                 .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
                             resolve('Item not currently available, please try again later')
                             break;
+                        case "sold":
+                            clearInterval(interval);
+                            removeListing(listingId)
+                                .then(() => console.log('Sucessfully removed listing'))
+                                .catch((e) => console.error(e));
+                            resolve('This item has been sold');
+                            break;
                         default:
                             reject(Error('Something went wrong checking availability'))
                     }
+                }
+                if (i === 50) {
+                    clearInterval(interval);
+                    reject(Error("No response from the seller, try again later"));
                 }
                 //stop checking the db timeout
                 if (time - Date.now() > buyerConstants.AVAILABILITY_TIMEOUT * 1000) {
