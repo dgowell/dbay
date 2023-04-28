@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Webcam from 'react-webcam'
 import Button from '@mui/material/Button';
-import { PhotoCamera, CloudUpload, CloseTwoTone, ReplayCircleFilled, Check } from "@mui/icons-material";
+import { CloseTwoTone, Check } from "@mui/icons-material";
 import Fab from '@mui/material/Fab';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
@@ -15,24 +15,18 @@ const videoConstraints = {
 
 
 const UserWebCam = (props) => {
-  const [picture, setPicture] = useState('')
-  const [facingMode, setFacingMode] = React.useState("environment");
-  const webcamRef = React.useRef(null)
-  const handleSwitch = React.useCallback(() => {
-    setFacingMode(
-      prevState =>
-        prevState === "environment"
-          ? "user"
-          : "environment"
-    );
-  }, []);
-  const capture = React.useCallback(async () => {
-    const pictureSrc = webcamRef.current.getScreenshot()
-    setPicture(pictureSrc)
-    let temp = [...props.images];
-    temp[props.index] = pictureSrc;
-    props.setImages(temp);
-  })
+  const [picture, setPicture] = useState('');
+  const webcamRef = React.useRef(null);
+  const facingMode = "environment";
+  const capture = React.useCallback(
+    async () => {
+      const pictureSrc = webcamRef.current.getScreenshot()
+      setPicture(pictureSrc)
+      let temp = [...props.images];
+      temp[props.index] = pictureSrc;
+      props.setImages(temp);
+    },
+    [webcamRef, props]);
   return (
     <div style={{ backgroundColor: 'black' }}>
       <div style={{ textAlign: "center" }}>

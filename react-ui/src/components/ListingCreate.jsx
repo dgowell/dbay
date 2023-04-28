@@ -296,7 +296,7 @@ export default function ListingCreate() {
                       <p style={{ margin: "0", color: "#4B4949", fontSize: "12px" }}>Primary Photo</p>
                     </Box>
                   </Box>}
-                  {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,0)}} hidden/> */}
+                  <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,0)}} hidden/>
                 </Grid>
                 <Grid item xs={6} onClick={() => handleModalOpen(1)}>
                   {images[1] ? <img src={images[1]} alt="" style={{
