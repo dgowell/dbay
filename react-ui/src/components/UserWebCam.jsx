@@ -51,8 +51,9 @@ const UserWebCam = (props) => {
             ref={webcamRef}
             width="100%"
             objectFit='cover'
-            screenshotFormat="image/jpeg"
+            screenshotFormat="image/webp"
             videoConstraints={{ ...videoConstraints, facingMode }}
+            screenshotQuality={0.8}
           />
         ) : (
           <img src={picture} height={"calc(100vh - 200px)"} width={"100%"}

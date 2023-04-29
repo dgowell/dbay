@@ -120,7 +120,7 @@ export default function Marketplace() {
               <Grid container mt={1} rowSpacing={2} columnSpacing={{ xs: 2, sm: 3, md: 3 }}>
                 {filter(listings, o => marketplaceFilter(o)).filter((i) => i.title.toLowerCase().includes(filterKey.toLowerCase())).map((item, ind) => (
                   <Grid item xs={6} sx={{position: 'relative'}}>
-                    <div style={{maxWidth:"200px", maxHeight:"200px", overflow: "hidden" }}>
+                    <div style={{maxWidth:"200px", height:"150px", overflow: "hidden" }}>
                     <img
                       onClick={() => navigate(`/listing/${item.listing_id}`)}
                       src={`${item.image.split("(+_+)")[0]}`}
