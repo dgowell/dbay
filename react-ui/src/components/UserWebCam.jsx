@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Webcam from 'react-webcam'
 import Button from '@mui/material/Button';
-import { PhotoCamera, CloudUpload, CloseTwoTone, ReplayCircleFilled, Check } from "@mui/icons-material";
+import { CloseTwoTone, Check } from "@mui/icons-material";
 import Fab from '@mui/material/Fab';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
@@ -15,24 +15,20 @@ const videoConstraints = {
 
 
 const UserWebCam = (props) => {
-  const [picture, setPicture] = useState('')
-  const [facingMode, setFacingMode] = React.useState("environment");
-  const webcamRef = React.useRef(null)
-  const handleSwitch = React.useCallback(() => {
-    setFacingMode(
-      prevState =>
-        prevState === "environment"
-          ? "user"
-          : "environment"
-    );
-  }, []);
-  const capture = React.useCallback(async () => {
-    const pictureSrc = webcamRef.current.getScreenshot()
-    setPicture(pictureSrc)
-    let temp = [...props.images];
-    temp[props.index] = pictureSrc;
-    props.setImages(temp);
-  })
+  const [picture, setPicture] = useState('');
+  const webcamRef = React.useRef(null);
+  const facingMode = "environment";
+
+  const capture = React.useCallback(
+    async () => {
+      const pictureSrc = webcamRef.current.getScreenshot()
+      setPicture(pictureSrc)
+      let temp = [...props.images];
+      temp[props.index] = pictureSrc;
+      props.setImages(temp);
+    },
+    [webcamRef, props]);
+
   return (
     <div style={{ backgroundColor: 'black' }}>
       <div style={{ textAlign: "center" }}>
@@ -57,8 +53,9 @@ const UserWebCam = (props) => {
             ref={webcamRef}
             width="100%"
             objectFit='cover'
-            screenshotFormat="image/jpeg"
+            screenshotFormat="image/webp"
             videoConstraints={{ ...videoConstraints, facingMode }}
+            screenshotQuality={0.92}
           />
         ) : (
           <img src={picture} height={"calc(100vh - 200px)"} width={"100%"}
@@ -75,7 +72,10 @@ const UserWebCam = (props) => {
       <Stack p={1} pb={2} direction="row" justifyContent={'space-around'}>
         <Fab style={{backgroundColor: 'rgba(255,255,255,0.1)'}} color="primary" component="label">
           <FolderOutlinedIcon />
-          <input type="file" accept="image/*" onChange={(e) => { props.close(-1); props.handleUpload(e, props.index) }} hidden />
+          <input type="file" accept="image/*" onChange={(e) => { 
+            props.close(-1);
+            props.handleUpload(e, props.index);
+            }} hidden />
         </Fab>
           <Fab size="large"
             color={picture ? 'clear' : 'white'}

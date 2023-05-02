@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import ListingList from "../components/ListingList";
 import Autocomplete from "@mui/material/Autocomplete";
 import { getListings } from "../database/listing";
 import TextField from "@mui/material/TextField";
@@ -7,8 +6,6 @@ import Stack from "@mui/material/Stack";
 import filter from 'lodash/filter';
 import { getHost } from '../database/settings';
 import Skeleton from '@mui/material/Skeleton';
-import ImageList from '@mui/material/ImageList';
-import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
@@ -20,7 +17,8 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { useNavigate } from "react-router-dom";
-import Popover from '@mui/material/Popover';
+import Grid from "@mui/material/Grid";
+import { Box } from "@mui/material";
 
 export default function Marketplace() {
   const [listings, setListings] = useState();
@@ -43,15 +41,13 @@ export default function Marketplace() {
     setSort(val);
   };
 
-
-
   /* fetches the listings from local database */
   useEffect(() => {
     setLoading(true);
     getListings()
       .then((data) => {
-        console.log(`results:`,data);
-       const sort = [...data].sort((a, b) => b.created_at - a.created_at)
+        console.log(`results:`, data);
+        const sort = [...data].sort((a, b) => b.created_at - a.created_at)
         return setListings(sort);
       })
       .catch((e) => {
@@ -79,25 +75,9 @@ export default function Marketplace() {
     setFilterKey(e.target.value);
   }
 
-  const [anchorEl, setAnchorEl] = React.useState(null);
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const open = Boolean(anchorEl);
-  const id = open ? 'simple-popover' : undefined;
-
-
-
   if (listings) {
     return (
-      <div>
-        <Stack spacing={2} sx={{ width: '100%', mt: 2, mb: 8 }}>
+      <Box mt={2} sx={{ flexGrow: 1 }}>
           <Autocomplete
             id="free-solo-demo"
             freeSolo
@@ -137,9 +117,10 @@ export default function Marketplace() {
             </>
             // : <ListingList link='/listing' listings={filter(listings, o => marketplaceFilter(o)).filter((i)=>i.title.includes(filterKey))} />
             : <>
-              <ImageList  gap="20px" sx={{ width: "100%" }}>
+              <Grid container mt={1} rowSpacing={2} columnSpacing={{ xs: 2, sm: 3, md: 3 }}>
                 {filter(listings, o => marketplaceFilter(o)).filter((i) => i.title.toLowerCase().includes(filterKey.toLowerCase())).map((item, ind) => (
-                  <ImageListItem sx={{ height: "153px" }} key={"list_" + ind}>
+                  <Grid item xs={6} sx={{position: 'relative'}}>
+                    <div style={{maxWidth:"200px", height:"150px", overflow: "hidden" }}>
                     <img
                       onClick={() => navigate(`/listing/${item.listing_id}`)}
                       src={`${item.image.split("(+_+)")[0]}`}
@@ -147,22 +128,13 @@ export default function Marketplace() {
                       alt={item.title}
                       loading="lazy"
                       style={{
-                        height: "153px",
+                        width: "100%",
+                        height: "100%",
                         borderRadius: "5px",
-                        left: "0",
-                        right: "0",
-                        top: "0",
-                        bottom: "0",
-                        objectFit: "cover"
-                      }}
+                        objectFit: "cover"}}
                     />
-                    <ImageListItemBar
-                      sx={{ background: "rgba(0, 0, 0, 0)",
-                      top:"120px", right:"5px" }}
-                      position="top"
-                      actionPosition="right"
-                      actionIcon={
-                        <>
+                    </div>
+                    <div style={{position:"absolute", right: '3px', marginTop: '-37px'}}>
                           {item.collection === 'true' && (item.status === 'available' || item.status === 'pending' || item.status === 'unchecked')
                             ? <IconButton
                               size="small"
@@ -195,23 +167,18 @@ export default function Marketplace() {
                               <LocalShippingOutlinedIcon fontSize="2px" />
                             </IconButton>
                             : null}
-
-
-                        </>
-                      }
-                    />
+                    </div>
                     <ImageListItemBar
                       title={"$M" + item.price}
                       subtitle={<span>{item.title}</span>}
                       position="below"
                     />
-                  </ImageListItem>
+                  </Grid>
                 ))}
-              </ImageList>
+              </Grid>
             </>
           }
-        </Stack>
-      </div>
+      </Box>
     );
   } else {
     return (

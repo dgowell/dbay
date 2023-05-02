@@ -101,8 +101,8 @@ function ListingCollectionBuyer(props) {
             console.log(`Insufficient funds: ${error}`);
         });
 
-        if (hasFunds|| (process.env.REACT_APP_MODE==="mainnet")) {
-            if(process.env.REACT_APP_MODE==="mainnet"){
+        if (hasFunds|| (process.env.REACT_APP_MODE==="testvalue")) {
+            if (process.env.REACT_APP_MODE ==="testvalue"){
                 updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
                 updateListing(listing.listing_id, 'transmission_type',  listing.transmission_type).catch((e)=>console.error(e));
                 sendPurchaseReceipt({
