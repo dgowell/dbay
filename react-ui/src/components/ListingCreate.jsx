@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -39,12 +39,12 @@ function ComingSoon() {
     <Box component="span" sx={{
       border: '1px solid rgba(255, 74, 74, 0.6)',
       display: 'inline-block',
-      p:'1px 6px',
+      p: '1px 6px',
       float: 'right',
-      marginTop:'13px',
+      marginTop: '13px',
       marginRight: '-20px',
       marginBottom: '-20px'
-      }}>
+    }}>
       <Typography color='error'>coming soon</Typography>
     </Box>
   )
@@ -155,9 +155,13 @@ export default function ListingCreate() {
     setLoading(true);
     setError(null);
 
-    // When a post request is sent to the create url, we'll add a new record to the database.
+    //pass each image through the handleUpload function
+    const compressedImages = await Promise.all( // eslint-disable-line no-undef
+      images.map((image) => handleUpload(image))
+    );
+
     const newListing = { ...formik.values };
-    console.log("des", newListing.description)
+    console.log(`New listing about to be created : ${JSON.stringify(newListing)}`);
     let id = "";
     createListing({
       title: newListing.title.replace(/'/g, "''"),
@@ -165,7 +169,7 @@ export default function ListingCreate() {
       createdByPk: host.pk,
       createdByName: host.name,
       walletAddress: walletAddress,
-      image: images.join("(+_+)"),
+      image: compressedImages.join("(+_+)"),
       description: newListing.description.replace(/'/g, "''") ?? '',
       collection: newListing.collection,
       delivery: newListing.delivery,
@@ -229,28 +233,28 @@ export default function ListingCreate() {
     reader.onerror = error => reject(error);
   })
 
-  const handleUpload = async (e, i) => {
-    let temp = [...images];
-    if (e.target.files) {
-      const imageFile = e.target.files[0];
-      console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
-      console.log(`originalFile size ${imageFile.size / 1024} KB`);
-      const options = {
-        maxSizeMB: 0.03,
-        maxWidthOrHeight: 828,
-        useWebWorker: true
-      }
-      try {
-        const compressedFile = await imageCompression(imageFile, options);
-        console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-        console.log(`compressedFile size ${compressedFile.size / 1024} KB`); // smaller than maxSizeMB
-        const smp = await fileToDataUri(compressedFile);
-        temp[i] = smp;
-        setImages(temp);
-      } catch (error) {
-        console.log(error);
-        setError('File is not Image');
-      }
+  const handleUpload = async (imageFile) => {
+    //convert imageFile to blob
+    const blob = await fetch(imageFile).then(r => r.blob());
+    console.log(blob);
+    imageFile = blob;
+    console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+    console.log(`originalFile size ${imageFile.size / 1024} KB`);
+    const options = {
+      maxSizeMB: 0.02,
+      maxWidthOrHeight: 828,
+      useWebWorker: true
+    }
+    try {
+      const compressedFile = await imageCompression(imageFile, options);
+      console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+      console.log(`compressedFile size ${compressedFile.size / 1024} KB`); // smaller than maxSizeMB
+      const smp = await fileToDataUri(compressedFile);
+      console.log(smp);
+      return smp;
+    } catch (error) {
+      console.log(error);
+      setError('File is not Image');
     }
   }
 
@@ -296,7 +300,7 @@ export default function ListingCreate() {
                       <p style={{ margin: "0", color: "#4B4949", fontSize: "12px" }}>Primary Photo</p>
                     </Box>
                   </Box>}
-                  <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,0)}} hidden/>
+                  <input type="file" accept="image/*" onChange={(e) => { handleUpload(e, 0) }} hidden />
                 </Grid>
                 <Grid item xs={6} onClick={() => handleModalOpen(1)}>
                   {images[1] ? <img src={images[1]} alt="" style={{
@@ -562,7 +566,7 @@ export default function ListingCreate() {
             <Button xs={{ width: '100%' }}>
               <Item>
                 <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="h6" mb={2} sx={{fontWeight: 400, fontSize: '16px'}}>TIME</Typography>
+                  <Typography variant="h6" mb={2} sx={{ fontWeight: 400, fontSize: '16px' }}>TIME</Typography>
                   <TimeIcon />
                 </Stack>
                 <Typography mr={5}>Web development, remote tutor, design, VA, minidapp development...</Typography>
@@ -575,4 +579,3 @@ export default function ListingCreate() {
     );
   }
 }
- 

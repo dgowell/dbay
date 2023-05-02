@@ -151,7 +151,7 @@ function ListingDetail() {
 
     //check there is money to pay for the item first
     const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
-      if (process.env.REACT_APP_MODE !== "mainnet") {
+      if (process.env.REACT_APP_MODE !== "testvalue") {
         navigate(`/info`, { state: { action: "error", main: "Insufficient Funds!", sub: "It looks like you don't have enough $M to purchase this item" } });
         // setError('Insufficient Funds');
         setLoading(false);
@@ -161,7 +161,7 @@ function ListingDetail() {
     });
     console.log("hasFunds",hasFunds);
 
-    if (hasFunds || (process.env.REACT_APP_MODE === "mainnet")) {
+    if (hasFunds || (process.env.REACT_APP_MODE === "testvalue")) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,
         buyerPk: buyerAddress,

@@ -49,7 +49,7 @@ function DeliveryConfirmation({
     setLoading(true);
     setError(false);
 
-    if (process.env.REACT_APP_MODE === "mainnet") {
+    if (process.env.REACT_APP_MODE === "testvalue") {
       //update local db
       updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
       updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e) => console.error(e));

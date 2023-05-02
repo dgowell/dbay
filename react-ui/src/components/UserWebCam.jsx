@@ -18,6 +18,7 @@ const UserWebCam = (props) => {
   const [picture, setPicture] = useState('');
   const webcamRef = React.useRef(null);
   const facingMode = "environment";
+
   const capture = React.useCallback(
     async () => {
       const pictureSrc = webcamRef.current.getScreenshot()
@@ -27,6 +28,7 @@ const UserWebCam = (props) => {
       props.setImages(temp);
     },
     [webcamRef, props]);
+
   return (
     <div style={{ backgroundColor: 'black' }}>
       <div style={{ textAlign: "center" }}>
@@ -53,7 +55,7 @@ const UserWebCam = (props) => {
             objectFit='cover'
             screenshotFormat="image/webp"
             videoConstraints={{ ...videoConstraints, facingMode }}
-            screenshotQuality={0.8}
+            screenshotQuality={0.92}
           />
         ) : (
           <img src={picture} height={"calc(100vh - 200px)"} width={"100%"}
@@ -70,7 +72,10 @@ const UserWebCam = (props) => {
       <Stack p={1} pb={2} direction="row" justifyContent={'space-around'}>
         <Fab style={{backgroundColor: 'rgba(255,255,255,0.1)'}} color="primary" component="label">
           <FolderOutlinedIcon />
-          <input type="file" accept="image/*" onChange={(e) => { props.close(-1); props.handleUpload(e, props.index) }} hidden />
+          <input type="file" accept="image/*" onChange={(e) => { 
+            props.close(-1);
+            props.handleUpload(e, props.index);
+            }} hidden />
         </Fab>
           <Fab size="large"
             color={picture ? 'clear' : 'white'}
