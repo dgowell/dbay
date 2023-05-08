@@ -406,6 +406,38 @@ export  function  addContact(max){
 
 }
 
+
+export function checkValut() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('vault', function (res) {
+            if (res.status) {
+                resolve(res.response.locked);
+                console.log(`vault Locked: ${res.response.locked}`);
+            } else {
+                reject(Error(`Couldn't fetch mini address ${res.error}`));
+            }
+        })
+    })
+}
+
+export function unlockValut(pswd) {
+    return new Promise(function (resolve, reject) {
+        try{
+        window.MDS.cmd(`vault action:passwordunlock password:${pswd}`, function (res) {
+            console.log(res);
+            if (res.status) {
+                resolve(res.response.status);
+                console.log(`vault status: ${res.response.locked}`);
+            } else {
+                reject(res.error);
+            }
+        })
+        }catch(e){
+            reject(Error(e));
+        }
+    })
+}
+
 export async function isContactByName(adrs){
     const contacts = await getMaxContacts();
     var found=false;
