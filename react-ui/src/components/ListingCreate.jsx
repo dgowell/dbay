@@ -258,6 +258,33 @@ export default function ListingCreate() {
     }
   }
 
+  const handleFileUpload = async (e, i) => {
+    let temp = [...images];
+    if (e.target.files) {
+      const imageFile = e.target.files[0];
+      console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+      console.log(`originalFile size ${imageFile.size / 1024} KB`);
+      const options = {
+        maxSizeMB: 0.02,
+        maxWidthOrHeight: 828,
+        useWebWorker: true
+      }
+      try {
+        const compressedFile = await imageCompression(imageFile, options);
+        console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+        console.log(`compressedFile size ${compressedFile.size / 1024} KB`); // smaller than maxSizeMB
+        const smp = await fileToDataUri(compressedFile);
+        temp[i] = smp;
+        setImages(temp);
+      } catch (error) {
+        console.log(error);
+        setError('File is not Image');
+      }
+      //handleModalClose(-1)console
+    }
+  }
+
+
   if (catSelected) {
     if (walletAddress && host) {
       // This following section will display the form that takes the input from the user.
@@ -300,7 +327,7 @@ export default function ListingCreate() {
                       <p style={{ margin: "0", color: "#4B4949", fontSize: "12px" }}>Primary Photo</p>
                     </Box>
                   </Box>}
-                  <input type="file" accept="image/*" onChange={(e) => { handleUpload(e, 0) }} hidden />
+                  {/* <input type="file" accept="image/*" onChange={(e) => { handleUpload(e, 0) }} hidden /> */}
                 </Grid>
                 <Grid item xs={6} onClick={() => handleModalOpen(1)}>
                   {images[1] ? <img src={images[1]} alt="" style={{
@@ -510,7 +537,7 @@ export default function ListingCreate() {
             aria-labelledby="responsive-dialog-title"
           >
             <Box alignContent="center">
-              <UserWebCam handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} />
+              <UserWebCam handleFileUpload={handleFileUpload} handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} />
             </Box>
           </Dialog>
         </Box>
