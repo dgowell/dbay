@@ -19,7 +19,7 @@ import Select from '@mui/material/Select';
 import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import { Box } from "@mui/material";
-import CircleIcon from '@mui/icons-material/Circle';
+import Button from "@mui/material/Button";
 
 export default function Marketplace() {
   const [listings, setListings] = useState();
@@ -136,11 +136,13 @@ export default function Marketplace() {
                         objectFit: "cover"}}
                     />
                     </div>
+                    <div style={{position:"absolute", left: '15px', top: '15px'}}>
+                      {item.created_by_pk === host.pk ? <Button
+                        size="small"
+                        sx={{ color: 'black', background: "rgba(255,255,255,0.7)" }}
+                      >YOUR ITEM</Button> : null}
+                    </div>
                     <div style={{position:"absolute", right: '3px', marginTop: '-37px'}}>
-                          {item.created_by_pk === host.pk ?  <IconButton
-                              size="small"
-                              sx={{ color: 'red', background: "rgba(255,255,255,0.7)" }}
-                            ><CircleIcon fontSize="1px"/></IconButton> : null}
                           {item.collection === 'true' && (item.status === 'available' || item.status === 'pending' || item.status === 'unchecked')
                             ? <IconButton
                               size="small"
