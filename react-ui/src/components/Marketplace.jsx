@@ -19,6 +19,7 @@ import Select from '@mui/material/Select';
 import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import { Box } from "@mui/material";
+import CircleIcon from '@mui/icons-material/Circle';
 
 export default function Marketplace() {
   const [listings, setListings] = useState();
@@ -68,7 +69,8 @@ export default function Marketplace() {
   }, []);
 
   function marketplaceFilter(o) {
-    return o.created_by_pk !== host.pk && (o.status === 'unchecked' || o.status === 'available');
+    return (o.status === 'unchecked' || o.status === 'available');
+    //return o.created_by_pk !== host.pk && (o.status === 'unchecked' || o.status === 'available');
   }
 
   function handleSearch(e) {
@@ -122,7 +124,7 @@ export default function Marketplace() {
                   <Grid item xs={6} sx={{position: 'relative'}}>
                     <div style={{maxWidth:"200px", height:"150px", overflow: "hidden" }}>
                     <img
-                      onClick={() => navigate(`/listing/${item.listing_id}`)}
+                      onClick={() => item.created_by_pk !== host.pk ? navigate(`/listing/${item.listing_id}`) : navigate(`/seller/listing/${item.listing_id}`) }
                       src={`${item.image.split("(+_+)")[0]}`}
                       srcSet={`${item.image.split("(+_+)")[0]}`}
                       alt={item.title}
@@ -135,6 +137,10 @@ export default function Marketplace() {
                     />
                     </div>
                     <div style={{position:"absolute", right: '3px', marginTop: '-37px'}}>
+                          {item.created_by_pk === host.pk ?  <IconButton
+                              size="small"
+                              sx={{ color: 'red', background: "rgba(255,255,255,0.7)" }}
+                            ><CircleIcon fontSize="1px"/></IconButton> : null}
                           {item.collection === 'true' && (item.status === 'available' || item.status === 'pending' || item.status === 'unchecked')
                             ? <IconButton
                               size="small"
