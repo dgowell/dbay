@@ -34,6 +34,12 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import { checkValut, unlockValut } from '../minima';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import IconButton from '@mui/material/IconButton';
 
 function DeliveryConfirmation({
   total,
@@ -43,12 +49,53 @@ function DeliveryConfirmation({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isLocked,setIsLocked] = useState(false);
+  const [psdError,setPsdError] = useState(false);
+  const [password,setPassword] = useState("");
+  const [msg,setMsg] = useState("");
+
   const navigate = useNavigate();
 
-  function handlePay() {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  useEffect(()=>{
+  checkValut().then(res=>setIsLocked(res))
+  },[])
+
+  function handlePassword(e){
+      setPassword(e.target.value);
+  }
+
+  async function handlePay() {
     setLoading(true);
     setError(false);
+    setMsg("");
+    
 
+    if(isLocked){
+      if(password===""){
+        setPsdError(true);
+        setLoading(false);
+        setError(false);
+        return null;
+      }else{
+        setPsdError(false);
+      }
+      try{
+      const vaultStatus = await unlockValut(password);
+      console.log("status",vaultStatus);
+      }catch(e){
+        console.log(e);
+        setPsdError(true);
+        setLoading(false);
+        setError(false); 
+        setMsg(e);
+        return null;
+      }
+
+    }
     if (process.env.REACT_APP_MODE === "testvalue") {
       //update local db
       updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
@@ -147,6 +194,28 @@ function DeliveryConfirmation({
             </TableBody>
           </Table>
         </TableContainer>
+        {isLocked &&<>
+          <span style={{color:"red",padding:0,margin:0}} >{msg}</span>
+         <OutlinedInput
+            placeholder='Please enter your vault password'
+            id="outlined-adornment-password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={handlePassword}
+            error={psdError}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowPassword}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            }
+            label="Password"
+          /></>}
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>
