@@ -457,7 +457,7 @@ export default function ListingCreate() {
                         mt: 3,
                         mb: 3
                       }} elevation={2}>
-                        <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
+                        <Typography>You can add current coordinates here. This reveals your approximate location to anyone that can view your item.</Typography>
                         <LoadingButton color="secondary" className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="outlined" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
                           ? <Alert variant="success">coordinates added!</Alert>
