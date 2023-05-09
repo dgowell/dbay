@@ -430,7 +430,7 @@ export default function ListingCreate() {
                         mt: 3,
                         mb: 3
                       }} elevation={2}>
-                        <Typography>You can add your approximate coordinates here. Be aware that your location can be estimated to within.</Typography>
+                        <Typography>You can add current coordinates here. This reveals your approximate location to anyone that can view your item.</Typography>
                         <LoadingButton color="secondary" className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="outlined" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
                           ? <Alert variant="success">coordinates added!</Alert>
