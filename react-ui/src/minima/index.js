@@ -352,9 +352,12 @@ send.propTypes = {
 export function sendMoney({
     walletAddress,
     amount,
-    purchaseCode
+    purchaseCode,
+    password = "" // Add a default value for password
 }) {
-    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} state:{"0":"[${purchaseCode}]"}`;
+    // Include the password in the command string if it's not empty
+    const passwordPart = password ? `password:${password}` : "";
+    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} password:${passwordPart} state:{"0":"[${purchaseCode}]"}`;
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
         window.MDS.cmd(Q, function (res) {

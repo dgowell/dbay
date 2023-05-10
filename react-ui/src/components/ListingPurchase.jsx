@@ -72,63 +72,53 @@ function DeliveryConfirmation({
     setLoading(true);
     setError(false);
     setMsg("");
-    
-
-    if(isLocked){
-      if(password===""){
-        setPsdError(true);
-        setLoading(false);
-        setError(false);
-        return null;
-      }else{
-        setPsdError(false);
-      }
-      try{
-      const vaultStatus = await unlockValut(password);
-      console.log("status",vaultStatus);
-      }catch(e){
-        console.log(e);
-        setPsdError(true);
-        setLoading(false);
-        setError(false); 
-        setMsg(e);
-        return null;
-      }
-
+  
+    if (isLocked && password === "") {
+      setPsdError(true);
+      setLoading(false);
+      setError(false);
+      return null;
+    } else {
+      setPsdError(false);
     }
+  
     if (process.env.REACT_APP_MODE === "testvalue") {
-      //update local db
+      // Update local db
       updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
       updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e) => console.error(e));
-
-      //update the seller
+  
+      // Update the seller
       sendPurchaseReceipt({
         message: message,
         listingId: listing.listing_id,
-        coinId: "0x1asd234", seller: listing.created_by_pk,
-        transmissionType: transmissionType
-      })
-
-      //navigate user to confirmation page
+        coinId: "0x1asd234",
+        seller: listing.created_by_pk,
+        transmissionType: transmissionType,
+      });
+  
+      // Navigate user to confirmation page
       navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } });
     } else {
-
       purchaseListing({
         listingId: listing.listing_id,
         seller: listing.created_by_pk,
         walletAddress: listing.wallet_address,
         purchaseCode: listing.purchase_code,
         message: message,
-        amount: (parseInt(listing.price) + parseInt(listing.shipping_cost)),
+        amount: parseInt(listing.price) + parseInt(listing.shipping_cost),
         transmissionType: transmissionType,
-      }).then(
-        () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
-        error => navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: `This has happened either because dbay has not been given WRITE permissions, or your wallet is password protected. Or both.` } })
-      ).catch((e) => {
-        console.log("error", e);
+        password: password, // Pass the password here
       })
+        .then(
+          () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
+          error => navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: `This has happened either because dbay has not been given WRITE permissions, or your wallet is password protected. Or both.` } })
+        )
+        .catch((e) => {
+          console.log("error", e);
+        });
     }
   }
+  
   return (
     <Box sx={{
       width: '100%',
