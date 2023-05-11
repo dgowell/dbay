@@ -111,18 +111,27 @@ function DeliveryConfirmation({
       })
         .then(
           () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
-          error => navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: `This has happened either because dbay has not been given WRITE permissions, or your wallet is password protected. Or both.` } })
+          error => {
+            if (error.message.includes("Incorrect password")) {
+              setMsg("Incorrect password");
+              setPsdError(true);
+              setLoading(false);
+              setError(false);
+            } else {
+              navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: error.message } })
+            }
+          }
         )
         .catch((e) => {
           console.log("error", e);
         });
     }
   }
-  
+
   return (
     <Box sx={{
       width: '100%',
-      height: 'calc(100vh - 50px)',
+      height: '100vh',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
