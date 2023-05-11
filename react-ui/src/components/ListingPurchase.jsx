@@ -32,14 +32,14 @@ import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { checkValut, unlockValut } from '../minima';
+import { checkValut } from '../minima';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
+import InputLabel from '@mui/material/InputLabel';
 
 function DeliveryConfirmation({
   total,
@@ -122,7 +122,7 @@ function DeliveryConfirmation({
   return (
     <Box sx={{
       width: '100%',
-      height: 'calc(100vh - 130px)',
+      height: 'calc(100vh - 50px)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -186,13 +186,16 @@ function DeliveryConfirmation({
         </TableContainer>
         {isLocked &&<>
           <span style={{color:"red",padding:0,margin:0}} >{msg}</span>
+          <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
          <OutlinedInput
-            placeholder='Please enter your vault password'
             id="outlined-adornment-password"
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={handlePassword}
             error={psdError}
+            required={true}
+            helperText="Must enter vault password"
             endAdornment={
               <InputAdornment position="end">
                 <IconButton
@@ -204,8 +207,8 @@ function DeliveryConfirmation({
                 </IconButton>
               </InputAdornment>
             }
-            label="Password"
-          /></>}
+            label="Vault Password"
+            /></FormControl></>}
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>
