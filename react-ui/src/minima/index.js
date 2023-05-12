@@ -410,7 +410,7 @@ export  function  addContact(max){
 }
 
 
-export function checkValut() {
+export function checkVault() {
     return new Promise(function (resolve, reject) {
         window.MDS.cmd('vault', function (res) {
             if (res.status) {

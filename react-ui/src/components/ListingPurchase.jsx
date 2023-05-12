@@ -33,7 +33,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableRow from '@mui/material/TableRow';
-import { checkValut } from '../minima';
+import { checkVault } from '../minima';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
@@ -61,7 +61,7 @@ function DeliveryConfirmation({
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
   useEffect(()=>{
-  checkValut().then(res=>setIsLocked(res))
+  checkVault().then(res=>setIsLocked(res))
   },[])
 
   function handlePassword(e){

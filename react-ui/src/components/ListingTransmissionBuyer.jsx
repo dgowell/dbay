@@ -9,13 +9,13 @@ import { purchaseListing, cancelCollection } from '../minima/buyer-processes';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Stack from '@mui/material/Stack';
+import FormControl from '@mui/material/FormControl';
 
 import ListItemText from "@mui/material/ListItemText";
 
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
-import BackButton from './BackButton';
 import PaymentError from './PaymentError';
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import Badge from '@mui/material/Badge';
@@ -26,11 +26,17 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { checkVault } from '../minima';
 import Divider from "@mui/material/Divider";
 import Modal from '@mui/material/Modal';
 import Alert from '@mui/material/Alert';
 import { isContact,addContact } from '../minima';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import IconButton from '@mui/material/IconButton';
+import InputLabel from '@mui/material/InputLabel';
 
 function ListingCollectionBuyer(props) {
     const [open, setOpen] = useState(false);
@@ -46,7 +52,20 @@ function ListingCollectionBuyer(props) {
     const [status, setStatus] = useState();
     const [msg, setMsg] = useState();
     const [seller, setSeller] = useState();
+    const [passwordError, setPasswordError] = useState(false);
+    const [password, setPassword] = useState("");
+    const [isLocked, setIsLocked] = useState(false);
 
+    const [showPassword, setShowPassword] = useState(false);
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+    
+    useEffect(() => {
+        checkVault().then(res => setIsLocked(res))
+    }, [])
+
+    function handlePassword(e) {
+        setPassword(e.target.value);
+    }
 
     async function handleAdd() {
         const { msg, status } = await addContact(seller);
@@ -101,6 +120,15 @@ function ListingCollectionBuyer(props) {
             console.log(`Insufficient funds: ${error}`);
         });
 
+        if (isLocked && password === "") {
+            setPasswordError(true);
+            setLoading(false);
+            setError(false);
+            return null;
+        } else {
+            setPasswordError(false);
+        }
+
         if (hasFunds|| (process.env.REACT_APP_MODE==="testvalue")) {
             if (process.env.REACT_APP_MODE ==="testvalue"){
                 updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
@@ -119,23 +147,23 @@ function ListingCollectionBuyer(props) {
                         purchaseCode: listing.purchase_code,
                         amount: listing.price,
                         transmissionType: listing.transmission_type,
+                        password: password
                     }).then(
                         () =>navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}),
-                        error =>navigate('/info',{state:{action:"error",main:"Payment Failed!",sub:`This has happened either because dbay has not been given WRITE permission, or your wallet is password protected. Or both.`}}) //setError(error.message)
+                        error => {
+                            if (error.message.includes("Incorrect password")) {
+                                setMsg("Incorrect password");
+                                setPasswordError(true);
+                                setLoading(false);
+                                setError(false);
+                                setOpen(false);
+                            } else {
+                                navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: error.message } })
+                            }
+                        }
                     )
                  }
          }
-    }
-    function handleCancel() {
-        cancelCollection({
-            listingId: listing.listing_id,
-            seller: listing.created_by_pk
-        })
-    }
-
-    function handleReceived(){
-        updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e)); 
-        navigate('/seller/listings/')
     }
 
     if (listing) {
@@ -258,7 +286,32 @@ function ListingCollectionBuyer(props) {
                         alignItems="center"
                     >
                         {listing.transmission_type === 'collection' &&
-                            <Stack mt={15} direction="row" spacing={2} width={"100%"}>
+                            <Stack mt={15} direction="column" spacing={2} width={"100%"}>
+                                {isLocked && <>
+                                    <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
+                                    <FormControl variant="outlined">
+                                        <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
+                                        <OutlinedInput
+                                            id="outlined-adornment-password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={handlePassword}
+                                            error={passwordError}
+                                            required={true}
+                                            helperText="Must enter vault password"
+                                            endAdornment={
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                                        aria-label="toggle password visibility"
+                                                        onClick={handleClickShowPassword}
+                                                        edge="end"
+                                                    >
+                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            }
+                                            label="Vault Password"
+                                        /></FormControl></>}
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleOpen} variant="contained">
                                      PAY NOW
                                 </LoadingButton>
