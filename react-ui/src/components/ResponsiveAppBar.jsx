@@ -8,26 +8,32 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate } from "react-router";
 import { ReactComponent as Logo } from '../assets/images/logo.svg';
-
+import Button from '@mui/material/Button';
 
 const ResponsiveAppBar = () => {
     const navigate = useNavigate();
+
+    const handleLogoClick = () => {
+        navigate('/');
+    };
+
     return (
         <AppBar elevation={0} position="sticky" sx={{backgroundColor:"#2C2C2C"}}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
-
                     <IconButton sx={{color:"white"}} onClick={()=>navigate(-1)}>
                         <ArrowBackIcon color="white" />
                     </IconButton>
                     {process.env.REACT_APP_MODE ==="testvalue" && <Typography>Test Mode</Typography>}
-                    <IconButton size='small' sx={{color:"white", height: "40px"}}>
-                        <Logo />
-                    </IconButton>
-
+                    <Button onClick={handleLogoClick}>
+                        <IconButton size='small' sx={{color:"white", height: "40px"}}>
+                            <Logo />
+                        </IconButton>
+                    </Button>
                 </Toolbar>
             </Container>
         </AppBar >
     );
 };
 export default ResponsiveAppBar;
+
