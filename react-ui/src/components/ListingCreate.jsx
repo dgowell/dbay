@@ -211,27 +211,47 @@ export default function ListingCreate() {
 
   function handleLocation() {
     setLoadingCoorindates(true);
+    
+// generate random offset in meters (0.1km - 0.5km)
+    function getRandomOffset(minMeters, maxMeters) {
+      const metersPerDegreeLatitude = 111000;
+      return (Math.random() * (maxMeters - minMeters) + minMeters) / metersPerDegreeLatitude;
+    }
+  // get current position
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(showPosition);
     } else {
       console.error("Geolocation is not supported by this browser.");
       setLoadingCoorindates(false);
     }
-
+  
     function showPosition(position) {
+      const minDistance = 100; // meters
+      const maxDistance = 500; // meters
+  
+      // Generate random offsets for latitude and longitude
+      const latOffset = getRandomOffset(minDistance, maxDistance);
+      const lngOffset = getRandomOffset(minDistance, maxDistance);
+  
+      // Randomly choose the direction (north/south and east/west) for the offset
+      const newLatitude = position.coords.latitude + (Math.random() < 0.5 ? latOffset : -latOffset);
+      const newLongitude = position.coords.longitude + (Math.random() < 0.5 ? lngOffset : -lngOffset);
+  
       setLocation({
-        latitude: (position.coords.latitude.toFixed(3)),
-        longitude: (position.coords.longitude.toFixed(3))
+        latitude: newLatitude.toFixed(3),
+        longitude: newLongitude.toFixed(3),
       });
       setLoadingCoorindates(false);
     }
   }
+  
   const fileToDataUri = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
   })
+  
 
   const handleUpload = async (imageFile) => {
     //convert imageFile to blob
