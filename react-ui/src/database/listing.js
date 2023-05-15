@@ -4,6 +4,21 @@ import { getPublicKey } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
 
+export function addLocationDescriptionColumn() {
+    const Q = `alter table ${LISTINGSTABLE} add column if not exists "locationDescription" varchar(150);`;
+
+    return new Promise((resolve, reject) => {
+        window.MDS.sql(Q, function (res) {
+            window.MDS.log(`MDS.SQL, ${Q}`);
+            console.log(res);
+            if (res.status) {
+                resolve(true)
+            } else {
+                reject(Error(`Adding locationDescription column to listing table ${res.error}`));
+            }
+        })
+    })
+}
 
 export function createListingTable() {
     const Q = `create table if not exists ${LISTINGSTABLE} (
@@ -28,6 +43,7 @@ export function createListingTable() {
         "image"  varchar(max),
         "description" varchar(1500),
         "location" varchar(50),
+        "locationDescription" varchar(1500),
         "shipping_cost" int,
         "shipping_countries" varchar(150),
         "transmission_type" varchar(10),
@@ -65,6 +81,7 @@ export async function createListing({
     collection,
     delivery,
     location,
+    locationDescription,
     shippingCost,
     shippingCountries
 }) {
@@ -93,6 +110,7 @@ export async function createListing({
             "image",
             "description",
             ${location ? '"location",' : ''}
+            ${locationDescription ? '"locationDescription",' : ''}
             ${shippingCost ? '"shipping_cost",' : ''}
             ${shippingCountries ? '"shipping_countries",' : ''}
             "created_at"
@@ -113,6 +131,7 @@ export async function createListing({
             '${image}',
             '${description}',
             ${location ? `'${location}',` : ''}
+            ${locationDescription ? `'${locationDescription}',` : ''} 
             ${shippingCost ? `'${shippingCost}',` : ''}
             ${shippingCountries ? `'${shippingCountries}',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
@@ -144,6 +163,7 @@ createListing.propTypes = {
     image:PropTypes.string,
     description:PropTypes.string,
     location:PropTypes.string,
+    locationDescription: PropTypes.string,
     shippingCost:PropTypes.number,
     shippingCountries:PropTypes.string
 }
