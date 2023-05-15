@@ -1,19 +1,10 @@
 import PropTypes from 'prop-types';
-import {
-    processListing,
-    getListingById,
-} from '../database/listing';
+import { getListingById } from '../database/listing';
 import { utf8ToHex, hexToUtf8 } from '../utils';
 import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
-import { processAvailabilityResponse } from './buyer-processes';
-import {
-    processAvailabilityCheck,
-    processPurchaseReceipt,
-    processCollectionConfirmation,
-    processCancelCollection
-} from './seller-processes';
+
 
 
 /**

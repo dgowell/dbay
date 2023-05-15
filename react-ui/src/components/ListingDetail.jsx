@@ -240,7 +240,7 @@ function ListingDetail() {
                     <ListItemIcon>
                       <PersonPinCircleOutlinedIcon color="secondary" />
                     </ListItemIcon>
-                    <ListItemText primary="Collection" secondary={distance ? `${distance} km away` : null} />
+                    <ListItemText primary="Collection" secondary={isNaN(distance) ? null : `${distance} km away`} />
                   </ListItem>
                   : null}
                 {listing.delivery === "true"
