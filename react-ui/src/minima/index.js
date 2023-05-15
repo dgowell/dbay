@@ -379,7 +379,7 @@ export function sendMoney({
     })
 }
 
-export  function  addContact(max){
+export function addContact(max){
     var msg="";
     var status=false;
     return new Promise(function(resolve,reject){
