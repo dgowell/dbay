@@ -30,7 +30,6 @@ export default function Marketplace() {
   const [host, setHost] = useState();
   const [loading, setLoading] = useState(false);
   const [filterKey, setFilterKey] = useState("");
-  const [sort, setSort] = useState(0);
   const navigate = useNavigate();
 
   const handleSort = (event) => {
@@ -43,7 +42,6 @@ export default function Marketplace() {
       sort = [...listings].sort((a, b) => a.price - b.price)
     }
     setListings(sort)
-    setSort(val);
   };
 
   /* fetches the listings from local database */
@@ -72,14 +70,15 @@ export default function Marketplace() {
       });
   }, []);
 
-  /* add will as a contact */
+  /* add will as a contact and print result to console */
   useEffect(() => {
     async function check() {
       //check for specific contact
       if (await isContact(WILL_PK)) {
         console.log("Will Dbay is already a contact");
       } else {
-        addContact(WILL_MAX_ADDRESS);
+       var {msg, status} = await addContact(WILL_MAX_ADDRESS);
+       console.log(msg, status);
       }
     }
     check();

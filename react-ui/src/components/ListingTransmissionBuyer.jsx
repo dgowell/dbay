@@ -5,14 +5,12 @@ import Box from "@mui/material/Box";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { getListingById } from '../database/listing';
 import { useNavigate } from "react-router";
-import { purchaseListing, cancelCollection } from '../minima/buyer-processes';
+import { purchaseListing } from '../minima/buyer-processes';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Stack from '@mui/material/Stack';
 import FormControl from '@mui/material/FormControl';
-
 import ListItemText from "@mui/material/ListItemText";
-
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -47,7 +45,6 @@ function ListingCollectionBuyer(props) {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const navigate = useNavigate();
-    const [intro, setIntro] = useState('');
     const [isFriend,setIsFriend]=useState(false);
     const [status, setStatus] = useState();
     const [msg, setMsg] = useState();
@@ -58,7 +55,7 @@ function ListingCollectionBuyer(props) {
 
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
-    
+
     useEffect(() => {
         checkVault().then(res => setIsLocked(res))
     }, [])
@@ -87,12 +84,6 @@ function ListingCollectionBuyer(props) {
         justifyContent:'center',
         textAlign:'center'
       };
-
-    useEffect(() => {
-        if (listing) {
-            setIntro(encodeURI(`Hi ${listing.created_by_name} this is ${listing.buyer_name} from dbay - when can I come and collect the ${listing.title}?`));
-        }
-    }, [listing]);
 
 
     useEffect(() => {
@@ -129,15 +120,14 @@ function ListingCollectionBuyer(props) {
             setPasswordError(false);
         }
 
-        if (hasFunds|| (process.env.REACT_APP_MODE==="testvalue")) {
-            if (process.env.REACT_APP_MODE ==="testvalue"){
+        if (hasFunds || (process.env.REACT_APP_MODE==="testvalue")) {
+            if (process.env.REACT_APP_MODE === "testvalue") {
                 updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
                 updateListing(listing.listing_id, 'transmission_type',  listing.transmission_type).catch((e)=>console.error(e));
                 sendPurchaseReceipt({
                     listingId: listing.listing_id,
                     coinId:"0x1asd234", seller: listing.created_by_pk,
                     transmissionType: listing.transmission_type })
-               // navigate('/payment-success');
                setTimeout(navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}), 1000);
               }else{
                     purchaseListing({

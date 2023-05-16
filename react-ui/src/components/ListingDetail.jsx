@@ -30,7 +30,6 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import LoadingButton from "@mui/lab/LoadingButton";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -61,7 +60,6 @@ function ListingDetail() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState(false);
   const [images, setImages] = useState([]);
   const [distance, setDistance] = useState(0);
   const [sent, setSent] = useState(false);
@@ -103,7 +101,7 @@ function ListingDetail() {
       });
       console.log(JSON.stringify(coordinates));
     };
-  }, []);
+  }, [coordinates]);
 
 
   useEffect(() => {
@@ -181,10 +179,6 @@ function ListingDetail() {
         navigate(`/listing/${listing.listing_id}/purchase`)
       }
     }//close if
-  }
-
-  function handleContact() {
-    console.log('contact seller clicked!');
   }
 
   checkingAvailability && <AvailabilityCheckScreen />

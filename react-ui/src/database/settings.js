@@ -1,26 +1,5 @@
 const SETTINGSTABLE = 'SETTINGS';
 
-export function createSettingsTable() {
-    const Q = `create table if not exists ${SETTINGSTABLE} (
-        "pk" varchar(620),
-        "name" varchar(50),
-        CONSTRAINT AK_name UNIQUE("name"),
-        CONSTRAINT AK_pk UNIQUE("pk")
-        )`;
-
-    return new Promise((resolve, reject) => {
-        window.MDS.sql(Q, function (res) {
-            window.MDS.log(`MDS.SQL, ${Q}`);
-            console.log(res);
-            if (res.status) {
-                resolve(true)
-            } else {
-                reject(`${res.error}`);
-            }
-        })
-    })
-}
-
 /* adds a setting to the database */
 export async function createHost(name, pk) {
     return new Promise(function (resolve, reject) {
