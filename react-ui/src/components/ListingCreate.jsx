@@ -462,8 +462,7 @@ export default function ListingCreate() {
                         elevation={2}
                       >
                         <Typography>
-                          You can add current coordinates here. This reveals your approximate
-                          location to anyone that can view your item. Allows for search by distance.
+                         If you choose to add your location, your coordinates will be randomly offset by at least 100m. Enhances the visibility of your listing. 
                         </Typography>
                         <LoadingButton
                           color="secondary"
@@ -478,10 +477,9 @@ export default function ListingCreate() {
                         {location.latitude !== '' ? (
                           <Alert variant="success">coordinates added!</Alert>
                         ) : null}
-                            <Typography variant="body2" sx={{ mt: 2 }}>
-      Optional. Provide a city/town name or a description of a place you'd be willing to
-      meet:
-    </Typography>
+                            <Typography>
+                        Provide a preferred meeting place. Can be a town / city or locally known venue.
+                        </Typography>
                         <Grid item xs={12}>
                           <TextField
                             label="Location Description"
