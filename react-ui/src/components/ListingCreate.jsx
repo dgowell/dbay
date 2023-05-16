@@ -470,52 +470,47 @@ export default function ListingCreate() {
                       label="Collection"
                     />
              {formik.values.collection ? (
-                      <Paper
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          p: 2,
-                          gap: 2,
-                          mt: 3,
-                          mb: 3,
-                        }}
-                        elevation={2}
-                      >
-                        <Typography>
-                          You can add current coordinates here. This reveals your approximate
-                          location to anyone that can view your item. Allows for search by distance.
-                        </Typography>
-                        <LoadingButton
-                          color="secondary"
-                          className={'custom-loading'}
-                          mt={2}
-                          loading={loadingCoordinates}
-                          variant="outlined"
-                          onClick={handleLocation}
-                        >
-                          Add Coordinates
-                        </LoadingButton>
-                        {location.latitude !== '' ? (
-                          <Alert variant="success">coordinates added!</Alert>
-                        ) : null}
-                            <Typography variant="body2" sx={{ mt: 2 }}>
-      Optional. Provide a city/town name or a description of a place you'd be willing to
-      meet:
-    </Typography>
-                        <Grid item xs={12}>
-                          <TextField
-                            label="Location Description"
-                            id="locationDescription"
-                            name="locationDescription"
-                            className="form-field"
-                            type="text"
-                            fullWidth
-                            value={formik.values.locationDescription}
-                            onChange={formik.handleChange}
-                            variant="outlined"
-                            error={formik.touched.locationDescription && formik.errors.locationDescription}
-                            helperText={formik.touched.locationDescription && formik.errors.locationDescription}
-                          />
+        <Paper
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          gap: 2,
+          mt: 3,
+          mb: 3,
+        }}
+        elevation={2}
+      >
+        <Typography>
+        Boost your listing's visibility by providing approximate coordinates or a location description, like a nearby town, city, or well-known venue
+        </Typography>
+        <LoadingButton
+          color="secondary"
+          className={'custom-loading'}
+          mt={2}
+          loading={loadingCoordinates}
+          variant="outlined"
+          onClick={handleLocation}
+        >
+          Add Coordinates
+        </LoadingButton>
+        {location.latitude !== '' ? (
+          <Alert variant="success">coordinates added!</Alert>
+        ) : null}
+        <Grid item xs={12}>
+          <TextField
+            label="Location Description"
+            id="locationDescription"
+            name="locationDescription"
+            className="form-field"
+            type="text"
+            fullWidth
+            value={formik.values.locationDescription}
+            onChange={formik.handleChange}
+            variant="outlined"
+            error={formik.touched.locationDescription && formik.errors.locationDescription}
+            helperText={formik.touched.locationDescription && formik.errors.locationDescription}
+          />
                         </Grid>
                       </Paper>
                     ) : null}
