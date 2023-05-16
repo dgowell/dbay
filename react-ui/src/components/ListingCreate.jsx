@@ -462,7 +462,7 @@ export default function ListingCreate() {
         elevation={2}
       >
         <Typography>
-          Enhance the visibility of your listing by adding your approximate coordinates, and/or a location description, such as a town, city, or local venue.
+        Boost your listing's visibility by providing approximate coordinates or a location description, like a nearby town, city, or well-known venue
         </Typography>
         <LoadingButton
           color="secondary"
