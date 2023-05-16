@@ -451,35 +451,38 @@ export default function ListingCreate() {
                     />
              {formik.values.collection ? (
                       <Paper
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          p: 2,
-                          gap: 2,
-                          mt: 3,
-                          mb: 3,
-                        }}
-                        elevation={2}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: 2,
+                        gap: 2,
+                        mt: 3,
+                        mb: 3,
+                      }}
+                      elevation={2}
+                    >
+                      <Typography>
+                        Enhance the visibility of your listing by adding your approximate coordinates. Optional
+                      </Typography>
+                      <LoadingButton
+                        color="secondary"
+                        className={'custom-loading'}
+                        mt={2}
+                        loading={loadingCoordinates}
+                        variant="outlined"
+                        onClick={handleLocation}
                       >
-                        <Typography>
-                         If you choose to add your location, your coordinates will be randomly offset by at least 100m. Enhances the visibility of your listing. 
-                        </Typography>
-                        <LoadingButton
-                          color="secondary"
-                          className={'custom-loading'}
-                          mt={2}
-                          loading={loadingCoordinates}
-                          variant="outlined"
-                          onClick={handleLocation}
-                        >
-                          Add Coordinates
-                        </LoadingButton>
-                        {location.latitude !== '' ? (
-                          <Alert variant="success">coordinates added!</Alert>
-                        ) : null}
-                            <Typography>
-                        Provide a preferred meeting place. Can be a town / city or locally known venue.
-                        </Typography>
+                        Add Coordinates
+                      </LoadingButton>
+                      <Typography variant="caption" sx={{ mt: 1 }}>
+                        Note: your coordinates are randomly offset by at least 100m before being shared.
+                      </Typography>
+                      {location.latitude !== '' ? (
+                        <Alert variant="success">coordinates added!</Alert>
+                      ) : null}
+                      <Typography>
+                        Provide a preferred meeting place. Can be a town / city or locally known venue. Optional.
+                      </Typography>                               
                         <Grid item xs={12}>
                           <TextField
                             label="Location Description"
