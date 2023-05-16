@@ -450,53 +450,47 @@ export default function ListingCreate() {
                       label="Collection"
                     />
              {formik.values.collection ? (
-                      <Paper
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        p: 2,
-                        gap: 2,
-                        mt: 3,
-                        mb: 3,
-                      }}
-                      elevation={2}
-                    >
-                      <Typography>
-                        Enhance the visibility of your listing by adding your approximate coordinates. Optional
-                      </Typography>
-                      <LoadingButton
-                        color="secondary"
-                        className={'custom-loading'}
-                        mt={2}
-                        loading={loadingCoordinates}
-                        variant="outlined"
-                        onClick={handleLocation}
-                      >
-                        Add Coordinates
-                      </LoadingButton>
-                      <Typography variant="caption" sx={{ mt: 1 }}>
-                        Note: your coordinates are randomly offset by at least 100m before being shared.
-                      </Typography>
-                      {location.latitude !== '' ? (
-                        <Alert variant="success">coordinates added!</Alert>
-                      ) : null}
-                      <Typography>
-                        Provide a preferred meeting place. Can be a town / city or locally known venue. Optional.
-                      </Typography>                               
-                        <Grid item xs={12}>
-                          <TextField
-                            label="Location Description"
-                            id="locationDescription"
-                            name="locationDescription"
-                            className="form-field"
-                            type="text"
-                            fullWidth
-                            value={formik.values.locationDescription}
-                            onChange={formik.handleChange}
-                            variant="outlined"
-                            error={formik.touched.locationDescription && formik.errors.locationDescription}
-                            helperText={formik.touched.locationDescription && formik.errors.locationDescription}
-                          />
+        <Paper
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          gap: 2,
+          mt: 3,
+          mb: 3,
+        }}
+        elevation={2}
+      >
+        <Typography>
+          Enhance the visibility of your listing by adding your approximate coordinates, and/or a location description, such as a town, city, or local venue.
+        </Typography>
+        <LoadingButton
+          color="secondary"
+          className={'custom-loading'}
+          mt={2}
+          loading={loadingCoordinates}
+          variant="outlined"
+          onClick={handleLocation}
+        >
+          Add Coordinates
+        </LoadingButton>
+        {location.latitude !== '' ? (
+          <Alert variant="success">coordinates added!</Alert>
+        ) : null}
+        <Grid item xs={12}>
+          <TextField
+            label="Location Description"
+            id="locationDescription"
+            name="locationDescription"
+            className="form-field"
+            type="text"
+            fullWidth
+            value={formik.values.locationDescription}
+            onChange={formik.handleChange}
+            variant="outlined"
+            error={formik.touched.locationDescription && formik.errors.locationDescription}
+            helperText={formik.touched.locationDescription && formik.errors.locationDescription}
+          />
                         </Grid>
                       </Paper>
                     ) : null}
