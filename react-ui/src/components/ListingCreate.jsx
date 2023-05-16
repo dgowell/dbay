@@ -122,7 +122,8 @@ export default function ListingCreate() {
       delivery: false,
       collection: false,
       deliveryCost: 0,
-      description: ''
+      description: '',
+      locationDescription: '',
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -174,6 +175,7 @@ export default function ListingCreate() {
       collection: newListing.collection,
       delivery: newListing.delivery,
       location: JSON.stringify(location),
+      locationDescription: newListing.locationDescription,
       shippingCost: newListing.deliveryCost,
     }).then(function (listingId) {
       id = listingId;
@@ -467,24 +469,52 @@ export default function ListingCreate() {
                       }
                       label="Collection"
                     />
-                    {formik.values.collection ?
-
-                      <Paper sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        p: 2,
-                        gap: 2,
-                        mt: 3,
-                        mb: 3
-                      }} elevation={2}>
-                        <Typography>You can add current coordinates here. This reveals your approximate location to anyone that can view your item.</Typography>
-                        <LoadingButton color="secondary" className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="outlined" onClick={handleLocation}>Add Coordinates</LoadingButton>
-                        {location.latitude !== ''
-                          ? <Alert variant="success">coordinates added!</Alert>
-                          : null}
+             {formik.values.collection ? (
+        <Paper
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          gap: 2,
+          mt: 3,
+          mb: 3,
+        }}
+        elevation={2}
+      >
+        <Typography>
+        Boost your listing's visibility by providing approximate coordinates or a location description, like a nearby town, city, or well-known venue
+        </Typography>
+        <LoadingButton
+          color="secondary"
+          className={'custom-loading'}
+          mt={2}
+          loading={loadingCoordinates}
+          variant="outlined"
+          onClick={handleLocation}
+        >
+          Add Coordinates
+        </LoadingButton>
+        {location.latitude !== '' ? (
+          <Alert variant="success">coordinates added!</Alert>
+        ) : null}
+        <Grid item xs={12}>
+          <TextField
+            label="Location Description"
+            id="locationDescription"
+            name="locationDescription"
+            className="form-field"
+            type="text"
+            fullWidth
+            value={formik.values.locationDescription}
+            onChange={formik.handleChange}
+            variant="outlined"
+            error={formik.touched.locationDescription && formik.errors.locationDescription}
+            helperText={formik.touched.locationDescription && formik.errors.locationDescription}
+          />
+                        </Grid>
                       </Paper>
+                    ) : null}
 
-                      : null}
                     <FormControlLabel
                       control={
                         <Switch color="secondary" checked={formik.values.delivery} onChange={formik.handleChange} name="delivery" />
