@@ -30,6 +30,8 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import LoadingButton from "@mui/lab/LoadingButton";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} {...props} />;
@@ -105,10 +107,11 @@ function ListingDetail() {
 
 
   useEffect(() => {
-    if ((coordinates.latitude !== '') && listing) {
+    // check there is a value for the location
+    if ((coordinates.latitude !== '') && listing && listing.location) {
       const location = JSON.parse(listing.location);
-      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`)
-      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`)
+      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`);
+      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`);
       setDistance((haversine(coordinates, location) / 1000).toFixed(1));
     }
   }, [coordinates, listing])
@@ -240,7 +243,14 @@ function ListingDetail() {
                     <ListItemIcon>
                       <PersonPinCircleOutlinedIcon color="secondary" />
                     </ListItemIcon>
-                    <ListItemText primary="Collection" secondary={isNaN(distance) ? null : `${distance} km away`} />
+                    <ListItemText
+                      primary="Collection"
+                      secondary={
+                        distance
+                          ? `${distance} km away${listing.location_description ? `, ${listing.location_description}` : ''}`
+                          : null
+                      }
+                    />
                   </ListItem>
                   : null}
                 {listing.delivery === "true"
@@ -265,6 +275,8 @@ function ListingDetail() {
                   <ListItemText primary="Shared by" secondary={`@${listing.sent_by_name}`} />
                 </ListItem>
               </List>
+
+
             </Card>
             <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
               <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>

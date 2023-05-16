@@ -228,6 +228,7 @@ function createListing({
     collection,
     delivery,
     location,
+    locationDescription,
     shippingCost,
     shippingCountries
 }) {
@@ -253,6 +254,7 @@ function createListing({
             "image",
             "description",
             ${location ? '"location",' : ''}
+            ${locationDescription ? '"location_description",' : ''}
             ${shippingCost ? '"shipping_cost",' : ''}
             ${shippingCountries ? '"shipping_countries",' : ''}
             "created_at"
@@ -273,6 +275,7 @@ function createListing({
             '${image}',
             '${description}',
             ${location ? `'${location}',` : ''}
+            ${locationDescription ? `'${locationDescription}',` : ''}
             ${shippingCost ? `'${shippingCost}',` : ''}
             ${shippingCountries ? `'${shippingCountries}',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
@@ -312,6 +315,7 @@ function processListing(entity) {
         collection: entity.collection,
         delivery: entity.delivery,
         location: entity.location,
+        locationDescription: entity.location_description,
         shippingCost: entity.shipping_cost,
         shippingCountries: entity.shipping_countries
     });
@@ -430,6 +434,7 @@ function createListingTable() {
             "image"  varchar(max),
             "description" varchar(1500),
             "location" varchar(50),
+            "location_description" varchar(150),
             "shipping_cost" int,
             "shipping_countries" varchar(150),
             "transmission_type" varchar(10),
