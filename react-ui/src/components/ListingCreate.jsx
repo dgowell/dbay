@@ -174,6 +174,7 @@ export default function ListingCreate() {
       description: newListing.description.replace(/'/g, "''") ?? '',
       collection: newListing.collection,
       delivery: newListing.delivery,
+      location: JSON.stringify(location),
       locationDescription: newListing.locationDescription,
       shippingCost: newListing.deliveryCost,
     }).then(function (listingId) {
@@ -483,7 +484,7 @@ export default function ListingCreate() {
     </Typography>
                         <Grid item xs={12}>
                           <TextField
-                            label="locationDescription"
+                            label="Location Description"
                             id="locationDescription"
                             name="locationDescription"
                             className="form-field"

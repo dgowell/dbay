@@ -5,7 +5,7 @@ import { getPublicKey } from "../minima";
 const LISTINGSTABLE = 'LISTING';
 
 export function addLocationDescriptionColumn() {
-    const Q = `alter table ${LISTINGSTABLE} add column if not exists "locationDescription" varchar(150);`;
+    const Q = `alter table ${LISTINGSTABLE} add column if not exists "location_description" varchar(150);`;
 
     return new Promise((resolve, reject) => {
         window.MDS.sql(Q, function (res) {
@@ -14,7 +14,7 @@ export function addLocationDescriptionColumn() {
             if (res.status) {
                 resolve(true)
             } else {
-                reject(Error(`Adding locationDescription column to listing table ${res.error}`));
+                reject(Error(`Adding location_description column to listing table ${res.error}`));
             }
         })
     })
@@ -43,7 +43,7 @@ export function createListingTable() {
         "image"  varchar(max),
         "description" varchar(1500),
         "location" varchar(50),
-        "locationDescription" varchar(1500),
+        "location_description" varchar(1500),
         "shipping_cost" int,
         "shipping_countries" varchar(150),
         "transmission_type" varchar(10),
@@ -110,7 +110,7 @@ export async function createListing({
             "image",
             "description",
             ${location ? '"location",' : ''}
-            ${locationDescription ? '"locationDescription",' : ''}
+            ${locationDescription ? '"location_description",' : ''}
             ${shippingCost ? '"shipping_cost",' : ''}
             ${shippingCountries ? '"shipping_countries",' : ''}
             "created_at"
@@ -404,6 +404,7 @@ export async function processListing(entity) {
         collection:entity.collection,
         delivery:entity.delivery,
         location:entity.location,
+        locationDescription:entity.location_description,
         shippingCost:entity.shipping_cost,
         shippingCountries:entity.shipping_countries
     }).then(() => {
