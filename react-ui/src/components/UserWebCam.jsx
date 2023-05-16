@@ -74,7 +74,7 @@ const UserWebCam = (props) => {
           <FolderOutlinedIcon />
           <input type="file" accept="image/*" onChange={(e) => { 
             props.close(-1);
-            props.handleUpload(e, props.index);
+            props.handleFileUpload(e, props.index);
             }} hidden />
         </Fab>
           <Fab size="large"

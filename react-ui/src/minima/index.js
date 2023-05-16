@@ -1,19 +1,10 @@
 import PropTypes from 'prop-types';
-import {
-    processListing,
-    getListingById,
-} from '../database/listing';
+import { getListingById } from '../database/listing';
 import { utf8ToHex, hexToUtf8 } from '../utils';
 import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
-import { processAvailabilityResponse } from './buyer-processes';
-import {
-    processAvailabilityCheck,
-    processPurchaseReceipt,
-    processCollectionConfirmation,
-    processCancelCollection
-} from './seller-processes';
+
 
 
 /**
@@ -352,9 +343,12 @@ send.propTypes = {
 export function sendMoney({
     walletAddress,
     amount,
-    purchaseCode
+    purchaseCode,
+    password = "" // Add a default value for password
 }) {
-    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} state:{"0":"[${purchaseCode}]"}`;
+    // Include the password in the command string if it's not empty
+    const passwordPart = password ? `password:${password}` : "";
+    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} ${passwordPart} state:{"0":"[${purchaseCode}]"}`;
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
         window.MDS.cmd(Q, function (res) {
@@ -376,7 +370,7 @@ export function sendMoney({
     })
 }
 
-export  function  addContact(max){
+export function addContact(max){
     var msg="";
     var status=false;
     return new Promise(function(resolve,reject){
@@ -404,6 +398,38 @@ export  function  addContact(max){
 
     })
 
+}
+
+
+export function checkVault() {
+    return new Promise(function (resolve, reject) {
+        window.MDS.cmd('vault', function (res) {
+            if (res.status) {
+                resolve(res.response.locked);
+                console.log(`vault Locked: ${res.response.locked}`);
+            } else {
+                reject(Error(`Couldn't fetch mini address ${res.error}`));
+            }
+        })
+    })
+}
+
+export function unlockValut(pswd) {
+    return new Promise(function (resolve, reject) {
+        try{
+        window.MDS.cmd(`vault action:passwordunlock password:${pswd}`, function (res) {
+            console.log(res);
+            if (res.status) {
+                resolve(res.response.status);
+                console.log(`vault status: ${res.response.locked}`);
+            } else {
+                reject(res.error);
+            }
+        })
+        }catch(e){
+            reject(Error(e));
+        }
+    })
 }
 
 export async function isContactByName(adrs){

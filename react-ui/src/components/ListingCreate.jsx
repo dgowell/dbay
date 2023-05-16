@@ -211,27 +211,47 @@ export default function ListingCreate() {
 
   function handleLocation() {
     setLoadingCoorindates(true);
+    
+// generate random offset in meters (0.1km - 0.5km)
+    function getRandomOffset(minMeters, maxMeters) {
+      const metersPerDegreeLatitude = 111000;
+      return (Math.random() * (maxMeters - minMeters) + minMeters) / metersPerDegreeLatitude;
+    }
+  // get current position
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(showPosition);
     } else {
       console.error("Geolocation is not supported by this browser.");
       setLoadingCoorindates(false);
     }
-
+  
     function showPosition(position) {
+      const minDistance = 100; // meters
+      const maxDistance = 500; // meters
+  
+      // Generate random offsets for latitude and longitude
+      const latOffset = getRandomOffset(minDistance, maxDistance);
+      const lngOffset = getRandomOffset(minDistance, maxDistance);
+  
+      // Randomly choose the direction (north/south and east/west) for the offset
+      const newLatitude = position.coords.latitude + (Math.random() < 0.5 ? latOffset : -latOffset);
+      const newLongitude = position.coords.longitude + (Math.random() < 0.5 ? lngOffset : -lngOffset);
+  
       setLocation({
-        latitude: (position.coords.latitude.toFixed(3)),
-        longitude: (position.coords.longitude.toFixed(3))
+        latitude: newLatitude.toFixed(3),
+        longitude: newLongitude.toFixed(3),
       });
       setLoadingCoorindates(false);
     }
   }
+  
   const fileToDataUri = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
   })
+  
 
   const handleUpload = async (imageFile) => {
     //convert imageFile to blob
@@ -257,6 +277,33 @@ export default function ListingCreate() {
       setError('File is not Image');
     }
   }
+
+  const handleFileUpload = async (e, i) => {
+    let temp = [...images];
+    if (e.target.files) {
+      const imageFile = e.target.files[0];
+      console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+      console.log(`originalFile size ${imageFile.size / 1024} KB`);
+      const options = {
+        maxSizeMB: 0.02,
+        maxWidthOrHeight: 828,
+        useWebWorker: true
+      }
+      try {
+        const compressedFile = await imageCompression(imageFile, options);
+        console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+        console.log(`compressedFile size ${compressedFile.size / 1024} KB`); // smaller than maxSizeMB
+        const smp = await fileToDataUri(compressedFile);
+        temp[i] = smp;
+        setImages(temp);
+      } catch (error) {
+        console.log(error);
+        setError('File is not Image');
+      }
+      //handleModalClose(-1)console
+    }
+  }
+
 
   if (catSelected) {
     if (walletAddress && host) {
@@ -300,7 +347,7 @@ export default function ListingCreate() {
                       <p style={{ margin: "0", color: "#4B4949", fontSize: "12px" }}>Primary Photo</p>
                     </Box>
                   </Box>}
-                  <input type="file" accept="image/*" onChange={(e) => { handleUpload(e, 0) }} hidden />
+                  {/* <input type="file" accept="image/*" onChange={(e) => { handleUpload(e, 0) }} hidden /> */}
                 </Grid>
                 <Grid item xs={6} onClick={() => handleModalOpen(1)}>
                   {images[1] ? <img src={images[1]} alt="" style={{
@@ -430,7 +477,7 @@ export default function ListingCreate() {
                         mt: 3,
                         mb: 3
                       }} elevation={2}>
-                        <Typography>You must add coordinates to your listing in order to make the item available for collection. This makes the listing searchable.</Typography>
+                        <Typography>You can add current coordinates here. This reveals your approximate location to anyone that can view your item.</Typography>
                         <LoadingButton color="secondary" className={"custom-loading"} mt={2} loading={loadingCoordinates} variant="outlined" onClick={handleLocation}>Add Coordinates</LoadingButton>
                         {location.latitude !== ''
                           ? <Alert variant="success">coordinates added!</Alert>
@@ -510,7 +557,7 @@ export default function ListingCreate() {
             aria-labelledby="responsive-dialog-title"
           >
             <Box alignContent="center">
-              <UserWebCam handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} />
+              <UserWebCam handleFileUpload={handleFileUpload} handleUpload={handleUpload} index={currentIndex} images={images} setImages={setImages} close={handleModalClose} />
             </Box>
           </Dialog>
         </Box>

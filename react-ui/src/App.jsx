@@ -28,6 +28,7 @@ import ListingTransmissionBuyer from "./components/ListingTransmissionBuyer";
 import CollectionSuccess from "./components/CollectionSuccess";
 import InfoPage from "./components/InfoPage";
 import ArrangeCollection from "./components/ArrangeCollection";
+import InstructionPage from "./components/InstructionPage";
 
 import "@fontsource/roboto";
 
@@ -151,6 +152,7 @@ function App() {
               <Route path="info/" element={<InfoPage />} />
               <Route path="arr-col/:id" element={<ArrangeCollection />} />
               <Route path="*" element={<NoMatch />} />
+              <Route path="instruction/" element={<InstructionPage />} />
             </Routes>
             <BottomNavBar />
           </Box>

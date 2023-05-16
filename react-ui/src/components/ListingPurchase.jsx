@@ -32,8 +32,14 @@ import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import { checkVault } from '../minima';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import IconButton from '@mui/material/IconButton';
+import InputLabel from '@mui/material/InputLabel';
 
 function DeliveryConfirmation({
   total,
@@ -43,49 +49,89 @@ function DeliveryConfirmation({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isLocked,setIsLocked] = useState(false);
+  const [psdError,setPsdError] = useState(false);
+  const [password,setPassword] = useState("");
+  const [msg,setMsg] = useState("");
+
   const navigate = useNavigate();
 
-  function handlePay() {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  useEffect(()=>{
+  checkVault().then(res=>setIsLocked(res))
+  },[])
+
+  function handlePassword(e){
+      setPassword(e.target.value);
+  }
+
+  async function handlePay() {
     setLoading(true);
     setError(false);
-
+    setMsg("");
+  
+    if (isLocked && password === "") {
+      setPsdError(true);
+      setLoading(false);
+      setError(false);
+      return null;
+    } else {
+      setPsdError(false);
+    }
+  
     if (process.env.REACT_APP_MODE === "testvalue") {
-      //update local db
+      // Update local db
       updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
       updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e) => console.error(e));
-
-      //update the seller
+  
+      // Update the seller
       sendPurchaseReceipt({
         message: message,
         listingId: listing.listing_id,
-        coinId: "0x1asd234", seller: listing.created_by_pk,
-        transmissionType: transmissionType
-      })
-
-      //navigate user to confirmation page
+        coinId: "0x1asd234",
+        seller: listing.created_by_pk,
+        transmissionType: transmissionType,
+      });
+  
+      // Navigate user to confirmation page
       navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } });
     } else {
-
       purchaseListing({
         listingId: listing.listing_id,
         seller: listing.created_by_pk,
         walletAddress: listing.wallet_address,
         purchaseCode: listing.purchase_code,
         message: message,
-        amount: (parseInt(listing.price) + parseInt(listing.shipping_cost)),
+        amount: parseInt(listing.price) + parseInt(listing.shipping_cost),
         transmissionType: transmissionType,
-      }).then(
-        () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
-        error => navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: `This has happened either because dbay has not been given WRITE permissions, or your wallet is password protected. Or both.` } })
-      ).catch((e) => {
-        console.log("error", e);
+        password: password, // Pass the password here
       })
+        .then(
+          () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
+          error => {
+            if (error.message.includes("Incorrect password")) {
+              setMsg("Incorrect password");
+              setPsdError(true);
+              setLoading(false);
+              setError(false);
+            } else {
+              navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: error.message } })
+            }
+          }
+        )
+        .catch((e) => {
+          console.log("error", e);
+        });
     }
   }
+
   return (
     <Box sx={{
       width: '100%',
-      height: 'calc(100vh - 130px)',
+      height: '100vh',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -147,6 +193,31 @@ function DeliveryConfirmation({
             </TableBody>
           </Table>
         </TableContainer>
+        {isLocked &&<>
+          <span style={{color:"red",padding:0,margin:0}} >{msg}</span>
+          <FormControl variant="outlined">
+          <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
+         <OutlinedInput
+            id="outlined-adornment-password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={handlePassword}
+            error={psdError}
+            required={true}
+            helperText="Must enter vault password"
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowPassword}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            }
+            label="Vault Password"
+            /></FormControl></>}
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>
@@ -299,7 +370,7 @@ function ListingPurchase(props) {
                 onChange={handleChange}
               >
                 {listing.collection === "true" && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
-                  <Typography variant="caption" color="grey" mt='-12px'>{distance ? `${distance}km` : null}</Typography>
+                  <Typography variant="caption" color="grey" mt='-12px'>{isNaN(distance) ? null : `${distance}km`}</Typography>
                   {transmissionType === 'collection'
                     ? <Box p={2} >
                       <Button variant="outlined" color="secondary" className={"custom-loading"} href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">See location</Button>

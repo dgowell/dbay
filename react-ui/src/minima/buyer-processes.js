@@ -95,9 +95,9 @@ async function sendCancellationNotification({ listingId, seller }) {
 * @param {int} amount - cost of purchase
 * @param {string} transmissionType - collection or delivery
 */
-export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType }) {
+export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType, password }) {
     return new Promise(function (resolve, reject) {
-        sendMoney({ walletAddress, amount, purchaseCode })
+        sendMoney({ walletAddress, amount, purchaseCode, password })
             .then((coinId) => {
                 if (coinId.includes('0x')) {
                     updateListing(listingId, 'status', 'purchased').catch((e) => console.error(e));
