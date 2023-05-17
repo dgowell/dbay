@@ -332,7 +332,7 @@ export default function ListingCreate() {
 
             <Box sx={{ flexGrow: 1 }}>
               <Grid container spacing={2} style={{ marginBottom: "2rem" }}>
-                <Grid item xs={6} onClick={() => { handleModalOpen(0) }}>
+                <Grid item xs={6} style={{height:"150px"}} onClick={() => { handleModalOpen(0) }}>
                   {images[0] ? <img src={images[0]} alt="" style={{
                     width: "100%",
                     height: "100%",
@@ -351,7 +351,7 @@ export default function ListingCreate() {
                   </Box>}
                   {/* <input type="file" accept="image/*" onChange={(e) => { handleUpload(e, 0) }} hidden /> */}
                 </Grid>
-                <Grid item xs={6} onClick={() => handleModalOpen(1)}>
+                <Grid item xs={6} style={{ height: "150px" }} onClick={() => handleModalOpen(1)}>
                   {images[1] ? <img src={images[1]} alt="" style={{
                     width: "100%",
                     height: "100%",
@@ -368,7 +368,7 @@ export default function ListingCreate() {
                   </Box>}
                   {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,1)}} hidden/> */}
                 </Grid>
-                <Grid item xs={6} onClick={() => handleModalOpen(2)}>
+                <Grid item xs={6} style={{ height: "150px" }} onClick={() => handleModalOpen(2)}>
                   {images[2] ? <img src={images[2]} alt="" style={{
                     width: "100%",
                     height: "100%",
@@ -385,7 +385,7 @@ export default function ListingCreate() {
                   </Box>}
                   {/* <input type="file" accept="image/*" onChange={(e)=>{handleUpload(e,2)}} hidden/> */}
                 </Grid>
-                <Grid item xs={6} onClick={() => handleModalOpen(3)}>
+                <Grid item xs={6} style={{ height: "150px" }} onClick={() => handleModalOpen(3)}>
                   {images[3] ? <img src={images[3]} alt="" style={{
                     width: "100%",
                     height: "100%",
