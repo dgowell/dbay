@@ -325,7 +325,7 @@ export function addContact(address) {
                 status = true;
                 resolve({ msg, status });
             } else {
-                msg = "Unable to add contact, something went wrong";
+                msg = res.error;
                 status = false;
                 reject({ msg, status })
             }
