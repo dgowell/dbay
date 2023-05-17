@@ -99,9 +99,8 @@ function ListingDetail() {
         latitude: (position.coords.latitude.toFixed(3)),
         longitude: (position.coords.longitude.toFixed(3))
       });
-      console.log(JSON.stringify(coordinates));
     };
-  }, [coordinates]);
+  }, []);
 
 
   useEffect(() => {
@@ -110,7 +109,8 @@ function ListingDetail() {
       const location = JSON.parse(listing.location);
       console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`);
       window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`);
-      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
+      var dist = (haversine(coordinates, location) / 1000).toFixed(1);
+      setDistance(isNaN(dist) ? 0 : dist);
     }
   }, [coordinates, listing])
 
@@ -239,10 +239,9 @@ function ListingDetail() {
                     </ListItemIcon>
                     <ListItemText
                       primary="Collection"
-                      secondary={
-                        distance
-                          ? `${distance} km away${listing.location_description ? `, ${listing.location_description}` : ''}`
-                          : null
+                      secondary={distance
+                        ? `${distance}km away ${listing.location_description ? ', ' + listing.location_description : ''}`
+                        : listing.location_description ? listing.location_description : ''
                       }
                     />
                   </ListItem>

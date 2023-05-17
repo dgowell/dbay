@@ -542,7 +542,7 @@ export default function ListingCreate() {
                             label="Delivery Cost"
                             id="deliveryCost"
                             name="deliveryCost"
-                            // value={formik.values.deliveryCost}
+                            value={formik.values.deliveryCost}
                             onChange={formik.handleChange}
                             startAdornment={
                               <InputAdornment position="start">$M</InputAdornment>

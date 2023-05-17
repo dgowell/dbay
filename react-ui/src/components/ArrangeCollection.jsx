@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Stack from "@mui/material/Stack"
 import Typography from '@mui/material/Typography';
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Alert from '@mui/material/Alert';
 import { getListingById } from "../database/listing";
-import { getContacts, addContact, isContact } from "../minima";
+import { addContact, isContact } from "../minima";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import Box from "@mui/material/Box";
 import Timeline from '@mui/lab/Timeline';
@@ -28,7 +27,6 @@ export default function InfoPage() {
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
-      const contacts = getContacts();
       const slr = result.created_by_pk;
       setSeller(slr);
       const pk = slr.split("#")[1];
