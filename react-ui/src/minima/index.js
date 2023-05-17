@@ -175,57 +175,6 @@ sendListingToContacts.propTypes = {
     listingId: PropTypes.string.isRequired
 }
 
-
-/**
-* Get's sellers current public key using permanent address
-* @param {string} permanentAddress - The seller permanent address MAX#<pk>#<mls>
-*/
-export function getSellersPubKey(permanentAddress) {
-    return new Promise(function (resolve, reject) {
-        const func = `maxextra action:getaddress maxaddress:${permanentAddress}`;
-        console.log(func);
-        //Send the message via Maxima!..
-        window.MDS.cmd(func, function (resp) {
-            if (resp.status === false) {
-                reject(resp.error);
-                console.error(resp.error);
-                window.MDS.log(JSON.stringify(resp));
-            } else if (resp.response.success === false) {
-                reject(resp.response.error);
-                console.error(resp.response.error);
-                window.MDS.log(JSON.stringify(resp));
-            } else if (resp.status === true) {
-                resolve(resp.response.mlsresponse.publickey);
-            }
-        });
-    });
-}
-
-
-/**
-* Get's sellers current contact address using permanent address
-* @param {string} permanentAddress - The seller permanent address MAX#<pk>#<mls>
-*/
-export function getSellersAddress(permanentAddress) {
-    return new Promise(function (resolve, reject) {
-        const func = `maxextra action:getaddress maxaddress:${permanentAddress}`;
-        //Send the message via Maxima!..
-        window.MDS.cmd(func, function (resp) {
-            if (resp.status === false) {
-                reject(resp.error);
-                console.error(resp.error);
-                window.MDS.log(JSON.stringify(resp));
-            } else if (resp.response.success === false) {
-                reject(resp.response.error ? resp.response.error : false);
-                console.error(resp.response.error ? resp.response.error : false);
-                window.MDS.log(JSON.stringify(resp));
-            } else if (resp.status === true) {
-                resolve(resp.response.mlsresponse.address);
-            }
-        });
-    });
-}
-
 /**
 * Sends data to a publickey address via maxima
 * @param {string} data - The data to send

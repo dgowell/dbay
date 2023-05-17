@@ -231,16 +231,12 @@ function ListingCollectionBuyer(props) {
                                 gap: 3,
                             }}>
                                 {listing.transmission_type === 'collection' &&
-                                    // <Box>
-                                    //     <Typography mb={3} gutterBottom component="div">Please wait for the seller to arrange collection on Whatsapp.</Typography>
-                                    //     <Typography gutterBottom component="div">When you have collected the item and are happy with it, you can complete the purchase by paying the seller using the button below</Typography>
-                                    // </Box>
                                     <List>
                                         <ListItem>
                                             <ListItemText primaryTypographyProps={{ fontSize: 16, fontWeight: 700 }} primary={(!isFriend ? `Add @${listing.created_by_name}.` : `@${listing.created_by_name} is already a contact. `) + `Chat over MaxSolo, meet and pay when you are with the seller.`} />
                                         </ListItem>
                                         <ListItem>
-                                            {!isFriend && <Stack spacing={2}><LoadingButton className={"custom-loading"} sx={{ width: "100%" }} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
+                                            {!isFriend && <Stack spacing={2}><LoadingButton className={"custom-loading"} sx={{ width: "100%" }} color="primary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
                                                 {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
                                             </Stack>}
                                         </ListItem>
@@ -256,7 +252,7 @@ function ListingCollectionBuyer(props) {
                                             <ListItemText primaryTypographyProps={{ fontSize: 16, fontWeight: 700 }} primary={(!isFriend ? `Add @${listing.created_by_name}. ` : `@${listing.created_by_name} is already a contact. `) + `Chat over MaxSolo, meet and pay when you are with the seller.`} />
                                         </ListItem>
                                         <ListItem>
-                                            {!isFriend && <Stack spacing={2}><LoadingButton className={"custom-loading"} sx={{ width: "100%" }} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
+                                            {!isFriend && <Stack spacing={2}><LoadingButton className={"custom-loading"} sx={{ width: "100%" }} color="primary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
                                                 {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
                                             </Stack>}
                                         </ListItem>
@@ -314,20 +310,9 @@ function ListingCollectionBuyer(props) {
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleOpen} variant="contained">
                                     PAY NOW
                                 </LoadingButton>
-                                {/* <Button variant="outlined" onClick={handleCancel}>Cancel</Button> */}
                             </Stack>
                         }
-                        {listing.transmission_type === 'delivery' && <></>
-                            // <Stack mt={15} direction="row" spacing={2} width={"100%"}>
-                            //     <Stack spacing={2} sx={{paddingLeft: 2, paddingRight: 2}}>
-                            //     <LoadingButton className={"custom-loading"} color={"secondary"}  loading={loading} onClick={handleReceived} variant="contained">
-                            //          Item Received
-                            //     </LoadingButton>
-                            //     <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">Once seller confirms the delivery kindly  acknowledge</Typography>
-                            //     </Stack>
-                            //     {/* <Button variant="outlined" onClick={handleCancel}>Cancel</Button> */}
-                            // </Stack>
-                        }
+                        {listing.transmission_type === 'delivery' && <></>}
                     </Box>
                     <Modal
                         open={open}
