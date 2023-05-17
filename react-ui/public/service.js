@@ -1,23 +1,56 @@
+/* eslint-disable no-undef */
 var LISTINGSTABLE = 'LISTING';
 var SETTINGSTABLE = 'SETTINGS';
 var APPLICATION_NAME = 'stampd';
 
+//switch on and off logs
+var logs = true;
+
 MDS.init(function (msg) {
-    //MDS.log("event: "+msg);
     switch (msg.event) {
         case "inited":
             setup();
             break;
         case "MAXIMA":
+            MDS.log("MAXIMA EVENT received: " + JSON.stringify(msg.data));
             processMaximaEvent(msg);
             break;
         default:
             break;
     }
 });
+/*
+* Register the store name and public key, if no store then create it
+* store name = maxima contact name
+* store id = current public key
+*/
+function setup() {
+    let pk = getPublicKey();
+    let hostName = getMaximaContactName();
+    let mls = getMLS();
+    const permanentAddress = `MAX#${pk}#${mls}`;
 
-function hexToUtf8(s) {
-    return decodeURIComponent(s).split("%27").join("'");
+    if (logs) { MDS.log(`Permanent Address: ${permanentAddress}`) }
+
+    //create listing table
+    createListingTable();
+    if (logs) { MDS.log('Listing table created or exists') }
+
+    //add location description column
+    addLocationDescriptionColumn(function (result) {
+        if (logs) { MDS.log('Added location description Column: ' + result) }
+    });
+
+    //create settings table
+    createSettingsTable();
+    if (logs) {
+        MDS.log('Settings table created or exists');
+        MDS.log(hostName);
+    }
+
+    //check if store exists
+    createHost(hostName, permanentAddress);
+    if (logs) { MDS.log('Local hosting info stored in database') }
 }
 
 function processMaximaEvent(msg) {
@@ -32,23 +65,27 @@ function processMaximaEvent(msg) {
     if (datastr.startsWith("0x")) {
         datastr = datastr.substring(2);
     }
-    MDS.log("----");
-    MDS.log(JSON.stringify(msg.data.data));
-    MDS.log("----");
+    if (logs) {
+        MDS.log("----");
+        MDS.log(JSON.stringify(msg.data.data));
+        MDS.log("----");
+    }
 
     var jsonstr = "";
     MDS.cmd("convert from:HEX to:String data:" + msg.data.data, function (resp) {
         MDS.log(JSON.stringify(resp.response.conversion).replace(/'/g, ""));
         jsonstr = JSON.parse(resp.response.conversion.replace(/'/g, ""));
     });
-    //The JSON
-    //var jsonstr = hexToUtf8(datastr);
-    //And create the actual JSON
-    MDS.log(JSON.stringify(jsonstr));
-    var entity = jsonstr;
-    MDS.log("======");
-    MDS.log(entity.type);
-    MDS.log("======");
+
+    if (logs) {
+        //And create the actual JSON
+        MDS.log(JSON.stringify(jsonstr));
+        var entity = jsonstr;
+        MDS.log("======");
+        MDS.log(entity.type);
+        MDS.log("======");
+    }
+
     //determine what type of message you're receiving
     switch (entity.type) {
         case 'availability_check':
@@ -80,7 +117,10 @@ function processMaximaEvent(msg) {
     }
 
 }
-function cg(length) {
+/*
+*   Generate Code depending on gioven length
+*/
+function generateCode(length) {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const charactersLength = characters.length;
@@ -105,15 +145,15 @@ function processAvailabilityCheck(entity) {
         //is listing available
         const listingStatus = getStatus(entity.listing_id);
         MDS.log(`status of listing is: ${JSON.stringify(listingStatus)}`);
-        if (listingStatus){
+        if (listingStatus) {
             data.status = listingStatus;
             //generate unique identifier for transaction
             //generate unique identifier for transaction
-            const purchaseCode = cg(20);
+            const purchaseCode = generateCode(20);
             data.purchase_code = purchaseCode;
-            MDS.log(`sending the responose to buyer..`); 
+            MDS.log(`sending the responose to buyer..`);
             send(data, entity.buyer_pk);
-            MDS.log(`updating listing in db to pending`); 
+            MDS.log(`updating listing in db to pending`);
             updateListing(entity.listing_id, "purchase_code", purchaseCode);
             //if listing available change to pending to stop other users buying it
             if (listingStatus === 'available') {
@@ -139,9 +179,6 @@ function getStatus(listingId) {
     return st;
 }
 
-function utf8ToHex(s) {
-    return encodeURIComponent(s).split("'").join("%27");
-}
 
 function send(data, address) {
 
@@ -291,8 +328,20 @@ function createListing({
     });
 }
 
+function addLocationDescriptionColumn(callback) {
+    const Q = `alter table ${LISTINGSTABLE} add column if not exists "location_description" varchar(150);`;
+    MDS.sql(Q, function (res) {
+        MDS.log(`MDS.SQL, ${Q}`);
+        if (res.status) {
+            callback(true)
+        } else {
+            callback(Error(`Adding location_description column to listing table ${res.error}`));
+        }
+    })
+}
 
 function processListing(entity) {
+    if (logs) { MDS.log(`processing listing...${entity}`) }
 
     //check it's not one of your own
     const host = getHost();
@@ -469,7 +518,7 @@ function createSettingsTable() {
 }
 function createHost(name, pk) {
     let fullsql = `insert into ${SETTINGSTABLE}("name", "pk") values('${name}', '${pk}');`;
-    MDS.log(`Store added to settings: ${name}`);
+    MDS.log(`Host added to settings table: ${name}`);
     MDS.sql(fullsql, (res) => {
         if (res.status) {
             return true;
@@ -477,25 +526,4 @@ function createHost(name, pk) {
             return Error(res.error);
         }
     });
-}
-function setup() {
-    //register the store name and public key
-    //if no store then create it
-    //store name = maxima contact name
-    //store id = current public key
-    let pk = getPublicKey();
-    let hostName = getMaximaContactName();
-    let mls = getMLS();
-    const permanentAddress = `MAX#${pk}#${mls}`;
-    MDS.log(`Permanent Address: ${permanentAddress}`);
-
-    //return the store name
-    createListingTable();
-    MDS.log('Listing table created or exists');
-    createSettingsTable();
-    MDS.log('Settings table created or exists');
-    MDS.log(hostName);
-    createHost(hostName, permanentAddress);
-    MDS.log('Local hosting info stored in database');
-
 }

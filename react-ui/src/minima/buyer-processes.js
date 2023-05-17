@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import { getSellersAddress, send, sendMoney, isContact } from './index';
-import { updateListing, getStatus, removeListing, resetListingState, getCreatedByNameById } from '../database/listing';
+import { send, sendMoney, isContact } from './index';
+import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
 import { getHost } from '../database/settings';
@@ -17,7 +17,7 @@ async function getSellerAddress(address) {
         if (currentAddress && currentAddress.includes('@')) {
             resolve(currentAddress);
         } else {
-             currentAddress = await getSellersAddress(address).catch(e=>console.log("inside",e));
+             currentAddress = address;
             console.log("here",currentAddress);
             if(currentAddress){
             resolve(currentAddress);

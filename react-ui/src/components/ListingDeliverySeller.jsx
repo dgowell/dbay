@@ -17,7 +17,6 @@ import Divider from "@mui/material/Divider";
 function ListingDeliverySeller() {
     const [listing, setListing] = useState();
     const params = useParams();
-    const [intro, setIntro] = useState('');
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [isFriend, setIsFriend] = useState(false);
@@ -56,7 +55,6 @@ function ListingDeliverySeller() {
     useEffect(() => {
         if (listing) {
             updateListing(listing.listing_id, 'notification', 'false').catch(e => console.error(`Couldn't reset notification ${e}`));
-            setIntro(encodeURI(`Hi ${listing.buyer_name} this is ${listing.created_by_name} from dbay - when would you like to come and collect the ${listing.title}?`));
         }
     }, [listing]);
 
@@ -67,7 +65,7 @@ function ListingDeliverySeller() {
                     <Card sx={{ marginTop: 2, marginBottom: 8, boxShadow: "none" }}>
                         <CardHeader
                             sx={{ textAlign: "center" }}
-                            title={listing.transmission_type == "collection" ? "Collection" : "Delivery"}
+                            title={listing.transmission_type === "collection" ? "Collection" : "Delivery"}
                             subheader={`${listing.title} $M${listing.price}`}
                         />
                         <CardContent>

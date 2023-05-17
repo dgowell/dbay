@@ -4,65 +4,6 @@ import { getPublicKey } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
 
-export function addLocationDescriptionColumn() {
-    const Q = `alter table ${LISTINGSTABLE} add column if not exists "location_description" varchar(150);`;
-
-    return new Promise((resolve, reject) => {
-        window.MDS.sql(Q, function (res) {
-            window.MDS.log(`MDS.SQL, ${Q}`);
-            console.log(res);
-            if (res.status) {
-                resolve(true)
-            } else {
-                reject(Error(`Adding location_description column to listing table ${res.error}`));
-            }
-        })
-    })
-}
-
-export function createListingTable() {
-    const Q = `create table if not exists ${LISTINGSTABLE} (
-        "listing_id" varchar(343) primary key,
-        "title" varchar(50) NOT NULL,
-        "price" INT NOT NULL,
-        "created_by_pk" varchar(640) NOT NULL,
-        "created_by_name" char(50),
-        "sent_by_pk" varchar(640),
-        "sent_by_name" char(50),
-        "created_at" int not null,
-        "wallet_address" varchar(80) not null,
-        "status" char(12) not null default 'available',
-        "buyer_message" varchar(1000),
-        "buyer_name" char(50),
-        "buyer_pk" varchar(330),
-        "purchase_code" varchar(30),
-        "coin_id" varchar(80),
-        "notification" boolean default false,
-        "collection" boolean default false,
-        "delivery" boolean default false,
-        "image"  varchar(max),
-        "description" varchar(1500),
-        "location" varchar(50),
-        "location_description" varchar(1500),
-        "shipping_cost" int,
-        "shipping_countries" varchar(150),
-        "transmission_type" varchar(10),
-        constraint UQ_listing_id unique("listing_id")
-        )`;
-
-    return new Promise((resolve, reject) => {
-        window.MDS.sql(Q, function (res) {
-            window.MDS.log(`MDS.SQL, ${Q}`);
-            console.log(res);
-            if (res.status) {
-                resolve(true)
-            } else {
-                reject(Error(`Creating listing tables ${res.error}`));
-            }
-        })
-    })
-}
-
 
 /* adds a listing to the database */
 

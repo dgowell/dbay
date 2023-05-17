@@ -30,7 +30,6 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import LoadingButton from "@mui/lab/LoadingButton";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -61,7 +60,6 @@ function ListingDetail() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState(false);
   const [images, setImages] = useState([]);
   const [distance, setDistance] = useState(0);
   const [sent, setSent] = useState(false);
@@ -101,7 +99,6 @@ function ListingDetail() {
         latitude: (position.coords.latitude.toFixed(3)),
         longitude: (position.coords.longitude.toFixed(3))
       });
-      console.log(JSON.stringify(coordinates));
     };
   }, []);
 
@@ -112,7 +109,8 @@ function ListingDetail() {
       const location = JSON.parse(listing.location);
       console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`);
       window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`);
-      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
+      var dist = (haversine(coordinates, location) / 1000).toFixed(1);
+      setDistance(isNaN(dist) ? 0 : dist);
     }
   }, [coordinates, listing])
 
@@ -156,7 +154,6 @@ function ListingDetail() {
     const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
       if (process.env.REACT_APP_MODE !== "testvalue") {
         navigate(`/info`, { state: { action: "error", main: "Insufficient Funds!", sub: "It looks like you don't have enough $M to purchase this item" } });
-        // setError('Insufficient Funds');
         setLoading(false);
       }
       console.log(`Insufficient funds: ${error}`);
@@ -181,10 +178,6 @@ function ListingDetail() {
         navigate(`/listing/${listing.listing_id}/purchase`)
       }
     }//close if
-  }
-
-  function handleContact() {
-    console.log('contact seller clicked!');
   }
 
   checkingAvailability && <AvailabilityCheckScreen />
@@ -245,10 +238,9 @@ function ListingDetail() {
                     </ListItemIcon>
                     <ListItemText
                       primary="Collection"
-                      secondary={
-                        distance
-                          ? `${distance} km away${listing.location_description ? `, ${listing.location_description}` : ''}`
-                          : null
+                      secondary={distance
+                        ? `${distance}km away ${listing.location_description ? ', ' + listing.location_description : ''}`
+                        : listing.location_description ? listing.location_description : ''
                       }
                     />
                   </ListItem>

@@ -21,6 +21,7 @@ import Grid from "@mui/material/Grid";
 import { Box } from "@mui/material";
 import Button from "@mui/material/Button";
 import { addContact, isContact } from "../minima";
+import ImageIcon from '@mui/icons-material/Image';
 
 const WILL_MAX_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D00308189028181008D376185509BDAC51FF82EF97152C3B01A685321FF6A9902D75133B988006C2CD3051AC57E89EBFAFF8A48516C0B550D2979181638DC77BDEE7E3D25CE5C66F5CFBBBFB307A990A779AD100DB4AE0FB11D5BDD9A2EAC5FED1D84747CF1C63B4E33429EEB8C53F2742092EF4C9A1A0140EE84F059E252A49F6125D85E059E2C1B0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G16KD3ADUVWE789VEVFHC9A9Z4YC2T1JFQYCWNRS41VPQWJFKW2BMGQFRJ6GDMT0TG5KVNG2WQ0PVCE99Z30BCH85KAV1B7PNY8E4A45BCQYP4PU3AQ06BESHA9YWBQND6YVEF74P9FW7EHCUT31ZDTZ4145F5EWURCD91HEP8VY2P4F2SY808PYABMZVKK6R4M72TCKCSRHN1K10608006C2AE9F@31.125.188.214:9001';
 const WILL_PK = '0x30819F300D06092A864886F70D010101050003818D00308189028181008D376185509BDAC51FF82EF97152C3B01A685321FF6A9902D75133B988006C2CD3051AC57E89EBFAFF8A48516C0B550D2979181638DC77BDEE7E3D25CE5C66F5CFBBBFB307A990A779AD100DB4AE0FB11D5BDD9A2EAC5FED1D84747CF1C63B4E33429EEB8C53F2742092EF4C9A1A0140EE84F059E252A49F6125D85E059E2C1B0203010001';
@@ -30,7 +31,6 @@ export default function Marketplace() {
   const [host, setHost] = useState();
   const [loading, setLoading] = useState(false);
   const [filterKey, setFilterKey] = useState("");
-  const [sort, setSort] = useState(0);
   const navigate = useNavigate();
 
   const handleSort = (event) => {
@@ -43,7 +43,6 @@ export default function Marketplace() {
       sort = [...listings].sort((a, b) => a.price - b.price)
     }
     setListings(sort)
-    setSort(val);
   };
 
   /* fetches the listings from local database */
@@ -72,14 +71,15 @@ export default function Marketplace() {
       });
   }, []);
 
-  /* add will as a contact */
+  /* add will as a contact and print result to console */
   useEffect(() => {
     async function check() {
       //check for specific contact
       if (await isContact(WILL_PK)) {
         console.log("Will Dbay is already a contact");
       } else {
-        addContact(WILL_MAX_ADDRESS);
+       var {msg, status} = await addContact(WILL_MAX_ADDRESS);
+       console.log(msg, status);
       }
     }
     check();
@@ -141,6 +141,9 @@ export default function Marketplace() {
               {filter(listings, o => marketplaceFilter(o)).filter((i) => i.title.toLowerCase().includes(filterKey.toLowerCase())).map((item, ind) => (
                 <Grid item xs={6} sx={{ position: 'relative' }}>
                   <div style={{ maxWidth: "200px", height: "150px", overflow: "hidden" }}>
+                    {item.image === ""
+                      ? <Box sx={{ backgroundColor: '#c6c6c6', borderRadius:'5px', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'column', flexWrap: 'wrap', height: '100%'}}><ImageIcon></ImageIcon></Box>
+                    :
                     <img
                       onClick={() => item.created_by_pk !== host.pk ? navigate(`/listing/${item.listing_id}`) : navigate(`/seller/listing/${item.listing_id}`)}
                       src={`${item.image.split("(+_+)")[0]}`}
@@ -153,7 +156,7 @@ export default function Marketplace() {
                         borderRadius: "5px",
                         objectFit: "cover"
                       }}
-                    />
+                    />}
                   </div>
                   <div style={{ position: "absolute", left: '15px', top: '15px' }}>
                     {item.created_by_pk === host.pk ? <Button

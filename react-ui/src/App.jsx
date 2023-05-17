@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import "./App.css";
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
@@ -15,12 +14,8 @@ import ListingPurchase from "./components/ListingPurchase";
 import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentError from "./components/PaymentError";
 import BottomNavBar from "./components/BottomNavBar";
-import { processMaximaEvent } from "./minima";
-import { getHost } from "./database/settings";
-import { setup } from "./database/index";
 import Purchases from "./components/Purchases";
 import Profile from "./components/Profile";
-import WelcomePage from "./components/WelcomePage";
 import ListingDetailSeller from "./components/ListingDetailSeller";
 import ListingListSeller from "./components/ListingListSeller";
 import ListingDeliverySeller from "./components/ListingDeliverySeller";
@@ -85,86 +80,38 @@ theme.typography.h3 = {
 };
 
 function App() {
-
-  const [loading, setLoading] = useState();
-  const [host, setHost] = useState({
-    "name": '',
-    "pk": ''
-  });
-
-  async function intialise() {
-    try {
-      await setup();
-    }
-    catch (e) {
-      console.log(`Setup failed! ${e}`);
-    }
-    getHost().then(res => {
-      setHost({
-        'name': res.name,
-        'pk': res.pk
-      });
-      setLoading(false);
-    }).catch((e) => console.error(e));
-  }
-
-  useEffect(() => {
-    window.MDS.init(function (msg) {
-      //take action depending on what type of event comes in
-      switch (msg.event) {
-        case "inited":
-          if (host.name === '') {
-            setLoading(true);
-            intialise();
-          }
-          break;
-        case "MAXIMA":
-          processMaximaEvent(msg);
-          break;
-        default:
-      }
-    });
-  }, [host.name]);
-
-  if (!loading) {
-    return (
-      <ThemeProvider theme={theme}>
-        <ResponsiveAppBar />
-        <Container component="main" maxWidth="xs" sx={{paddingBottom: '80px'}}>
-          <CssBaseline />
-          <Box>
-            <Routes>
-              <Route exact path="/" element={<Marketplace />} />
-              <Route path="listing/create" element={<ListingCreate />} />
-              <Route path="listing/:id" element={<ListingDetail />} />
-              <Route path="listing/:id/purchase" element={<ListingPurchase />} />
-              <Route path="listing/transmission/:id" element={<ListingTransmissionBuyer />} />
-              <Route path="seller/listings/" element={<ListingListSeller />} />
-              <Route path="seller/listing/:id" element={<ListingDetailSeller />} />
-              <Route path="seller/listing/delivery/:id" element={<ListingDeliverySeller />} />
-              <Route path="purchases/" element={<Purchases />} />
-              <Route path="collection-success/" element={<CollectionSuccess />} />
-              <Route path="payment-success/" element={<PaymentSuccess />} />
-              <Route path="payment-error/" element={<PaymentError />} />
-              <Route path="profile/" element={<Profile />} />
-              <Route path="address/" element={<Profile />} />
-              <Route path="name/" element={<Profile />} />
-              <Route path="info/" element={<InfoPage />} />
-              <Route path="arr-col/:id" element={<ArrangeCollection />} />
-              <Route path="*" element={<NoMatch />} />
-              <Route path="instruction/" element={<InstructionPage />} />
-            </Routes>
-            <BottomNavBar />
-          </Box>
-        </Container>
-      </ThemeProvider>
-    );
-  }
-  else {
-    return (
-      <WelcomePage />
-    )
-  }
+  return (
+    <ThemeProvider theme={theme}>
+      <ResponsiveAppBar />
+      <Container component="main" maxWidth="xs" sx={{ paddingBottom: '80px' }}>
+        <CssBaseline />
+        <Box>
+          <Routes>
+            <Route exact path="/" element={<Marketplace />} />
+            <Route path="listing/create" element={<ListingCreate />} />
+            <Route path="listing/:id" element={<ListingDetail />} />
+            <Route path="listing/:id/purchase" element={<ListingPurchase />} />
+            <Route path="listing/transmission/:id" element={<ListingTransmissionBuyer />} />
+            <Route path="seller/listings/" element={<ListingListSeller />} />
+            <Route path="seller/listing/:id" element={<ListingDetailSeller />} />
+            <Route path="seller/listing/delivery/:id" element={<ListingDeliverySeller />} />
+            <Route path="purchases/" element={<Purchases />} />
+            <Route path="collection-success/" element={<CollectionSuccess />} />
+            <Route path="payment-success/" element={<PaymentSuccess />} />
+            <Route path="payment-error/" element={<PaymentError />} />
+            <Route path="profile/" element={<Profile />} />
+            <Route path="address/" element={<Profile />} />
+            <Route path="name/" element={<Profile />} />
+            <Route path="info/" element={<InfoPage />} />
+            <Route path="arr-col/:id" element={<ArrangeCollection />} />
+            <Route path="instruction/" element={<InstructionPage />} />
+            <Route path="*" element={<NoMatch />} />
+          </Routes>
+          <BottomNavBar />
+        </Box>
+      </Container>
+    </ThemeProvider>
+  );
 }
 
 function NoMatch() {
