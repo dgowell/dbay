@@ -30,6 +30,7 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import LoadingButton from "@mui/lab/LoadingButton";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import ImageIcon from '@mui/icons-material/Image';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -159,7 +160,7 @@ function ListingDetail() {
       console.log(`Insufficient funds: ${error}`);
       return false;
     });
-    console.log("hasFunds",hasFunds);
+    console.log("hasFunds", hasFunds);
 
     if (hasFunds || (process.env.REACT_APP_MODE === "testvalue")) {
       const isAvailable = await checkAvailability({
@@ -190,8 +191,12 @@ function ListingDetail() {
           <div>
             <Card sx={{ maxWidth: '100%', marginTop: 2, border: "none", boxShadow: "none" }}>
               <Carousel indicators={false} height="350px" animation="slide" navButtonsAlwaysVisible={navButtonsVisible}>
-                {
-                  images.map((image, i) => (
+                {images.map((image, i) => (
+                  image === "" ? (
+                    <Box sx={{ backgroundColor: '#c6c6c6', borderRadius: '5px', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'column', flexWrap: 'wrap', height: '100%' }}>
+                      <ImageIcon />
+                    </Box>
+                  ) : (
                     <CardMedia
                       component="img"
                       width="100%"
@@ -202,8 +207,9 @@ function ListingDetail() {
                       position="center"
                       image={image}
                       alt="Test Image"
-                    />))
-                }
+                    />
+                  )
+                ))}
               </Carousel>
               <CardContent sx={{ marginTop: 2, padding: 0 }} >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb="1rem">
@@ -270,7 +276,7 @@ function ListingDetail() {
 
 
             </Card>
-            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
+            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
               <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
                 Item shared with contacts
               </Alert>
