@@ -142,7 +142,9 @@ export default function Marketplace() {
                 <Grid item xs={6} sx={{ position: 'relative' }}>
                   <div style={{ maxWidth: "200px", height: "150px", overflow: "hidden" }}>
                     {item.image === ""
-                      ? <Box sx={{ backgroundColor: '#c6c6c6', borderRadius:'5px', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'column', flexWrap: 'wrap', height: '100%'}}><ImageIcon></ImageIcon></Box>
+                      ? <Box 
+                      onClick={() => item.created_by_pk !== host.pk ? navigate(`/listing/${item.listing_id}`) : navigate(`/seller/listing/${item.listing_id}`)}  
+                      sx={{ backgroundColor: '#c6c6c6', borderRadius:'5px', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'column', flexWrap: 'wrap', height: '100%'}}><ImageIcon></ImageIcon></Box>
                     :
                     <img
                       onClick={() => item.created_by_pk !== host.pk ? navigate(`/listing/${item.listing_id}`) : navigate(`/seller/listing/${item.listing_id}`)}
