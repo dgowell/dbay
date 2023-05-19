@@ -49,10 +49,10 @@ function DeliveryConfirmation({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isLocked,setIsLocked] = useState(false);
-  const [psdError,setPsdError] = useState(false);
-  const [password,setPassword] = useState("");
-  const [msg,setMsg] = useState("");
+  const [isLocked, setIsLocked] = useState(false);
+  const [psdError, setPsdError] = useState(false);
+  const [password, setPassword] = useState("");
+  const [msg, setMsg] = useState("");
 
   const navigate = useNavigate();
 
@@ -60,19 +60,19 @@ function DeliveryConfirmation({
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  useEffect(()=>{
-  checkVault().then(res=>setIsLocked(res))
-  },[])
+  useEffect(() => {
+    checkVault().then(res => setIsLocked(res))
+  }, [])
 
-  function handlePassword(e){
-      setPassword(e.target.value);
+  function handlePassword(e) {
+    setPassword(e.target.value);
   }
 
   async function handlePay() {
     setLoading(true);
     setError(false);
     setMsg("");
-  
+
     if (isLocked && password === "") {
       setPsdError(true);
       setLoading(false);
@@ -81,12 +81,12 @@ function DeliveryConfirmation({
     } else {
       setPsdError(false);
     }
-  
+
     if (process.env.REACT_APP_MODE === "testvalue") {
       // Update local db
       updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
       updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e) => console.error(e));
-  
+
       // Update the seller
       sendPurchaseReceipt({
         message: message,
@@ -95,7 +95,7 @@ function DeliveryConfirmation({
         seller: listing.created_by_pk,
         transmissionType: transmissionType,
       });
-  
+
       // Navigate user to confirmation page
       navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } });
     } else {
@@ -164,7 +164,7 @@ function DeliveryConfirmation({
         <Divider />
         <Typography variant="h6">Delivery address</Typography>
         <Typography gutterBottom sx={{ textAlign: "left" }} component="address">{message.split("\n").map((i, key) => {
-          return <span style={{display: 'block'}} key={key}>{i}</span>;
+          return <span style={{ display: 'block' }} key={key}>{i}</span>;
         })}</Typography>
       </Box>
 
@@ -178,10 +178,10 @@ function DeliveryConfirmation({
         <TableContainer >
           <Table sx={{}} size="small" aria-label="a dense table">
             <TableBody>
-                <TableRow key="1" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <TableCell component="th" scope="row">Item</TableCell>
-                  <TableCell align="right">M${listing.price}</TableCell>
-                </TableRow>
+              <TableRow key="1" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                <TableCell component="th" scope="row">Item</TableCell>
+                <TableCell align="right">M${listing.price}</TableCell>
+              </TableRow>
               <TableRow key="2" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell component="th" scope="row">Delivery</TableCell>
                 <TableCell align="right">M${listing.shipping_cost}</TableCell>
@@ -193,30 +193,30 @@ function DeliveryConfirmation({
             </TableBody>
           </Table>
         </TableContainer>
-        {isLocked &&<>
-          <span style={{color:"red",padding:0,margin:0}} >{msg}</span>
+        {isLocked && <>
+          <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
           <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
-         <OutlinedInput
-            id="outlined-adornment-password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={handlePassword}
-            error={psdError}
-            required={true}
-            helperText="Must enter vault password"
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            }
-            label="Vault Password"
+            <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePassword}
+              error={psdError}
+              required={true}
+              helperText="Must enter vault password"
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              }
+              label="Vault Password"
             /></FormControl></>}
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
@@ -371,7 +371,7 @@ function ListingPurchase(props) {
               >
                 {listing.collection === "true" && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
                   <Typography variant="caption" color="grey" mt='-12px'>{isNaN(distance) ? null : `${distance}km`}</Typography>
-                  {transmissionType === 'collection'
+                  {transmissionType === 'collection' && latitude.includes('.')
                     ? <Box p={2} >
                       <Button variant="outlined" color="secondary" className={"custom-loading"} href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">See location</Button>
                       <List>
@@ -384,7 +384,6 @@ function ListingPurchase(props) {
                       </List>
                     </Box>
                     : null}</>}
-                <Divider />
                 {listing.delivery === "true" &&
                   <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="delivery" control={<Radio />} label={`Delivery`} />
                     <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
@@ -419,19 +418,21 @@ function ListingPurchase(props) {
             flexDirection="column"
             justifyContent="center"
             alignItems="center"
+            position="fixed"
+            bottom="80px"
+            width="87%"
+
           >
             {transmissionType === 'delivery' &&
-              <>
-                <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleDelivery} variant="contained">
-                  Continue
-                </LoadingButton>
-              </>}
+              <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleDelivery} variant="contained">
+                Continue
+              </LoadingButton>
+            }
             {transmissionType === 'collection' &&
-              <>
-                <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleCollection} variant="contained">
-                  Confirm Collection
-                </LoadingButton>
-              </>}
+              <LoadingButton xs={{flex:1}} className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleCollection} variant="contained">
+                Confirm Collection
+              </LoadingButton>
+            }
           </Box>
         </Box>
       );

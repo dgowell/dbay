@@ -13,6 +13,7 @@ import { useNavigate } from "react-router";
 import { isContactByName } from "../minima";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
+import { addContact } from "../minima";
 
 function ListingDeliverySeller() {
     const [listing, setListing] = useState();
@@ -24,11 +25,14 @@ function ListingDeliverySeller() {
     const [msg, setMsg] = useState();
 
 
-    function handleAdd() {
-        setStatus('success');
-        setMsg("Contact added successfully!");
-        setIsFriend(true);
-
+    async function handleAdd() {
+        const { msg, status } = await addContact(listing.createdByPk);
+        console.log(msg, status);
+        setStatus(status);
+        setMsg(msg);
+        if (status === "success") {
+            setIsFriend(true);
+        }
     }
     useEffect(() => {
         getListingById(params.id).then(function (result) {
