@@ -418,10 +418,6 @@ function ListingPurchase(props) {
             flexDirection="column"
             justifyContent="center"
             alignItems="center"
-            position="fixed"
-            bottom="80px"
-            width="87%"
-
           >
             {transmissionType === 'delivery' &&
               <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleDelivery} variant="contained">

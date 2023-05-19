@@ -26,7 +26,7 @@ function ListingDeliverySeller() {
 
 
     async function handleAdd() {
-        const { msg, status } = await addContact(listing.createdByPk);
+        const { msg, status } = await addContact(listing.created_by_pk);
         console.log(msg, status);
         setStatus(status);
         setMsg(msg);
@@ -82,11 +82,11 @@ function ListingDeliverySeller() {
                                         <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
                                             <Typography sx={{}} variant="h3">MaxSolo</Typography>
                                             <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `The buyer is already one of your contacts. Get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
-                                            {!isFriend &&
+                                            {/*!isFriend &&
                                             <>
                                                 <LoadingButton className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
                                                 {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-                                            </>}
+            </>*/}
                                         </Stack>
                                         <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} color="secondary" onClick={() => navigate("/")} variant="outlined">
                                             Close
@@ -105,13 +105,13 @@ function ListingDeliverySeller() {
                                             : "Buyer has missed the delivery details , you can contact buyer via maxSolo for missing details"
                                         }
                                         <Divider />
-                                        {!isFriend && <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
+                                        {/*!isFriend && <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
                                             <Typography sx={{}} variant="h3">MaxSolo</Typography>
                                             <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add the @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name}`}</Typography>
                                             {!isFriend && <><LoadingButton className={"custom-loading"} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
                                                 {msg && <Alert sx={{ width: "100%", backgroundColor: '#FFF' }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
                                                 <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">The @{listing.buyer_name} is expecting you to get in touch.</Typography></>}
-                                        </Stack>}
+                                    </Stack>*/}
                                         <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Item Sent</LoadingButton>
                                     </>
                                 }

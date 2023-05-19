@@ -53,7 +53,7 @@ export default function InfoPage() {
         <Typography sx={{ fontSize: "24px", textAlign: "center" }} variant="h1">Arrange Collection</Typography>
         <Typography mt={3} mb={3} variant="h3">What are my next steps?</Typography>
         {!isFriend && <LoadingButton mb={1} className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>}
-        {msg && <Alert mt={2} sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
+        {msg && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
         {!isFriend && <Typography sx={{ textAlign: 'center', marginTop: '15px' }} variant="caption">The seller is expecting you to get in touch.</Typography>}
         <Timeline position="alternate">
           <TimelineItem>
