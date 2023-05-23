@@ -100,8 +100,8 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
         sendMoney({ walletAddress, amount, purchaseCode, password })
             .then((coinId) => {
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, 'status', 'purchased').catch((e) => console.error(e));
-                    updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
+                    updateListing(listingId, {'status': 'purchased'}).catch((e) => console.error(e));
+                    updateListing(listingId, {'transmission_type': transmissionType}).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
                     console.log(`Sending purchase receipt to seller..`);
                     sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
@@ -146,8 +146,8 @@ purchaseListing.proptypes = {
 */
 export function collectListing({ seller, message, listingId, transmissionType }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, 'status', 'in progress').catch((e) => console.error(e));
-        updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
+        updateListing(listingId, {'status': 'in progress'}).catch((e) => console.error(e));
+        updateListing(listingId, {'transmission_type': transmissionType}).catch((e) => console.error(e));
         console.log(`Sending collection confirmation and phone numeber to seller.. ${message}`);
         sendCollectionConfirmation({ message, listingId, seller, transmissionType })
             .then(() => resolve(true))
@@ -169,9 +169,9 @@ collectListing.proptypes = {
 */
 export function processAvailabilityResponse(entity) {
     console.log("processing availability response...");
-    updateListing(entity.listing_id, "status", entity.status)
+    updateListing(entity.listing_id, {"status": entity.status})
         .catch((e) => console.error(`Couldn't update listing status ${e}`))
-    updateListing(entity.listing_id, "purchase_code", entity.purchase_code)
+    updateListing(entity.listing_id, {"purchase_code": entity.purchase_code})
         .catch((e) => console.error(`Couldn't update listing purchase code ${e}`))
 }
 processAvailabilityResponse.proptypes = {
@@ -231,7 +231,7 @@ export function checkAvailability({
                             break;
                         case "pending":
                             clearInterval(interval);
-                            updateListing(listingId, 'status', 'unchecked')
+                            updateListing(listingId, {'status': 'unchecked'})
                                 .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
                             resolve('Item not currently available, please try again later')
                             break;
@@ -304,7 +304,7 @@ hasSufficientFunds.PropTypes = {
 */
 export function cancelCollection({ seller, listingId }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, 'status', 'unchecked').catch((e) => console.error(e));
+        updateListing(listingId, {'status': 'unchecked'}).catch((e) => console.error(e));
         console.log(`Sending cancel notification to seller..`);
         sendCancellationNotification({ listingId, seller })
     })

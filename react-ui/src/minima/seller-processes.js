@@ -6,8 +6,10 @@ import { getListingById } from '../database/listing';
 import { generate } from '@wcj/generate-password';
 
 
+
+
 /**
-* When new block 
+* When new block
 * @param {string} seller - Sellers hex address
 */
 export function processNewBlock(data) {
@@ -24,7 +26,7 @@ export function processNewBlock(data) {
             //check the amount is the same
             if (listing.price === txnAmount) {
                 console.log(`A buyer has paid for your item: ${listing.title}`);
-                return updateListing(listing.listing_id, 'status', 'sold');
+                return updateListing(listing.listing_id, {'status': 'sold'});
             }
         }).catch((e) => console.error(`Couldn't find listing with this pruchase code: ${e}`))
     } catch {
@@ -56,8 +58,8 @@ export async function processAvailabilityCheck(entity) {
             data.purchase_code = purchaseCode;
 
             await send(data, entity.buyer_pk);
-            await updateListing(entity.listing_id, "purchase_code", purchaseCode);
-            await updateListing(entity.listing_id, "status", "pending");
+            await updateListing(entity.listing_id, {"purchase_code": purchaseCode});
+            await updateListing(entity.listing_id, {"status": "pending"});
             resetListingStatusTimeout(entity.listing_id);
         }
     } catch (error) {
@@ -75,7 +77,7 @@ function resetListingStatusTimeout(listingId) {
     async function resetListing(listingId) {
         const status = await getStatus(listingId);
         if (status === 'unavailble' || status === 'pending') {
-            updateListing(listingId, "status", "available")
+            updateListing(listingId, {"status": "available"})
                 .then(console.log('listing reset to availble'))
                 .catch((e) => console.error(e));
         }
@@ -87,33 +89,33 @@ export function processPurchaseReceipt(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
     console.log(`Message received for purchased listing, updating..`);
     if (entity.transmission_type === 'delivery') {
-        updateListing(entity.listing_id, 'buyer_message', entity.buyer_message).then(
+        updateListing(entity.listing_id, {'buyer_message': entity.buyer_message}).then(
             () => console.log('customer message added succesfully'),
             error => console.error(`Couldn't add message to listing ${error}`)
         );
-        updateListing(entity.listing_id, 'status', 'sold').then(
+        updateListing(entity.listing_id, {'status': 'sold'}).then(
             () => console.log('listing sold'),
             error => console.error(`Couldn't update listing status to sold ${error}`)
         );
     } else {
-        updateListing(entity.listing_id, 'status', 'completed').then(
+        updateListing(entity.listing_id, {'status': 'completed'}).then(
             () => console.log('listing completed'),
             error => console.error(`Couldn't update listing status to completed ${error}`)
         );
     }
-    updateListing(entity.listing_id, 'coin_id', entity.coin_id).then(
+    updateListing(entity.listing_id, {'coin_id': entity.coin_id}).then(
         () => console.log('coin id added to listing'),
         error => console.error(`Couldn't add coin id to listing ${error}`)
     );
-    updateListing(entity.listing_id, 'notification', 'true').then(
+    updateListing(entity.listing_id, {'notification': 'true'}).then(
         () => console.log('notification triggered'),
         error => console.error(`Couldn't update listing notification status: ${error}`)
     );
-    updateListing(entity.listing_id, 'transmission_type', entity.transmission_type).then(
+    updateListing(entity.listing_id, {'transmission_type': entity.transmission_type}).then(
         () => console.log(`update transmission type to ${entity.transmission_type}`),
         error => console.error(`Couldn't update transmission type: ${error}`)
     );
-    updateListing(entity.listing_id, 'buyer_name', entity.buyer_name).then(
+    updateListing(entity.listing_id, {'buyer_name': entity.buyer_name}).then(
         () => console.log(`update buyers name to ${entity.buyer_name}`),
         error => console.error(`Couldn't update buyers name: ${error}`)
     );
@@ -121,23 +123,23 @@ export function processPurchaseReceipt(entity) {
 
 export function processCollectionConfirmation(entity) {
     console.log(`Message received for collection of listing, updating..`);
-    updateListing(entity.listing_id, 'buyer_message', entity.message).then(
+    updateListing(entity.listing_id, {'buyer_message': entity.message}).then(
         () => console.log('customer message added succesfully'),
         error => console.error(`Couldn't add message to listing ${error}`)
     );
-    updateListing(entity.listing_id, 'status', 'sold').then(
+    updateListing(entity.listing_id, {'status': 'sold'}).then(
         () => console.log('listing sold'),
         error => console.error(`Couldn't update listing status to sold ${error}`)
     );
-    updateListing(entity.listing_id, 'notification', 'true').then(
+    updateListing(entity.listing_id, {'notification': 'true'}).then(
         () => console.log('notification triggered'),
         error => console.error(`Couldn't update listing notification status: ${error}`)
     );
-    updateListing(entity.listing_id, 'transmission_type', entity.transmission_type).then(
+    updateListing(entity.listing_id, {'transmission_type': entity.transmission_type}).then(
         () => console.log(`update transmission type to ${entity.transmission_type}`),
         error => console.error(`Couldn't update transmission type: ${error}`)
     );
-    updateListing(entity.listing_id, 'buyer_name', entity.buyer_name).then(
+    updateListing(entity.listing_id, {'buyer_name': entity.buyer_name}).then(
         () => console.log(`update buyers name to ${entity.buyer_name}`),
         error => console.error(`Couldn't update buyers name: ${error}`)
     );
@@ -148,7 +150,7 @@ export async function processCancelCollection(entity) {
     console.log(`Message received for cancelling collection`);
     const listing = await getListingById(entity.listing_id);
     if (listing.buyer_name === entity.buyer_name) {
-        updateListing(entity.listing_id, 'status', 'available').then(
+        updateListing(entity.listing_id, {'status': 'available'}).then(
             () => console.log('listing now available again'),
             error => console.error(`Couldn't update listing status to available ${error}`)
         );

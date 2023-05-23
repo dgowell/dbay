@@ -48,7 +48,7 @@ function ListingDeliverySeller() {
 
     function handleItemSent() {
         setLoading(true);
-        updateListing(listing.listing_id, "status", "completed")
+        updateListing(listing.listing_id, {"status": "completed"})
             .then(() => {
                 setLoading(false);
                 navigate('/seller/listings')
@@ -58,7 +58,7 @@ function ListingDeliverySeller() {
 
     useEffect(() => {
         if (listing) {
-            updateListing(listing.listing_id, 'notification', 'false').catch(e => console.error(`Couldn't reset notification ${e}`));
+            updateListing(listing.listing_id, {'notification': 'false'}).catch(e => console.error(`Couldn't reset notification ${e}`));
         }
     }, [listing]);
 

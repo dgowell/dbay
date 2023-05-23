@@ -15,7 +15,12 @@ MDS.init(function (msg) {
             MDS.log("MAXIMA EVENT received: " + JSON.stringify(msg.data));
             processMaximaEvent(msg);
             break;
+        case "NEWBALANCE":
+            //check coins against pending payemnts
+            MDS.log(JSON.stringify(msg));
+            break;
         default:
+            //MDS.log(JSON.stringify(msg));
             break;
     }
 });
@@ -154,10 +159,10 @@ function processAvailabilityCheck(entity) {
             MDS.log(`sending the responose to buyer..`);
             send(data, entity.buyer_pk);
             MDS.log(`updating listing in db to pending`);
-            updateListing(entity.listing_id, "purchase_code", purchaseCode);
+            updateListing(entity.listing_id, {"purchase_code" : purchaseCode});
             //if listing available change to pending to stop other users buying it
             if (listingStatus === 'available') {
-                updateListing(entity.listing_id, "status", "pending");
+                updateListing(entity.listing_id, {"status" : "pending"});
             }
         };
     } catch (error) {
@@ -219,8 +224,13 @@ function send(data, address) {
     });
 }
 
-function updateListing(listingId, key, value) {
-    MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listingId}';`, function (res) {
+function updateListing(listingId, data) {
+    //loop through data object and return all values in one long string
+    var formattedData = '';
+    for (var key in data) {
+        formattedData += `"${key}"='${data[key]}',`;
+    }
+    MDS.sql(`UPDATE ${LISTINGSTABLE} SET ${formattedData} WHERE "listing_id"='${listingId}';`, function (res) {
         if (res.status) {
             return res;
         } else {
@@ -232,8 +242,7 @@ function updateListing(listingId, key, value) {
 
 function processAvailabilityResponse(entity) {
     MDS.log(`processing availability response...${entity}`);
-    updateListing(entity.listing_id, "status", entity.status);
-    updateListing(entity.listing_id, "purchase_code", entity.purchase_code);
+    updateListing(entity.listing_id, { "purchase_code" : entity.purchase_code, "status" : entity.status });
 }
 
 function getHost() {
@@ -373,25 +382,30 @@ function processListing(entity) {
 
 function processPurchaseReceipt(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
+    var id = entity.listing_id;
     MDS.log(`Message received for purchased listing, updating..`);
     if (entity.transmission_type === 'delivery') {
-        updateListing(entity.listing_id, 'buyer_message', entity.buyer_message)
-        updateListing(entity.listing_id, 'status', 'sold')
+        updateListing(id, 
+            { 'buyer_message': entity.buyer_message,
+                    'status' : 'sold'})
     } else {
-        updateListing(entity.listing_id, 'status', 'completed')
+        updateListing(id, {'status': 'completed'})
     }
-    updateListing(entity.listing_id, 'coin_id', entity.coin_id)
-    updateListing(entity.listing_id, 'notification', 'true')
-    updateListing(entity.listing_id, 'transmission_type', entity.transmission_type)
-    updateListing(entity.listing_id, 'buyer_name', entity.buyer_name)
+    updateListing(id, {
+        'coin_id': entity.coin_id,
+        'notification': 'true',
+        'transmission_type': entity.transmission_type,
+        'buyer_name': entity.buyer_name })
 }
 function processCollectionConfirmation(entity) {
     MDS.log(`Message received for collection of listing, updating..`);
-    updateListing(entity.listing_id, 'buyer_message', entity.message)
-    updateListing(entity.listing_id, 'status', 'sold')
-    updateListing(entity.listing_id, 'notification', 'true')
-    updateListing(entity.listing_id, 'transmission_type', entity.transmission_type)
-    updateListing(entity.listing_id, 'buyer_name', entity.buyer_name)
+    updateListing(id, {
+        'buyer_message': entity.message,
+        'status': 'sold',
+        'notification': 'true',
+        'transmission_type': entity.transmission_type,
+        'buyer_name': entity.buyer_name
+    });
 }
 function getListingById(id) {
     var listings = '';
@@ -416,7 +430,7 @@ function processCancelCollection(entity) {
     MDS.log(`Message received for cancelling collection`);
     const listing = getListingById(entity.listing_id);
     if (listing.buyer_name === entity.buyer_name) {
-        updateListing(entity.listing_id, 'status', 'available')
+        updateListing(entity.listing_id, {'status': 'available'})
     } else {
         MDS.log("buyer name not the same as on listing so cancel averted!");
     }

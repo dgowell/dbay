@@ -147,7 +147,7 @@ function ListingDetail() {
     setLoading(true);
 
     //reset listing in order to check the availability
-    updateListing(listing.listing_id, "status", "unchecked")
+    updateListing(listing.listing_id, {"status": "unchecked"})
       .catch((e) => console.error(`Error resetting listing status to unchecked: ${e}`));
 
 
