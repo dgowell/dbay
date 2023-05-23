@@ -1,39 +1,9 @@
 import PropTypes from 'prop-types';
 import { send } from './index';
-import { updateListing, getStatus, getListingByPurchaseCode } from '../database/listing';
+import { updateListing, getStatus } from '../database/listing';
 import { getListingById } from '../database/listing';
 
 import { generate } from '@wcj/generate-password';
-
-
-
-
-/**
-* When new block
-* @param {string} seller - Sellers hex address
-*/
-export function processNewBlock(data) {
-    try {
-        //get the code and transaction amount
-        let purchaseCode = data.txpow.body.txn.state[0].data;
-        purchaseCode = purchaseCode.replace('[', '');
-        purchaseCode = purchaseCode.replace(']', '');
-        console.log(`Purchase Code: ${purchaseCode}`);
-        const txnAmount = data.txpow.body.txn.outputs[0].amount;
-        console.log(`Purchase Code: ${txnAmount}`);
-        //check if the seller has a listing that matches these values
-        getListingByPurchaseCode(purchaseCode).then((listing) => {
-            //check the amount is the same
-            if (listing.price === txnAmount) {
-                console.log(`A buyer has paid for your item: ${listing.title}`);
-                return updateListing(listing.listing_id, {'status': 'sold'});
-            }
-        }).catch((e) => console.error(`Couldn't find listing with this pruchase code: ${e}`))
-    } catch {
-        //console.error("No purchase code data attached to event");
-    }
-}
-
 
 /**
 * Sends availability status of listing to buyer along with unique pruchase code
@@ -56,9 +26,7 @@ export async function processAvailabilityCheck(entity) {
             //generate unique identifier for transaction
             const purchaseCode = generate({ length: 20, special: false });
             data.purchase_code = purchaseCode;
-
             await send(data, entity.buyer_pk);
-            await updateListing(entity.listing_id, {"purchase_code": purchaseCode});
             await updateListing(entity.listing_id, {"status": "pending"});
             resetListingStatusTimeout(entity.listing_id);
         }

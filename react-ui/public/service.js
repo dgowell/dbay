@@ -150,16 +150,13 @@ function processAvailabilityCheck(entity) {
         //is listing available
         const listingStatus = getStatus(entity.listing_id);
         MDS.log(`status of listing is: ${JSON.stringify(listingStatus)}`);
+
         if (listingStatus) {
             data.status = listingStatus;
-            //generate unique identifier for transaction
-            //generate unique identifier for transaction
-            const purchaseCode = generateCode(20);
-            data.purchase_code = purchaseCode;
+
             MDS.log(`sending the responose to buyer..`);
             send(data, entity.buyer_pk);
-            MDS.log(`updating listing in db to pending`);
-            updateListing(entity.listing_id, {"purchase_code" : purchaseCode});
+
             //if listing available change to pending to stop other users buying it
             if (listingStatus === 'available') {
                 updateListing(entity.listing_id, {"status" : "pending"});
@@ -242,7 +239,7 @@ function updateListing(listingId, data) {
 
 function processAvailabilityResponse(entity) {
     MDS.log(`processing availability response...${entity}`);
-    updateListing(entity.listing_id, { "purchase_code" : entity.purchase_code, "status" : entity.status });
+    updateListing(entity.listing_id, { "status" : entity.status });
 }
 
 function getHost() {
