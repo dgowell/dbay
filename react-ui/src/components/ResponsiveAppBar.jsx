@@ -14,7 +14,7 @@ const ResponsiveAppBar = () => {
     const navigate = useNavigate();
 
     const handleLogoClick = () => {
-        navigate('/instruction');
+        navigate('/dmaxclient.jsx');
     };
 
     return (
