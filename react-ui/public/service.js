@@ -12,16 +12,16 @@ MDS.init(function (msg) {
             setup();
             break;
         case "MAXIMA":
-            MDS.log("MAXIMA EVENT received: " + JSON.stringify(msg.data));
+            if (logs) { MDS.log("MAXIMA EVENT received: " + JSON.stringify(msg.data)); }
             processMaximaEvent(msg);
             break;
         case "MINING":
             //check coins against unconfirmed/pending payemnts
-            MDS.log("MINING EVENT received: " + JSON.stringify(msg.data));
+            if (logs) { MDS.log("MINING EVENT received: " + JSON.stringify(msg.data)); }
             processMiningEvent(msg.data);
             break;
         default:
-            MDS.log(JSON.stringify(msg));
+            if (logs) { MDS.log(JSON.stringify(msg)); }
             break;
     }
 });
@@ -119,7 +119,7 @@ function processMaximaEvent(msg) {
             processCancelCollection(entity);
             break;
         default:
-            MDS.log(entity);
+            if (logs) { MDS.log(entity); }
     }
 
 }
@@ -129,7 +129,7 @@ function processMaximaEvent(msg) {
 */
 function processMiningEvent(data) {
 
-    MDS.log("Checking for unconfirmed payments");
+    if (logs) { MDS.log("Checking for unconfirmed payments"); }
     var txn = data.txpow.body.txn;
     var listingId = txn.state[0].data;
 
@@ -141,18 +141,18 @@ function processMiningEvent(data) {
 
 
     getListingById(listingId, function (listing) {
-        MDS.log("listing:" + JSON.stringify(listing));
+        if (logs) { MDS.log("listing:" + JSON.stringify(listing)); }
 
 
         //loop through the outputs and check which amount equals the listing.price;
         for (var x = 0; x < outputs.length; x++) {
             var output = outputs[x];
             var amount = output.amount;
-            MDS.log("amount:" + amount);
+            if (logs) { MDS.log("amount:" + amount);}
             if (amount === listing.price) {
-                MDS.log("amount matches listing price");
+                if (logs) { MDS.log("amount matches listing price"); }
                 coinId = output.coinid;
-                MDS.log("coin id:" + coinId);
+                if (logs) { MDS.log("coin id:" + coinId); }
             }
         }
 
@@ -163,7 +163,7 @@ function processMiningEvent(data) {
             "coin_id": coinId
         }
 
-        MDS.log("sending purchase receipt to seller at: " + listing.created_by_pk);
+        if (logs) { MDS.log("sending purchase receipt to seller at: " + listing.created_by_pk); }
         send(data, listing.created_by_pk);
     });
 }
@@ -195,7 +195,7 @@ function processAvailabilityCheck(entity) {
             }
         };
     } catch (error) {
-        MDS.log(`There was an error processing availability check: ${error}`);
+        if (logs) { MDS.log(`There was an error processing availability check: ${JSON.stringify(error)}`); }
     };
 }
 
@@ -203,11 +203,11 @@ function getStatus(listingId) {
     var st = '';
     MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
         if (res) {
-            MDS.log(`Response from get status is: ${JSON.stringify(res)}`);
+            if (logs) { MDS.log(`Response from get status is: ${JSON.stringify(res)}`); }
             st = res.rows[0].status;
         }
         else {
-            MDS.log(`MDS.SQL ERROR, could get status of listing ${res.error}`);
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get status of listing ${res.error}`); }
         }
     });
     return st;
@@ -223,9 +223,9 @@ function send(data, address) {
     MDS.log(datastr);
     var hexstr = "";
     const funcC = `convert from:String to:HEX data:'${String(datastr)}'`;
-    MDS.log(funcC);
+    if (logs) { MDS.log(funcC); }
     MDS.cmd(funcC, function (resp) {
-        MDS.log(JSON.stringify(resp));
+        if (logs) { MDS.log(JSON.stringify(resp)); }
         hexstr = resp.response.conversion;
     });
     //And now convert to HEX
@@ -242,10 +242,10 @@ function send(data, address) {
     //Send the message via Maxima!..
     MDS.cmd(fullfunc, function (resp) {
         if (resp.status === false) {
-            MDS.log(JSON.stringify(resp));
+            if (logs) { MDS.log(JSON.stringify(resp)); }
             return false;
         } else if (resp.response.delivered === false) {
-            MDS.log(JSON.stringify(resp));
+            if (logs) { MDS.log(JSON.stringify(resp)); }
             return false;
         } else if (resp.status === true) {
             return true;
@@ -273,14 +273,14 @@ function updateListing(listingId, data) {
         if (res.status) {
             return res;
         } else {
-            MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`);
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`); }
             return false;
         }
     });
 }
 
 function processAvailabilityResponse(entity) {
-    MDS.log(`processing availability response...${entity}`);
+    if (logs) { MDS.log(`processing availability response...${entity}`);}
     updateListing(entity.listing_id, { "status": entity.status });
 }
 
@@ -320,7 +320,7 @@ function createListing({
     const randomId = Math.trunc(Math.random() * 10000000000000000);
     const pk = getPublicKey();
     const id = `${randomId}${pk}`;
-    MDS.log(`the id for the listing is: ${id}`);
+    if (logs) { MDS.log(`the id for the listing is: ${id}`); }
     const timestamp = Math.floor(Date.now() / 1000);
 
     let fullsql = `insert into ${LISTINGSTABLE}
@@ -366,11 +366,11 @@ function createListing({
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
         );`;
     MDS.sql(fullsql, (res) => {
-        MDS.log(`MDS.SQL, ${fullsql}`);
+        if (logs) { MDS.log(`MDS.SQL, ${fullsql}`); }
         if (res.status) {
             return listingId ? listingId : id;
         } else {
-            MDS.log(`MDS.SQL ERROR, could not create listing ${res.error}}`);
+            if (logs) { MDS.log(`MDS.SQL ERROR, could not create listing ${res.error}}`); }
             return Error(res.error);
         }
     });
@@ -379,7 +379,7 @@ function createListing({
 function addLocationDescriptionColumn(callback) {
     const Q = `alter table ${LISTINGSTABLE} add column if not exists "location_description" varchar(150);`;
     MDS.sql(Q, function (res) {
-        MDS.log(`MDS.SQL, ${Q}`);
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
         if (res.status) {
             callback(true)
         } else {
@@ -416,13 +416,13 @@ function processListing(entity) {
         shippingCost: entity.shipping_cost,
         shippingCountries: entity.shipping_countries
     });
-    MDS.log(`Listing ${entity.title} added!`);
+    if (logs) { MDS.log(`Listing ${entity.title} added!`); }
 }
 
 function processPurchaseReceipt(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
     var id = entity.listing_id;
-    MDS.log(`Message received for purchased listing, updating..`);
+    if (logs) { MDS.log(`Message received for purchased listing, updating..`); }
     if (entity.transmission_type === 'delivery') {
         updateListing(id,
             {
@@ -440,7 +440,7 @@ function processPurchaseReceipt(entity) {
     })
 }
 function processCollectionConfirmation(entity) {
-    MDS.log(`Message received for collection of listing, updating..`);
+    if (logs) { MDS.log(`Message received for collection of listing, updating..`); }
     updateListing(id, {
         'buyer_message': entity.message,
         'status': 'sold',
@@ -454,7 +454,7 @@ function getListingById(id, callback) {
     MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
         if (res.status) {
             if (res.count > 1) {
-                MDS.log(`More than one listing with id ${id}`);
+                if (logs) { MDS.log(`More than one listing with id ${id}`); }
                 return null;
             } else {
                 if (callback) {
@@ -464,7 +464,7 @@ function getListingById(id, callback) {
                 }
             }
         } else {
-            MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`);
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`); }
             return null;
         }
     });
@@ -473,19 +473,19 @@ function getListingById(id, callback) {
 
 function processCancelCollection(entity) {
     //TODO: rewrite function that updates the listing all at once instead of hitting database x times
-    MDS.log(`Message received for cancelling collection`);
+    if (logs) { MDS.log(`Message received for cancelling collection`); }
     const listing = getListingById(entity.listing_id);
     if (listing.buyer_name === entity.buyer_name) {
         updateListing(entity.listing_id, { 'status': 'available' })
     } else {
-        MDS.log("buyer name not the same as on listing so cancel averted!");
+        if (logs) { MDS.log("buyer name not the same as on listing so cancel averted!"); }
     }
 }
 
 function getMLS() {
     var mls = '';
     MDS.cmd('maxima', function (res) {
-        MDS.log(JSON.stringify(res));
+        if (logs) { MDS.log('Get MLS: ' + JSON.stringify(res)); }
         if (res.status) {
             mls = res.response.mls;
         } else {
@@ -498,7 +498,7 @@ function getMLS() {
 function getPublicKey() {
     var pb = '';
     MDS.cmd('maxima', function (res) {
-        MDS.log(JSON.stringify(res));
+        if (logs) { MDS.log(JSON.stringify(res)); }
         if (res.status) {
             pb = res.response.publickey;
         } else {
@@ -551,7 +551,7 @@ function createListingTable() {
             )`;
 
     MDS.sql(Q, function (res) {
-        MDS.log(`MDS.SQL, ${Q}`);
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
         if (res.status) {
             return true;
         } else {
@@ -568,7 +568,7 @@ function createSettingsTable() {
             )`;
 
     MDS.sql(Q, function (res) {
-        MDS.log(`MDS.SQL, ${Q}`);
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
         if (res.status) {
             return true;
         } else {
@@ -578,7 +578,7 @@ function createSettingsTable() {
 }
 function createHost(name, pk) {
     let fullsql = `insert into ${SETTINGSTABLE}("name", "pk") values('${name}', '${pk}');`;
-    MDS.log(`Host added to settings table: ${name}`);
+    if (logs) { MDS.log(`Host added to settings table: ${name}`); }
     MDS.sql(fullsql, (res) => {
         if (res.status) {
             return true;
