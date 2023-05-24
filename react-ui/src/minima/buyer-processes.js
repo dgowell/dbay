@@ -9,19 +9,19 @@ async function getSellerAddress(address) {
     //get name of node that create item
     const e = address.split('#');
     const pk = e[1];
-    var currentAddress ="";
+    var currentAddress = "";
     return new Promise(async function (resolve, reject) {
         //find out if they're a contact
-         currentAddress = await isContact(pk);
-         console.log("iscontact",currentAddress);
+        currentAddress = await isContact(pk);
+        console.log("iscontact", currentAddress);
         if (currentAddress && currentAddress.includes('@')) {
             resolve(currentAddress);
         } else {
-             currentAddress = address;
-            console.log("here",currentAddress);
-            if(currentAddress){
-            resolve(currentAddress);
-            }else{
+            currentAddress = address;
+            console.log("here", currentAddress);
+            if (currentAddress) {
+                resolve(currentAddress);
+            } else {
                 reject(currentAddress);
             }
         }
@@ -97,15 +97,15 @@ async function sendCancellationNotification({ listingId, seller }) {
 */
 export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType, password }) {
     return new Promise(function (resolve, reject) {
-        sendMoney({ walletAddress, amount, purchaseCode, password })
+        sendMoney({ walletAddress, amount, listingId, password })
             .then((coinId) => {
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, {'status': 'purchased'}).catch((e) => console.error(e));
-                    updateListing(listingId, {'transmission_type': transmissionType}).catch((e) => console.error(e));
+                    updateListing(listingId, { 'status': 'purchased' }).catch((e) => console.error(e));
+                    updateListing(listingId, { 'transmission_type': transmissionType }).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
                     console.log(`Sending purchase receipt to seller..`);
                     sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
-                        .then(()=>resolve(true))
+                        .then(() => resolve(true))
                         .catch(Error(`Couldn't send purchase receipt`));
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
@@ -118,6 +118,9 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
                         .then(() => console.log('listing state reset because of error'))
                         .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
                     reject(Error(`Insufficient funds`));
+                } else if (error.message.includes('command needs to be confirmed and is now pending')) {
+                    updateListing(listingId, { 'status': 'unconfirmed' }).catch((e) => console.error(e));
+                    reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
                 } else {
                     resetListingState(listingId)
                         .then(() => console.log('listing state reset because of error'))
@@ -146,8 +149,8 @@ purchaseListing.proptypes = {
 */
 export function collectListing({ seller, message, listingId, transmissionType }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, {'status': 'in progress'}).catch((e) => console.error(e));
-        updateListing(listingId, {'transmission_type': transmissionType}).catch((e) => console.error(e));
+        updateListing(listingId, { 'status': 'in progress' }).catch((e) => console.error(e));
+        updateListing(listingId, { 'transmission_type': transmissionType }).catch((e) => console.error(e));
         console.log(`Sending collection confirmation and phone numeber to seller.. ${message}`);
         sendCollectionConfirmation({ message, listingId, seller, transmissionType })
             .then(() => resolve(true))
@@ -169,7 +172,7 @@ collectListing.proptypes = {
 */
 export function processAvailabilityResponse(entity) {
     console.log("processing availability response...");
-    updateListing(entity.listing_id, {"status": entity.status})
+    updateListing(entity.listing_id, { "status": entity.status })
         .catch((e) => console.error(`Couldn't update listing status ${e}`))
 }
 processAvailabilityResponse.proptypes = {
@@ -196,7 +199,7 @@ export function checkAvailability({
 
     return new Promise(async function (resolve, reject) {
         //get sellers address from permanent address
-        let sellerAddress = await getSellerAddress(seller).catch(e => {reject(e); Error(console.error(e))});
+        let sellerAddress = await getSellerAddress(seller).catch(e => { reject(e); Error(console.error(e)) });
 
         //send request to seller
         send(data, sellerAddress)
@@ -229,7 +232,7 @@ export function checkAvailability({
                             break;
                         case "pending":
                             clearInterval(interval);
-                            updateListing(listingId, {'status': 'unchecked'})
+                            updateListing(listingId, { 'status': 'unchecked' })
                                 .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
                             resolve('Item not currently available, please try again later')
                             break;
@@ -302,7 +305,7 @@ hasSufficientFunds.PropTypes = {
 */
 export function cancelCollection({ seller, listingId }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, {'status': 'unchecked'}).catch((e) => console.error(e));
+        updateListing(listingId, { 'status': 'unchecked' }).catch((e) => console.error(e));
         console.log(`Sending cancel notification to seller..`);
         sendCancellationNotification({ listingId, seller })
     })

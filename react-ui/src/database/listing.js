@@ -203,9 +203,26 @@ getListingById.propTypes = {
 * @param {string} key - The key in the database
 * @param {string} value - The value that's being updated
 */
-export function updateListing(listingId, key, value) {
+
+export function updateListing(listingId, data) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listingId}';`, function (res) {
+        //loop through data object and return all values in one long string
+        var formattedData = '';
+
+        var keys = Object.keys(data);
+        var totalKeys = keys.length;
+
+        for (var i = 0; i < totalKeys; i++) {
+            var key = keys[i];
+
+            // Check if it's the last iteration
+            if (i === totalKeys - 1) {
+                formattedData += `"${key}"='${data[key]}'`;
+            } else {
+                formattedData += `"${key}"='${data[key]}',`;
+            }
+        }
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET ${formattedData} WHERE "listing_id"='${listingId}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {

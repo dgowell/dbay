@@ -24,7 +24,6 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { checkVault } from '../minima';
 import Divider from "@mui/material/Divider";
 import Modal from '@mui/material/Modal';
 import Alert from '@mui/material/Alert';
@@ -51,14 +50,9 @@ function ListingCollectionBuyer(props) {
     const [seller, setSeller] = useState();
     const [passwordError, setPasswordError] = useState(false);
     const [password, setPassword] = useState("");
-    const [isLocked, setIsLocked] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-    useEffect(() => {
-        checkVault().then(res => setIsLocked(res))
-    }, [])
 
     function handlePassword(e) {
         setPassword(e.target.value);
@@ -66,11 +60,11 @@ function ListingCollectionBuyer(props) {
 
     function handleAdd() {
         addContact(seller).then(
-            ({status, msg}) => {
+            ({ status, msg }) => {
                 setStatus(status);
                 setMsg(msg);
             },
-            ({status, msg}) => {
+            ({ status, msg }) => {
                 setStatus(status);
                 setMsg(msg);
                 console.error("Error adding contact: " + msg);
@@ -119,15 +113,6 @@ function ListingCollectionBuyer(props) {
             console.log(`Insufficient funds: ${error}`);
         });
 
-        if (isLocked && password === "") {
-            setPasswordError(true);
-            setLoading(false);
-            setError(false);
-            return null;
-        } else {
-            setPasswordError(false);
-        }
-
         if (hasFunds || (process.env.REACT_APP_MODE === "testvalue")) {
             if (process.env.REACT_APP_MODE === "testvalue") {
                 updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
@@ -143,7 +128,7 @@ function ListingCollectionBuyer(props) {
                     listingId: listing.listing_id,
                     seller: listing.created_by_pk,
                     walletAddress: listing.wallet_address,
-                    purchaseCode: listing.purchase_code,
+                    purchaseCode: listing.listing_id,
                     amount: listing.price,
                     transmissionType: listing.transmission_type,
                     password: password
@@ -156,8 +141,16 @@ function ListingCollectionBuyer(props) {
                             setLoading(false);
                             setError(false);
                             setOpen(false);
+                        } else if (error.message.includes("command needs to be confirmed and is now pending")) {
+                            setMsg("Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App");
+                            setLoading(false);
+                            setError(true);
+                            setOpen(false);
                         } else {
-                            navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: error.message } })
+                            setMsg(error.message);
+                            setLoading(false);
+                            setError(true);
+                            setOpen(false);
                         }
                     }
                 )
@@ -282,34 +275,34 @@ function ListingCollectionBuyer(props) {
                     >
                         {listing.transmission_type === 'collection' &&
                             <Stack mt={15} direction="column" spacing={2} width={"100%"}>
-                                {isLocked && <>
-                                    <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
-                                    <FormControl variant="outlined">
-                                        <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
-                                        <OutlinedInput
-                                            id="outlined-adornment-password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={handlePassword}
-                                            error={passwordError}
-                                            required={true}
-                                            helperText="Must enter vault password"
-                                            endAdornment={
-                                                <InputAdornment position="end">
-                                                    <IconButton
-                                                        aria-label="toggle password visibility"
-                                                        onClick={handleClickShowPassword}
-                                                        edge="end"
-                                                    >
-                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            }
-                                            label="Vault Password"
-                                        /></FormControl></>}
+                                <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
+                                <FormControl variant="outlined">
+                                    <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
+                                    <OutlinedInput
+                                        id="outlined-adornment-password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={password}
+                                        onChange={handlePassword}
+                                        error={passwordError}
+                                        required={true}
+                                        helperText="Must enter vault password if you have one"
+                                        endAdornment={
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={handleClickShowPassword}
+                                                    edge="end"
+                                                >
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        }
+                                        label="Vault Password"
+                                    /></FormControl>
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleOpen} variant="contained">
                                     PAY NOW
                                 </LoadingButton>
+                                {msg && <Alert severity="warning">{msg}</Alert>}
                             </Stack>
                         }
                         {listing.transmission_type === 'delivery' && <></>}

@@ -15,12 +15,13 @@ MDS.init(function (msg) {
             MDS.log("MAXIMA EVENT received: " + JSON.stringify(msg.data));
             processMaximaEvent(msg);
             break;
-        case "NEWBALANCE":
-            //check coins against pending payemnts
-            MDS.log(JSON.stringify(msg));
+        case "MINING":
+            //check coins against unconfirmed/pending payemnts
+            MDS.log("MINING EVENT received: " + JSON.stringify(msg.data));
+            processMiningEvent(msg.data);
             break;
         default:
-            //MDS.log(JSON.stringify(msg));
+            MDS.log(JSON.stringify(msg));
             break;
     }
 });
@@ -122,20 +123,51 @@ function processMaximaEvent(msg) {
     }
 
 }
+
 /*
-*   Generate Code depending on gioven length
+* Check coins for unconfirmed payments
 */
-function generateCode(length) {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    let counter = 0;
-    while (counter < length) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        counter += 1;
-    }
-    return result;
+function processMiningEvent(data) {
+
+    MDS.log("Checking for unconfirmed payments");
+    var txn = data.txpow.body.txn;
+    var listingId = txn.state[0].data;
+
+    //remove the square brackets int he listingID string
+    listingId = listingId.substring(1, listingId.length - 1);
+
+    var outputs = txn.outputs;
+    var coinId = '';
+
+
+    getListingById(listingId, function (listing) {
+        MDS.log("listing:" + JSON.stringify(listing));
+
+
+        //loop through the outputs and check which amount equals the listing.price;
+        for (var x = 0; x < outputs.length; x++) {
+            var output = outputs[x];
+            var amount = output.amount;
+            MDS.log("amount:" + amount);
+            if (amount === listing.price) {
+                MDS.log("amount matches listing price");
+                coinId = output.coinid;
+                MDS.log("coin id:" + coinId);
+            }
+        }
+
+        //send listingId and coinid to seller
+        var data = {
+            "type": "purchase_receipt",
+            "listing_id": listingId,
+            "coin_id": coinId
+        }
+
+        MDS.log("sending purchase receipt to seller at: " + listing.created_by_pk);
+        send(data, listing.created_by_pk);
+    });
 }
+
 
 function processAvailabilityCheck(entity) {
     MDS.log(`received availability check for listing: ${JSON.stringify(entity)}`);
@@ -159,7 +191,7 @@ function processAvailabilityCheck(entity) {
 
             //if listing available change to pending to stop other users buying it
             if (listingStatus === 'available') {
-                updateListing(entity.listing_id, {"status" : "pending"});
+                updateListing(entity.listing_id, { "status": "pending" });
             }
         };
     } catch (error) {
@@ -202,9 +234,9 @@ function send(data, address) {
     //Create the function..
     let fullfunc = '';
     if (address.includes('@')) {
-        fullfunc = `maxima action:send to:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+        fullfunc = `maxima action:send to:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
     } else {
-        fullfunc = `maxima action:send publickey:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+        fullfunc = `maxima action:send publickey:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
     }
 
     //Send the message via Maxima!..
@@ -222,10 +254,20 @@ function send(data, address) {
 }
 
 function updateListing(listingId, data) {
-    //loop through data object and return all values in one long string
     var formattedData = '';
-    for (var key in data) {
-        formattedData += `"${key}"='${data[key]}',`;
+
+    var keys = Object.keys(data);
+    var totalKeys = keys.length;
+
+    for (var i = 0; i < totalKeys; i++) {
+        var key = keys[i];
+
+        // Check if it's the last iteration
+        if (i === totalKeys - 1) {
+            formattedData += `"${key}"='${data[key]}'`;
+        } else {
+            formattedData += `"${key}"='${data[key]}',`;
+        }
     }
     MDS.sql(`UPDATE ${LISTINGSTABLE} SET ${formattedData} WHERE "listing_id"='${listingId}';`, function (res) {
         if (res.status) {
@@ -239,7 +281,7 @@ function updateListing(listingId, data) {
 
 function processAvailabilityResponse(entity) {
     MDS.log(`processing availability response...${entity}`);
-    updateListing(entity.listing_id, { "status" : entity.status });
+    updateListing(entity.listing_id, { "status": entity.status });
 }
 
 function getHost() {
@@ -382,17 +424,20 @@ function processPurchaseReceipt(entity) {
     var id = entity.listing_id;
     MDS.log(`Message received for purchased listing, updating..`);
     if (entity.transmission_type === 'delivery') {
-        updateListing(id, 
-            { 'buyer_message': entity.buyer_message,
-                    'status' : 'sold'})
+        updateListing(id,
+            {
+                'buyer_message': entity.buyer_message,
+                'status': 'sold'
+            })
     } else {
-        updateListing(id, {'status': 'completed'})
+        updateListing(id, { 'status': 'completed' })
     }
     updateListing(id, {
         'coin_id': entity.coin_id,
         'notification': 'true',
         'transmission_type': entity.transmission_type,
-        'buyer_name': entity.buyer_name })
+        'buyer_name': entity.buyer_name
+    })
 }
 function processCollectionConfirmation(entity) {
     MDS.log(`Message received for collection of listing, updating..`);
@@ -404,7 +449,7 @@ function processCollectionConfirmation(entity) {
         'buyer_name': entity.buyer_name
     });
 }
-function getListingById(id) {
+function getListingById(id, callback) {
     var listings = '';
     MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "listing_id"='${id}';`, function (res) {
         if (res.status) {
@@ -412,7 +457,11 @@ function getListingById(id) {
                 MDS.log(`More than one listing with id ${id}`);
                 return null;
             } else {
-                listings = res.rows[0];
+                if (callback) {
+                    callback(res.rows[0]);
+                } else {
+                    listings = res.rows[0];
+                }
             }
         } else {
             MDS.log(`MDS.SQL ERROR, could get listing by Id ${res.error}`);
@@ -427,7 +476,7 @@ function processCancelCollection(entity) {
     MDS.log(`Message received for cancelling collection`);
     const listing = getListingById(entity.listing_id);
     if (listing.buyer_name === entity.buyer_name) {
-        updateListing(entity.listing_id, {'status': 'available'})
+        updateListing(entity.listing_id, { 'status': 'available' })
     } else {
         MDS.log("buyer name not the same as on listing so cancel averted!");
     }

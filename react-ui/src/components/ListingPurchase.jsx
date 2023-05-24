@@ -33,7 +33,6 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableRow from '@mui/material/TableRow';
-import { checkVault } from '../minima';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
@@ -59,10 +58,6 @@ function DeliveryConfirmation({
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-  useEffect(() => {
-    checkVault().then(res => setIsLocked(res))
-  }, [])
 
   function handlePassword(e) {
     setPassword(e.target.value);
@@ -103,7 +98,7 @@ function DeliveryConfirmation({
         listingId: listing.listing_id,
         seller: listing.created_by_pk,
         walletAddress: listing.wallet_address,
-        purchaseCode: listing.purchase_code,
+        purchaseCode: listing.listing_id,
         message: message,
         amount: parseInt(listing.price) + parseInt(listing.shipping_cost),
         transmissionType: transmissionType,
@@ -193,7 +188,6 @@ function DeliveryConfirmation({
             </TableBody>
           </Table>
         </TableContainer>
-        {isLocked && <>
           <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
           <FormControl variant="outlined">
             <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
@@ -217,7 +211,7 @@ function DeliveryConfirmation({
                 </InputAdornment>
               }
               label="Vault Password"
-            /></FormControl></>}
+            /></FormControl>
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>

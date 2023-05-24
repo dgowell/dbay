@@ -232,17 +232,17 @@ send.propTypes = {
 export function sendMoney({
     walletAddress,
     amount,
-    purchaseCode,
+    listingId,
     password = "" // Add a default value for password
 }) {
     // Include the password in the command string if it's not empty
     const passwordPart = password ? `password:${password}` : "";
-    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} ${passwordPart} state:{"0":"[${purchaseCode}]"}`;
+    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} ${passwordPart} state:{"0":"[${listingId}]"}`;
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
         window.MDS.cmd(Q, function (res) {
             if (res.status === true) {
-                console.log(`sent ${amount} to ${walletAddress} with state code ${purchaseCode} succesfully!`);
+                console.log(`sent ${amount} to ${walletAddress} with state code ${listingId} succesfully!`);
                 const coinId = res.response.body.txn.outputs[0].coinid;
                 coinId ? resolve(coinId) : reject(Error(`No coin attached to purchase`));
             } else if (res.message) {
@@ -277,20 +277,6 @@ export function addContact(address) {
                 msg = res.error;
                 status = false;
                 reject({ msg, status })
-            }
-        })
-    })
-}
-
-
-export function checkVault() {
-    return new Promise(function (resolve, reject) {
-        window.MDS.cmd('vault', function (res) {
-            if (res.status) {
-                resolve(res.response.locked);
-                console.log(`vault Locked: ${res.response.locked}`);
-            } else {
-                reject(Error(`Couldn't fetch mini address ${res.error}`));
             }
         })
     })
