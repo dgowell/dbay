@@ -78,7 +78,7 @@ export function isContact(pk) {
                         resolve(c.currentaddress);
                     }
                 })
-                resolve(false);
+                reject(false);
             } else {
                 reject(Error(`Couldn't find a matching name ${res.error}`));
             }
