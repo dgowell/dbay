@@ -4,7 +4,7 @@ var SETTINGSTABLE = 'SETTINGS';
 var APPLICATION_NAME = 'stampd';
 
 //Load dmax.js..
-MDS.load("dmax.js");
+MDS.load("./dmax.js");
 
 MDS.init(function (msg) {
     switch (msg.event) {
@@ -78,7 +78,6 @@ MDS.init(function (msg) {
     }
 });
 
-
 /*
 * Register the store name and public key, if no store then create it
 * store name = maxima contact name
@@ -112,6 +111,7 @@ function setup() {
     createHost(hostName, permanentAddress);
     if (logs) { MDS.log('Local hosting info stored in database') }
 }
+
 
 function processMaximaEvent(msg) {
 
