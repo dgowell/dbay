@@ -100,13 +100,15 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
         sendMoney({ walletAddress, amount, listingId, password })
             .then((coinId) => {
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, { 'status': 'purchased' }).catch((e) => console.error(e));
-                    updateListing(listingId, { 'transmission_type': transmissionType }).catch((e) => console.error(e));
+
+                    updateListing(listingId, { 'status': 'purchased', 'transmission_type': transmissionType }).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
+
                     console.log(`Sending purchase receipt to seller..`);
                     sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
                         .then(() => resolve(true))
                         .catch(Error(`Couldn't send purchase receipt`));
+
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
                     resetListingState(listingId);

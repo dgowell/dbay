@@ -65,7 +65,7 @@ export default function Marketplace() {
     getHost()
       .then((data) => {
         setHost(data);
-        console.log(`Retrieved host successfully ${data}`);
+        console.log(`Retrieved host successfully ${JSON.stringify(data)}`);
         setLoading(false);
       }).catch((e) => {
         console.error(`Couldn't get host: ${e}`);

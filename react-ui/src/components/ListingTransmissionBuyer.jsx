@@ -141,13 +141,13 @@ function ListingCollectionBuyer(props) {
                             setLoading(false);
                             setError(false);
                             setOpen(false);
-                        } else if (error.message.includes("command needs to be confirmed and is now pending")) {
+                        } else if (error.message.includes("pending")) {
                             setMsg("Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App");
                             setLoading(false);
-                            setError(true);
+                            setError('Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App');
                             setOpen(false);
                         } else {
-                            setMsg(error.message);
+                            setMsg(error);
                             setLoading(false);
                             setError(true);
                             setOpen(false);
