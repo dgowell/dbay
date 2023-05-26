@@ -58,8 +58,7 @@ export async function processAvailabilityCheck(entity) {
             data.purchase_code = purchaseCode;
 
             await send(data, entity.buyer_pk);
-            await updateListing(entity.listing_id, {"purchase_code": purchaseCode});
-            await updateListing(entity.listing_id, {"status": "pending"});
+            await updateListing(entity.listing_id, { "purchase_code": purchaseCode }, { "status": "pending" });
             resetListingStatusTimeout(entity.listing_id);
         }
     } catch (error) {
