@@ -18,8 +18,6 @@ import PaymentError from './PaymentError';
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import Badge from '@mui/material/Badge';
 import { hasSufficientFunds } from '../minima/buyer-processes';
-import { updateListing } from '../database/listing';
-import { sendPurchaseReceipt } from '../minima/buyer-processes';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -113,48 +111,37 @@ function ListingCollectionBuyer(props) {
             console.log(`Insufficient funds: ${error}`);
         });
 
-        if (hasFunds || (process.env.REACT_APP_MODE === "testvalue")) {
-            if (process.env.REACT_APP_MODE === "testvalue") {
-                updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
-                updateListing(listing.listing_id, 'transmission_type', listing.transmission_type).catch((e) => console.error(e));
-                sendPurchaseReceipt({
-                    listingId: listing.listing_id,
-                    coinId: "0x1asd234", seller: listing.created_by_pk,
-                    transmissionType: listing.transmission_type
-                })
-                setTimeout(navigate('/info', { state: { main: "Success", sub: `You’ve successfully paid @${listing.created_by_name} $M${listing.price}` } }), 1000);
-            } else {
-                purchaseListing({
-                    listingId: listing.listing_id,
-                    seller: listing.created_by_pk,
-                    walletAddress: listing.wallet_address,
-                    purchaseCode: listing.purchase_code,
-                    amount: listing.price,
-                    transmissionType: listing.transmission_type,
-                    password: password
-                }).then(
-                    () => navigate('/info', { state: { main: "Success", sub: `You’ve successfully paid @${listing.created_by_name} $M${listing.price}` } }),
-                    error => {
-                        if (error.message.includes("Incorrect password")) {
-                            setMsg("Incorrect password");
-                            setPasswordError(true);
-                            setLoading(false);
-                            setError(false);
-                            setOpen(false);
-                        } else if (error.message.includes("pending")) {
-                            setMsg("Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App");
-                            setLoading(false);
-                            setError('Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App');
-                            setOpen(false);
-                        } else {
-                            setMsg(error);
-                            setLoading(false);
-                            setError(true);
-                            setOpen(false);
-                        }
+        if (hasFunds) {
+            purchaseListing({
+                listingId: listing.listing_id,
+                seller: listing.created_by_pk,
+                walletAddress: listing.wallet_address,
+                purchaseCode: listing.purchase_code,
+                amount: listing.price,
+                transmissionType: listing.transmission_type,
+                password: password
+            }).then(
+                () => navigate('/info', { state: { main: "Success", sub: `You’ve successfully paid @${listing.created_by_name} $M${listing.price}` } }),
+                error => {
+                    if (error.message.includes("Incorrect password")) {
+                        setMsg("Incorrect password");
+                        setPasswordError(true);
+                        setLoading(false);
+                        setError(false);
+                        setOpen(false);
+                    } else if (error.message.includes("pending")) {
+                        setMsg("Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App");
+                        setLoading(false);
+                        setError('Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App');
+                        setOpen(false);
+                    } else {
+                        setMsg(error);
+                        setLoading(false);
+                        setError(true);
+                        setOpen(false);
                     }
-                )
-            }
+                }
+            )
         }
     }
 
