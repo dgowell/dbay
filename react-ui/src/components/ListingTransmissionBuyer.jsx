@@ -128,7 +128,7 @@ function ListingCollectionBuyer(props) {
                     listingId: listing.listing_id,
                     seller: listing.created_by_pk,
                     walletAddress: listing.wallet_address,
-                    purchaseCode: listing.listing_id,
+                    purchaseCode: listing.purchase_code,
                     amount: listing.price,
                     transmissionType: listing.transmission_type,
                     password: password

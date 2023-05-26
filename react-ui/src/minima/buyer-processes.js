@@ -97,7 +97,7 @@ async function sendCancellationNotification({ listingId, seller }) {
 */
 export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType, password }) {
     return new Promise(function (resolve, reject) {
-        sendMoney({ walletAddress, amount, listingId, password })
+        sendMoney({ walletAddress, amount, purchaseCode, password })
             .then((coinId) => {
                 if (coinId.includes('0x')) {
 
