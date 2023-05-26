@@ -292,7 +292,7 @@ export function sendMoney({
 }) {
     // Include the password in the command string if it's not empty
     const passwordPart = password ? `password:${password}` : "";
-    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} ${passwordPart} state:{"0":"[${listingId}]"}`;
+    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} ${passwordPart} state:{"99":"[${listingId}]"}`;
     return new Promise(function (resolve, reject) {
         //get contacts list from maxima
         window.MDS.cmd(Q, function (res) {
