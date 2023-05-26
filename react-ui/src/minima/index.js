@@ -287,31 +287,18 @@ send.propTypes = {
 export function sendMoney({
     walletAddress,
     amount,
-    listingId,
+    purchaseCode,
     password = "" // Add a default value for password
-}) {
+}, callback) {
     // Include the password in the command string if it's not empty
     const passwordPart = password ? `password:${password}` : "";
-    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} ${passwordPart} state:{"99":"[${listingId}]"}`;
-    return new Promise(function (resolve, reject) {
-        //get contacts list from maxima
-        window.MDS.cmd(Q, function (res) {
-            if (res.status === true) {
-                console.log(`sent ${amount} to ${walletAddress} with state code ${listingId} succesfully!`);
-                const coinId = res.response.body.txn.outputs[0].coinid;
-                coinId ? resolve(coinId) : reject(Error(`No coin attached to purchase`));
-            } else if (res.message) {
-                reject(Error(`Problem sending money: ${res.message}`));
-                window.MDS.log(`Problem sending money: ${res.message}`);
-            } else if (res.error) {
-                reject(Error(`Problem sending money: ${res.error}`));
-                window.MDS.log(`Problem sending money: ${res.eror}`);
-            } else {
-                reject(Error(`Problem sending money: ${res}`));
-                window.MDS.log(`Problem sending money: ${res}`);
-            }
-        })
-    })
+    const Q = `send tokenid:0x00 address:${walletAddress} amount:${amount} ${passwordPart} state:{"99":"${purchaseCode}"}`;
+    //get contacts list from maxima
+    window.MDS.cmd(Q, function (res) {
+        if (callback) {
+            callback(res);
+        }
+    });
 }
 
 /*

@@ -97,10 +97,15 @@ async function sendCancellationNotification({ listingId, seller }) {
 */
 export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType, password }) {
     return new Promise(function (resolve, reject) {
-        sendMoney({ walletAddress, amount, purchaseCode, password })
-            .then((coinId) => {
-                if (coinId.includes('0x')) {
+        sendMoney({ walletAddress, amount, purchaseCode, password }, function(res) {
+            console.log("Response from sendMoney function:", res);
 
+            //if the payemnt was successful
+            if (res.status === true) {
+                console.log(`sent ${amount} to ${walletAddress} with state code ${listingId} succesfully!`);
+                const coinId = res.response.body.txn.outputs[0].coinid;
+
+                if (coinId.includes('0x')) {
                     updateListing(listingId, { 'status': 'purchased', 'transmission_type': transmissionType }).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
 
@@ -108,29 +113,20 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
                     sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
                         .then(() => resolve(true))
                         .catch(Error(`Couldn't send purchase receipt`));
-
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
                     resetListingState(listingId);
                     reject(Error(`There was a problem with the payment`));
                 }
-            }).catch((error) => {
-                if (error.message.includes('Insufficient funds')) {
-                    resetListingState(listingId)
-                        .then(() => console.log('listing state reset because of error'))
-                        .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
-                    reject(Error(`Insufficient funds`));
-                } else if (error.message.includes('command needs to be confirmed and is now pending')) {
-                    updateListing(listingId, { 'status': 'unconfirmed' }).catch((e) => console.error(e));
-                    reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
-                } else {
-                    resetListingState(listingId)
-                        .then(() => console.log('listing state reset because of error'))
-                        .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
-                    console.error(error);
-                    reject(error);
-                }
-            });//.then(resolve(true));
+
+            //if the payement is pending and needs accepting
+            } else if (res.pending === true) {
+                updateListing(listingId, { 'status': 'unconfirmed', 'pendinguid': res.pendinguid }).catch((e) => console.error(e));
+                reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
+            } else {
+                reject(Error(res.error));
+            }
+        });
     })
 }
 purchaseListing.proptypes = {
@@ -173,11 +169,9 @@ collectListing.proptypes = {
 * @param {object} entity - Sellers hex address
 */
 export function processAvailabilityResponse(entity) {
-    console.log("processing availability response...");
-    updateListing(entity.listing_id, { "status": entity.status })
-        .catch((e) => console.error(`Couldn't update listing status ${e}`))
-    updateListing(entity.listing_id, {"purchase_code": entity.purchase_code})
-        .catch((e) => console.error(`Couldn't update listing purchase code ${e}`))
+    console.log("processing availability response..." + JSON.stringify(entity));
+    updateListing(entity.listing_id, { "status": entity.status, "purchase_code" : entity.purchase_code })
+        .catch((e) => console.error(e));
 }
 processAvailabilityResponse.proptypes = {
     entity: PropTypes.object.isRequired

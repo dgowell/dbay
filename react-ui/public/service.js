@@ -31,6 +31,9 @@ MDS.init(function (msg) {
             //if (logs) { MDS.log("NEWBALANCE EVENT received: "); }
             processNewBalanceEvent();
             break;
+        case "MINIMALOG":
+            processMinimaLogEvent(msg.data);
+            break;
         default:
             //if (logs) { MDS.log(JSON.stringify(msg)); }
             break;
@@ -66,6 +69,11 @@ function setup() {
             if (logs) { MDS.log('Added unconfirmed coin Column: ' + result) }
         });
 
+        addPendingUIDColumn(function (result) {
+            if (logs) { MDS.log('Added pending UID Column: ' + result) }
+        });
+
+
         //create settings table
         createSettingsTable(function (result) {
             if (logs) { MDS.log('Settings table created or exists:' + hostName); }
@@ -81,6 +89,15 @@ function setup() {
 /*
 ************************************************* PROCESS EVENTS *************************************************
 */
+
+function processMinimaLogEvent(data) {
+    MDS.log(JSON.stringify(data));
+    //get all the listings with pending transactions
+
+
+    // run checkPending commadn on the mds to check for pending payments
+}
+
 function processMaximaEvent(msg) {
 
     //Is it for us.. ?
@@ -290,6 +307,18 @@ function processMiningEvent(data) {
     }
 }
 
+function generateCode(length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
+    }
+    return result;
+}
+
 function processAvailabilityCheck(entity) {
     MDS.log(`received availability check for listing: ${JSON.stringify(entity)}`);
 
@@ -303,16 +332,21 @@ function processAvailabilityCheck(entity) {
         //is listing available
         const listingStatus = getStatus(entity.listing_id);
         MDS.log(`status of listing is: ${JSON.stringify(listingStatus)}`);
+
         if (listingStatus) {
             data.status = listingStatus;
             //generate unique identifier for transaction
-            //generate unique identifier for transaction
             const purchaseCode = generateCode(20);
+            //generate purchase code and send to buyer
+            MDS.log(`generating purchase code: ${purchaseCode}`);
             data.purchase_code = purchaseCode;
+
             MDS.log(`sending the responose to buyer..`);
             send(data, entity.buyer_pk);
+
             MDS.log(`updating listing in db to pending`);
             updateListing(entity.listing_id, {"purchase_code" : purchaseCode});
+
             //if listing available change to pending to stop other users buying it
             if (listingStatus === 'available') {
                 updateListing(entity.listing_id, { "status": "pending" });
@@ -402,12 +436,12 @@ function processPurchaseReceipt(entity) {
 
 function processAvailabilityResponse(entity) {
     if (logs) { MDS.log(`processing availability response...${entity}`); }
-    updateListing(entity.listing_id, { "status": entity.status });
+    updateListing(entity.listing_id, { "status": entity.status, "purchase_code": entity.purchase_code });
 }
 
 function processCollectionConfirmation(entity) {
     if (logs) { MDS.log(`Message received for collection of listing, updating..`); }
-    updateListing(id, {
+    updateListing(entity.listing_id, {
         'buyer_message': entity.message,
         'status': 'sold',
         'notification': 'true',
@@ -586,6 +620,7 @@ function createListingTable(callback) {
             "buyer_name" char(50),
             "buyer_pk" varchar(330),
             "purchase_code" varchar(30),
+            "pendinguid" varchar(34),
             "coin_id" varchar(80),
             "unconfirmed_coin_id" varchar(80) default null,
             "notification" boolean default false,
@@ -747,6 +782,18 @@ function addUnconfirmedCoinColumn(callback) {
             callback(true)
         } else {
             callback(Error(`Adding unconfirmed_coin_id column to listing table ${res.error}`));
+        }
+    })
+}
+
+function addPendingUIDColumn(callback) {
+    const Q = `alter table ${LISTINGSTABLE} add column if not exists "pendinguid" varchar(34) default null;`;
+    MDS.sql(Q, function (res) {
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
+        if (res.status) {
+            callback(true)
+        } else {
+            callback(Error(`Adding pendinguid column to listing table ${res.error}`));
         }
     })
 }
