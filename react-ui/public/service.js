@@ -172,7 +172,6 @@ function processMaximaEvent(msg) {
                         if (error) {
                             MDS.log("Error sending Minima: " + error);
                             //update frontend document with error
-
                             return;
                         }
                         MDS.log("Sent Minima");
