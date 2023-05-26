@@ -176,6 +176,8 @@ export function processAvailabilityResponse(entity) {
     console.log("processing availability response...");
     updateListing(entity.listing_id, { "status": entity.status })
         .catch((e) => console.error(`Couldn't update listing status ${e}`))
+    updateListing(entity.listing_id, {"purchase_code": entity.purchase_code})
+        .catch((e) => console.error(`Couldn't update listing purchase code ${e}`))
 }
 processAvailabilityResponse.proptypes = {
     entity: PropTypes.object.isRequired

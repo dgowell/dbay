@@ -197,6 +197,28 @@ getListingById.propTypes = {
     id: PropTypes.string.isRequired,
 }
 
+
+/**
+* Fetches a listing using a pourchase code
+* @param {string} purchaseCode - Code created by selller and given to buyer to confirm transaction
+*/
+export function getListingByPurchaseCode(purchaseCode) {
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(`SELECT * FROM ${LISTINGSTABLE} WHERE "purchase_code"='${purchaseCode}';`, function (res) {
+            if (res.status && res.count === 1) {
+                resolve(res.rows[0]);
+            }
+            else {
+                reject(Error(`MDS.SQL ERROR, could get listings ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get listings ${res.error}`);
+            }
+        });
+    });
+}
+getListingByPurchaseCode.propTypes = {
+    purchaseCode: PropTypes.string.isRequired
+}
+
 /**
 * Updates a listing with given key and value
 * @param {string} listingId - The id of the listing
