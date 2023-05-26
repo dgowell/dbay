@@ -1,7 +1,13 @@
+//Load dmax.js
+MDS.load("dmax.js");
+
 /* eslint-disable no-undef */
 var LISTINGSTABLE = 'LISTING';
 var SETTINGSTABLE = 'SETTINGS';
 var APPLICATION_NAME = 'stampd';
+
+const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001'
+const SERVER_WALLET = 'MxG083U3R8H31Z30H7Z6T0KM1Z9GJ978NCDGBJU42JTSZS18ZW4GFDF43EH519U'
 
 //switch on and off logs
 var logs = true;
@@ -12,17 +18,17 @@ MDS.init(function (msg) {
             setup();
             break;
         case "MAXIMA":
-            if (logs) { MDS.log("MAXIMA EVENT received: "); }
+            //if (logs) { MDS.log("MAXIMA EVENT received: "); }
             processMaximaEvent(msg);
             break;
         case "MINING":
             //check coins against unconfirmed/pending payemnts
-            if (logs) { MDS.log("MINING EVENT received: "); }
+            //if (logs) { MDS.log("MINING EVENT received: "); }
             processMiningEvent(msg.data);
             break;
         case "NEWBALANCE":
             //check coins against unconfirmed/pending payemnts
-            if (logs) { MDS.log("NEWBALANCE EVENT received: "); }
+            //if (logs) { MDS.log("NEWBALANCE EVENT received: "); }
             processNewBalanceEvent();
             break;
         default:
@@ -36,7 +42,10 @@ MDS.init(function (msg) {
 * store id = current public key
 */
 function setup() {
-    let pk = getPublicKey();
+    let pk = '';
+    getPublicKey(function (res) {
+        pk = res;
+    });
     let hostName = getMaximaContactName();
     let mls = getMLS();
     const permanentAddress = `MAX#${pk}#${mls}`;
@@ -75,66 +84,125 @@ function setup() {
 function processMaximaEvent(msg) {
 
     //Is it for us.. ?
-    if (msg.data.application !== "stampd") {
-        return;
-    }
+    if (msg.data.application === "stampd") {
 
-    //Get the data packet..
-    var datastr = msg.data.data;
-    if (datastr.startsWith("0x")) {
-        datastr = datastr.substring(2);
-    }
-    if (logs) {
-        MDS.log("----");
-        MDS.log(JSON.stringify(msg.data.data));
-        MDS.log("----");
-    }
 
-    var jsonstr = "";
-    MDS.cmd("convert from:HEX to:String data:" + msg.data.data, function (resp) {
-        MDS.log(JSON.stringify(resp.response.conversion).replace(/'/g, ""));
-        jsonstr = JSON.parse(resp.response.conversion.replace(/'/g, ""));
-    });
+        //Get the data packet..
+        var datastr = msg.data.data;
+        if (datastr.startsWith("0x")) {
+            datastr = datastr.substring(2);
+        }
+        if (logs) {
+            MDS.log("----");
+            MDS.log(JSON.stringify(msg.data.data));
+            MDS.log("----");
+        }
 
-    if (logs) {
-        //And create the actual JSON
-        MDS.log(JSON.stringify(jsonstr));
-        var entity = jsonstr;
-        MDS.log("======");
-        MDS.log(entity.type);
-        MDS.log("======");
+        var jsonstr = "";
+        MDS.cmd("convert from:HEX to:String data:" + msg.data.data, function (resp) {
+            MDS.log(JSON.stringify(resp.response.conversion).replace(/'/g, ""));
+            jsonstr = JSON.parse(resp.response.conversion.replace(/'/g, ""));
+        });
+
+        if (logs) {
+            //And create the actual JSON
+            MDS.log(JSON.stringify(jsonstr));
+            var entity = jsonstr;
+            MDS.log("======");
+            MDS.log(entity.type);
+            MDS.log("======");
+        }
+
+        //determine what type of message you're receiving
+        switch (entity.type) {
+            case 'availability_check':
+                //buyer checks listing availability with seller
+                processAvailabilityCheck(entity);
+                break;
+            case 'availability_response':
+                //seller sends status of listing to buyer
+                processAvailabilityResponse(entity);
+                break;
+            case 'listing':
+                //a contact has shared a listing with you
+                processListing(entity);
+                break;
+            case 'purchase_receipt':
+                //buyer sends seller their address and coin id
+                processPurchaseReceipt(entity);
+                break;
+            case 'collection_confirmation':
+                //buyer sends seller their number to arrange collection
+                processCollectionConfirmation(entity);
+                break;
+            case 'cancel_collection':
+                //buyer sends seller their number to arrange collection
+                processCancelCollection(entity);
+                break;
+            default:
+                if (logs) { MDS.log(entity); }
+        }
+    } else if (msg.data.application === "dmax") {
+        //Is it for dmax...
+
+        //Convert the data..
+        MDS.cmd("convert from:HEX to:String data:" + msg.data.data, function (resp) {
+
+            //And create the actual JSON
+            //TODO: Check that conversion is part of the response
+            var json = JSON.parse(resp.response.conversion);
+
+            //What type is this..
+            var type = json.type;
+
+
+
+            if (type === "P2P_RESPONSE") {
+                MDS.log("P2P_RESPONSE received:" + JSON.stringify(json));
+                //create two variables for the amount and the p2pidentity
+                var amount = json.data.amount;
+                var p2pIdentity = json.data.p2pidentity;
+
+                //set the static MLS
+                setStaticMLS(p2pIdentity, function (resp) {
+                    MDS.log("Set static MLS");
+
+                    //send amount of money to the server wallet
+                    sendMinima(amount, SERVER_WALLET, function (coinId, error) {
+                        if (error) {
+                            MDS.log("Error sending Minima: " + error);
+                            //update frontend document with error
+
+                            return;
+                        }
+                        MDS.log("Sent Minima");
+                        //coinID is returned
+
+                        //get the client public key
+                        getPublicKey(function (clientPK) {
+                            MDS.log("Got public key");
+
+                            //send via maxima coinID, clientPK
+                            sendMaximaMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": amount } }, SERVER_ADDRESS, function (msg) {
+                                MDS.log("Sent response to " + SERVER_ADDRESS);
+                            });
+                        });
+                    });
+                });
+            }
+
+
+            else if (type === "EXPIRY_DATE") {
+                //replace user message with the expiry date and permanent maxima address
+                var expiryDate = json.data.expiry_date;
+                var permanentAddress = json.data.permanent_address;
+
+                document.getElementById("js-main").innerHTML = `Your MLS will expire on ${expiryDate}. Your permanent address is ${permanentAddress}.`;
+            } else {
+                MDS.log("INVALID message type in dmax server: " + messagetype);
+            }
+        });
     }
-
-    //determine what type of message you're receiving
-    switch (entity.type) {
-        case 'availability_check':
-            //buyer checks listing availability with seller
-            processAvailabilityCheck(entity);
-            break;
-        case 'availability_response':
-            //seller sends status of listing to buyer
-            processAvailabilityResponse(entity);
-            break;
-        case 'listing':
-            //a contact has shared a listing with you
-            processListing(entity);
-            break;
-        case 'purchase_receipt':
-            //buyer sends seller their address and coin id
-            processPurchaseReceipt(entity);
-            break;
-        case 'collection_confirmation':
-            //buyer sends seller their number to arrange collection
-            processCollectionConfirmation(entity);
-            break;
-        case 'cancel_collection':
-            //buyer sends seller their number to arrange collection
-            processCancelCollection(entity);
-            break;
-        default:
-            if (logs) { MDS.log(entity); }
-    }
-
 }
 function processListing(entity) {
     if (logs) { MDS.log(`processing listing...${entity}`) }
@@ -174,9 +242,6 @@ function processListing(entity) {
 function processMiningEvent(data) {
     if (logs) { MDS.log("Processing mining event"); }
 
-
-    //check if we are seller or buyer
-    var pk = getPublicKey();
 
     var txn = '';
     var listingId = '';
@@ -457,6 +522,7 @@ function getMLS() {
     return mls;
 }
 
+/*
 function getPublicKey() {
     var pb = '';
     MDS.cmd('maxima', function (res) {
@@ -469,6 +535,7 @@ function getPublicKey() {
     })
     return pb;
 }
+*/
 
 function getMaximaContactName() {
     var mcn = '';
@@ -592,7 +659,15 @@ function createListing({
     shippingCountries
 }) {
     const randomId = Math.trunc(Math.random() * 10000000000000000);
-    const pk = getPublicKey();
+    let pk = '';
+    getPublicKey(function (res) {   // get the public key of the user
+        if (res) {
+            pk = res;
+        } else {
+            return Error(`Couldn't fetch public key ${res.error}`);
+        }
+    });
+
     const id = `${randomId}${pk}`;
     if (logs) { MDS.log(`the id for the listing is: ${id}`); }
     const timestamp = Math.floor(Date.now() / 1000);

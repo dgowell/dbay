@@ -5,7 +5,6 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate } from "react-router";
 import { ReactComponent as Logo } from '../assets/images/logo.svg';
 import Button from '@mui/material/Button';
@@ -14,7 +13,7 @@ const ResponsiveAppBar = () => {
     const navigate = useNavigate();
 
     const handleLogoClick = () => {
-        navigate('/instruction');
+        navigate('/dmax');
     };
 
     return (

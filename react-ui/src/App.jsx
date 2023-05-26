@@ -24,6 +24,7 @@ import CollectionSuccess from "./components/CollectionSuccess";
 import InfoPage from "./components/InfoPage";
 import ArrangeCollection from "./components/ArrangeCollection";
 import InstructionPage from "./components/InstructionPage";
+import DmaxClient from "./components/DmaxClient";
 
 import "@fontsource/roboto";
 
@@ -105,6 +106,7 @@ function App() {
             <Route path="info/" element={<InfoPage />} />
             <Route path="arr-col/:id" element={<ArrangeCollection />} />
             <Route path="instruction/" element={<InstructionPage />} />
+            <Route path="dmax/" element={<DmaxClient />} />
             <Route path="*" element={<NoMatch />} />
           </Routes>
           <BottomNavBar />

@@ -5,6 +5,9 @@ import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
 
+//get server address env variable
+const SERVER_ADDRESS = process.env.REACT_APP_DMAX_SERVER_ADDRESS;
+
 /**
 * Fetches publickeys of your maxima contacts
 */
@@ -131,8 +134,58 @@ export function getMiniAddress() {
     })
 }
 
+/**
+ * Send message via Maxima to contat address or permanent address
+ * @param {*} message
+ * @param {*} address
+ * @param {*} callback
+ */
+export function sendMaximaMessage(message, address, callback) {
+    window.MDS.log("Sending message to " + address);
+    var maxcmd = "maxima action:send poll:true to:" + address + " application:dmax data:" + JSON.stringify(message);
+    window.MDS.log(maxcmd);
+    window.MDS.cmd(maxcmd, function (msg) {
+        window.MDS.log(JSON.stringify(msg));
+        if (callback) {
+            callback(msg);
+        }
+    });
+}
 
+/**
+* Called when form is submitted
+* @param amount
+*/
 
+export function handleDmaxClientSubmit(amount) {
+
+    //get the clients contact address
+    getContactAddress(function (address) {
+
+        //create p2pidentity request
+        sendMaximaMessage({ "type": "P2P_REQUEST", "data": { "amount": amount, "contact": address } }, SERVER_ADDRESS, function (msg) {
+            window.MDS.log("Sent P2P request to " + SERVER_ADDRESS);
+
+            //remove the form from the UI and replace with a message
+            document.getElementById("js-main").innerHTML = "Your request has been sent to the MLS server. Please wait for confirmation.";
+        });
+    });
+}
+
+/**
+* Get Contact Address
+* @param {*} callback
+*/
+export function getContactAddress(callback) {
+    var maxcmd = "maxima";
+    window.MDS.cmd(maxcmd, function (msg) {
+        window.MDS.log(`Get Contact Address: ${JSON.stringify(msg)}`);
+        if (callback) {
+            window.MDS.log(`Contact Address: ${msg.response.contact}`);
+            callback(msg.response.contact);
+        }
+    });
+}
 
 /**
 * Send listing to all contacts
