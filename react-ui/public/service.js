@@ -92,11 +92,31 @@ function setup() {
 
 function processMinimaLogEvent(data) {
     MDS.log(JSON.stringify(data));
-    //get all the listings with pending transactions
-
-
-    // run checkPending commadn on the mds to check for pending payments
+    //get all pending transactions
+    getListingsWithPendingUID(function (listings) {
+        if (logs) { MDS.log('Listings with pending UID: ' + JSON.stringify(listings)) }
+        if (listings.length > 0) {
+            listings.foreach(function (listing) {
+                let cmd = `checkpending uid:${listing.pendinguid}`;
+                MDS.cmd(cmd, function (response) {
+                    if (response.status === true) {
+                        const data = {
+                            "type": "purchase_receipt",
+                            "buyer_message": listing.buyer_message,
+                            "listing_id": listing.listing_id,
+                            "transmission_type": listing.transmission_type,
+                            "buyer_name": listing.buyer_name
+                        }
+                        sendMaximaMessage(data, listing.created_by_pk, function (result) {
+                            if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+                        });
+                    }
+                });
+            });
+        } else { if (logs) { MDS.log('No listings with pending UID') } }
+    });
 }
+
 
 function processMaximaEvent(msg) {
 
@@ -345,7 +365,7 @@ function processAvailabilityCheck(entity) {
             send(data, entity.buyer_pk);
 
             MDS.log(`updating listing in db to pending`);
-            updateListing(entity.listing_id, {"purchase_code" : purchaseCode});
+            updateListing(entity.listing_id, { "purchase_code": purchaseCode });
 
             //if listing available change to pending to stop other users buying it
             if (listingStatus === 'available') {
@@ -399,37 +419,57 @@ function processPurchaseReceipt(entity) {
     //get the listing
     getListingById(id, function (listing) {
         if (logs) { MDS.log(`Listing found: ${JSON.stringify(listing)}`); }
-        //check coins for coin id
-        if (logs) { MDS.log(`Coin id about to be checked: ${entity.coin_id}`); }
-        getCoinById(entity.coin_id, function (coin) {
-            if (coin) {
-                if (logs) { MDS.log(`Coin amount: ${coin.amount}, listing price: ${listing.price}`); }
-                //if the coin amount is the same as the listing price, update the listing
-                if (coin.amount === listing.price) {
-                    updateListing(id,
-                        {
-                            'buyer_message': entity.buyer_message,
-                            'status': 'sold',
-                            'coin_id': entity.coin_id,
-                            'notification': 'true',
-                            'buyer_name': entity.buyer_name
-                        })
-                } else if (coin.amount > listing.price) {
-                    MDS.log(`Coin amount greater than listing price, coin value sent: ${coin.amount}, listing price: ${listing.price}`);
+
+        if (entity.coin_id) {
+            //check coins for coin id
+            if (logs) { MDS.log(`Coin id about to be checked: ${entity.coin_id}`); }
+            getCoinById(entity.coin_id, function (coin) {
+                if (coin) {
+                    if (logs) { MDS.log(`Coin amount: ${coin.amount}, listing price: ${listing.price}`); }
+                    //if the coin amount is the same as the listing price, update the listing
+                    if (coin.amount === listing.price + listing.shippingCost ? listing.shippingCost : 0) {
+                        updateListing(id,
+                            {
+                                'buyer_message': entity.buyer_message,
+                                'status': 'sold',
+                                'coin_id': entity.coin_id,
+                                'notification': 'true',
+                                'buyer_name': entity.buyer_name
+                            })
+                    } else if (coin.amount > listing.price) {
+                        MDS.log(`Coin amount greater than listing price, coin value sent: ${coin.amount}, listing price: ${listing.price}`);
+                    } else {
+                        MDS.log(`Coin amount less than listing price, coin value sent: ${coin.amount}, listing price: ${listing.price}`);
+                    }
                 } else {
-                    MDS.log(`Coin amount less than listing price, coin value sent: ${coin.amount}, listing price: ${listing.price}`);
+                    //no coin found
+                    if (logs) { MDS.log(`No coin found for coin id: ${entity.coin_id}`); }
+                    //update listing with coin id sent from buyer
+                    updateListing(id, {
+                        'unconfirmed_coin_id': entity.coin_id,
+                        'buyer_name': entity.buyer_name,
+                        'buyer_message': entity.buyer_message,
+                    });
                 }
-            } else {
-                //no coin found
-                if (logs) { MDS.log(`No coin found for coin id: ${entity.coin_id}`); }
-                //update listing with coin id sent from buyer
-                updateListing(id, {
-                    'unconfirmed_coin_id': entity.coin_id,
-                    'buyer_name': entity.buyer_name,
-                    'buyer_message': entity.buyer_message,
-                });
-            }
-        }); //get coin
+            }); //get coin
+        } //if there is no coin id then the request must be after accepting
+        else {
+            confirmCoin(listing.purchase_code, function (coin) {
+                if (coin) {
+                    //if coin is confirmed then check the amount of the coin matches the amount on th elisting
+                    if (coin.amount === listing.price + listing.shippingCost ? listing.shippingCost : 0) {
+                        updateListing(id,
+                            {
+                                'buyer_message': entity.buyer_message,
+                                'status': 'sold',
+                                'coin_id': coin.coin_id,
+                                'notification': 'true',
+                                'buyer_name': entity.buyer_name
+                            });
+                    }
+                }
+            });
+        }
     }); //get listing
 }
 
@@ -600,6 +640,24 @@ function getListingsWithUnconfirmedCoins(callback) {
     });
 }
 
+function getListingsWithPendingUID(callback) {
+    if (logs) { MDS.log("Getting pending listings"); }
+    MDS.sql("SELECT * FROM listing WHERE pendinguid IS NOT NULL", function (result) {
+        if (result && callback) {
+            if (logs) { MDS.log(`Listings Found: ${JSON.stringify(result)}`); }
+            callback(result);
+        } else {
+            callback([]);
+            if (logs) { MDS.log("No pending listings found"); }
+        }
+    });
+}
+
+
+function confirmCoin(code, callback) {
+    if (logs) { MDS.log('Search history for purchase code') }
+
+}
 /*
 ***************************************************** DATABASE FUNCTIONS *****************************************************
 */

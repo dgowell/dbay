@@ -121,7 +121,12 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
 
             //if the payement is pending and needs accepting
             } else if (res.pending === true) {
-                updateListing(listingId, { 'status': 'unconfirmed', 'pendinguid': res.pendinguid }).catch((e) => console.error(e));
+                updateListing(listingId, {
+                    'status': 'unconfirmed',
+                    'pendinguid': res.pendinguid,
+                    'transmission_type': transmissionType,
+                    'buyer_message': message,
+                }).catch((e) => console.error(e));
                 reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
             } else {
                 reject(Error(res.error));
