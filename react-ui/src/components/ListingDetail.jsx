@@ -162,16 +162,24 @@ function ListingDetail() {
     });
     console.log("hasFunds", hasFunds);
 
-    if (hasFunds || (process.env.REACT_APP_MODE === "testvalue")) {
+    if (hasFunds) {
       const isAvailable = await checkAvailability({
         seller: listing.created_by_pk,
         buyerPk: buyerAddress,
         listingId: listing.listing_id,
-      }).catch(error => {
-        console.log(`Item is not available ${error}`);
-        navigate(`/info`, { state: { action: "error", main: (error ? "Not available" : "Seller not available"), sub: (error ? "It looks like someone has recently bought this item or the seller has removed it from sale" : `Seller is not a contact. Try contacting @${listing.sent_by_name} to see if they can put you in touch.`) } });
-        setError(`Not available`);
-        setLoading(false);
+      }).catch(
+        error => {
+          if (error.message.includes('connect timed out')) {
+           console.log(`Problem checking item availability ${error}`);
+            navigate(`/info`, { state: { action: "error", main: 'Network timeout', sub: "couldnt reach seller, check your maxima connection and try again in a few minutes" } });
+            setError(`Network timeout`);
+            setLoading(false);
+          } else {
+            console.log(`Problem checking item availability ${error}`);
+            navigate(`/info`, { state: { action: "error", main: "There was a problem", sub: (error.message ? error.message : `There was a problem, please try again later.`) } });
+            setError(`There was a problem`);
+            setLoading(false);
+          }
       });
 
       if (isAvailable) {

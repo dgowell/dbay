@@ -121,6 +121,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
 
             //if the payement is pending and needs accepting
             } else if (res.pending === true) {
+                console.log(`Transaction pending. saving uid: ${res.pendinguid}`);
                 updateListing(listingId, {
                     'status': 'unconfirmed',
                     'pendinguid': res.pendinguid,

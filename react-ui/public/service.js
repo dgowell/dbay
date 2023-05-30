@@ -21,11 +21,6 @@ MDS.init(function (msg) {
             //if (logs) { MDS.log("MAXIMA EVENT received: "); }
             processMaximaEvent(msg);
             break;
-        case "MINING":
-            //check coins against unconfirmed/pending payemnts
-            //if (logs) { MDS.log("MINING EVENT received: "); }
-            processMiningEvent(msg.data);
-            break;
         case "NEWBALANCE":
             //check coins against unconfirmed/pending payemnts
             //if (logs) { MDS.log("NEWBALANCE EVENT received: "); }
@@ -58,32 +53,33 @@ function setup() {
     //create listing table
     createListingTable(function (result) {
         if (logs) { MDS.log('Listing table created or exists') }
-
-        //add location description column
-        addLocationDescriptionColumn(function (result) {
-            if (logs) { MDS.log('Added location description Column: ' + result) }
-        });
-
-        //add location description column
-        addUnconfirmedCoinColumn(function (result) {
-            if (logs) { MDS.log('Added unconfirmed coin Column: ' + result) }
-        });
-
-        addPendingUIDColumn(function (result) {
-            if (logs) { MDS.log('Added pending UID Column: ' + result) }
-        });
-
-
-        //create settings table
-        createSettingsTable(function (result) {
-            if (logs) { MDS.log('Settings table created or exists:' + hostName); }
-
-            //check if store exists
-            createHost(hostName, permanentAddress);
-            if (logs) { MDS.log('Local hosting info stored in database') }
-
-        });
     });
+
+    //add location description column
+    addLocationDescriptionColumn(function (result) {
+        if (logs) { MDS.log('Added location description Column: ' + result) }
+    });
+
+    //add location description column
+    addUnconfirmedCoinColumn(function (result) {
+        if (logs) { MDS.log('Added unconfirmed coin Column: ' + result) }
+    });
+
+    addPendingUIDColumn(function (result) {
+        if (logs) { MDS.log('Added pending UID Column: ' + result) }
+    });
+
+
+    //create settings table
+    createSettingsTable(function (result) {
+        if (logs) { MDS.log('Settings table created or exists:' + hostName); }
+
+        //check if store exists
+        createHost(hostName, permanentAddress);
+        if (logs) { MDS.log('Local hosting info stored in database') }
+
+    });
+
 }
 
 /*
@@ -91,30 +87,49 @@ function setup() {
 */
 
 function processMinimaLogEvent(data) {
-    MDS.log(JSON.stringify(data));
-    //get all pending transactions
-    getListingsWithPendingUID(function (listings) {
-        if (logs) { MDS.log('Listings with pending UID: ' + JSON.stringify(listings)) }
-        if (listings.length > 0) {
-            listings.foreach(function (listing) {
-                let cmd = `checkpending uid:${listing.pendinguid}`;
+    //if we have a new spent coin
+    if (data.message.includes("NEW Spent Coin")) {
+        //get all pending transactions
+        getListingsWithPendingUID(function (listings) {
+            if (logs) { MDS.log(`Listings Found: ${JSON.stringify(listings)}`); }
+            MDS.log('listings is a : ' + typeof(listings));
+            if (listings.length > 1) {
+                listings.foreach(function (listing) {
+                    let cmd = `checkpending uid:${listing.pendinguid}`;
+                    MDS.cmd(cmd, function (response) {
+                        if (response.status === true) {
+                            const data = {
+                                "type": "purchase_receipt",
+                                "buyer_message": listing.buyer_message,
+                                "listing_id": listing.listing_id,
+                                "transmission_type": listing.transmission_type,
+                                "buyer_name": listing.buyer_name
+                            }
+                            sendMaximaMessage(data, listing.created_by_pk, function (result) {
+                                if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+                            });
+                        }
+                    });
+                });
+            } else if (listings.length > 0) {
+                let cmd = `checkpending uid:${listings.pendinguid}`;
                 MDS.cmd(cmd, function (response) {
                     if (response.status === true) {
                         const data = {
                             "type": "purchase_receipt",
-                            "buyer_message": listing.buyer_message,
-                            "listing_id": listing.listing_id,
-                            "transmission_type": listing.transmission_type,
-                            "buyer_name": listing.buyer_name
+                            "buyer_message": listings.buyer_message,
+                            "listing_id": listings.listing_id,
+                            "transmission_type": listings.transmission_type,
+                            "buyer_name": listings.buyer_name
                         }
-                        sendMaximaMessage(data, listing.created_by_pk, function (result) {
+                        sendMaximaMessage(data, listings.created_by_pk, function (result) {
                             if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
                         });
                     }
                 });
-            });
-        } else { if (logs) { MDS.log('No listings with pending UID') } }
-    });
+            } else { if (logs) { MDS.log('No listings with pending UID') } }
+        });
+    }
 }
 
 
@@ -272,61 +287,6 @@ function processListing(entity) {
 }
 
 
-/*
-* Check coins for unconfirmed payments
-*/
-function processMiningEvent(data) {
-    if (logs) { MDS.log("Processing mining event"); }
-
-
-    var txn = '';
-    var listingId = '';
-    var outputs = '';
-    var coinId = '';
-
-    try {
-        txn = data.txpow.body.txn;
-        listingId = txn.state[0].data;
-
-        //remove the square brackets in the listingID string
-        listingId = listingId.substring(1, listingId.length - 1);
-
-        var outputs = txn.outputs;
-
-
-        getListingById(listingId, function (listing) {
-            if (logs) { MDS.log("Listing:" + JSON.stringify(listing)); }
-
-            //loop through the outputs and check which amount equals the listing.price;
-            for (var x = 0; x < outputs.length; x++) {
-                var output = outputs[x];
-                var amount = output.amount;
-                if (logs) { MDS.log("amount:" + amount); }
-                if (amount === listing.price) {
-                    if (logs) { MDS.log("amount matches listing price"); }
-                    coinId = output.coinid;
-                    if (logs) { MDS.log("coin id:" + coinId); }
-                }
-            }
-            if (logs) { MDS.log("Transmission Type:" + listing.transmission_type); }
-
-            //send listingId and coinid to seller
-            var data = {
-                "type": "purchase_receipt",
-                "listing_id": listingId,
-                "coin_id": coinId,
-                "transmission_type": listing.transmission_type
-            }
-
-            if (logs) { MDS.log("sending purchase receipt to seller at: " + listing.created_by_pk); }
-            send(data, listing.created_by_pk);
-
-        });
-    } catch (error) {
-        if (logs) { MDS.log(error); }
-    }
-}
-
 function generateCode(length) {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -381,30 +341,33 @@ function processNewBalanceEvent() {
     if (logs) { MDS.log("Processing new balance event"); }
 
     getListingsWithUnconfirmedCoins(function (listings) {
-        if (logs) { MDS.log("Listings with unconfirmed coins: " + JSON.stringify(listings)); }
+        if (logs) {
+            MDS.log(`Found ${JSON.stringify(listings.count)} listings with unconfirmed coins`); }
 
-        //loop therough coins and check each one against the coins list returned by mds.cmd('coins')
-        listings.forEach(function (listing) {
-            if (logs) { MDS.log("Unconfirmed coin: " + JSON.stringify(listing.unconfirmed_coin_id)); }
+        if (listings.length > 0) {
+            //loop therough coins and check each one against the coins list returned by mds.cmd('coins')
+            listings.forEach(function (listing) {
+                if (logs) { MDS.log("Unconfirmed coin: " + JSON.stringify(listing.unconfirmed_coin_id)); }
 
-            //check if a coin exists with this id
-            MDS.cmd('coins coinid:' + listing.unconfirmed_coin_id, function (coin) {
-                if (logs) { MDS.log("Coin: " + JSON.stringify(coin)); }
-                coin = response[0];
-                //confirm that the amount onf the listing equals the coin amount
-                if (coin.amount === listing.price) {
-                    //update the listing as sold
-                    //remove the coin id from the listing
-                    updateListing(listing.id, {
-                        'unconfirmed_coin_id': null,
-                        'coin_id': coin.coinid,
-                        'status': 'sold',
-                        'notification': 'true'
-                    }, function (result) {
-                    })
-                }
+                //check if a coin exists with this id
+                MDS.cmd('coins coinid:' + listing.unconfirmed_coin_id, function (coin) {
+                    if (logs) { MDS.log("Coin: " + JSON.stringify(coin)); }
+                    coin = response[0];
+                    //confirm that the amount onf the listing equals the coin amount
+                    if (coin.amount === listing.price) {
+                        //update the listing as sold
+                        //remove the coin id from the listing
+                        updateListing(listing.id, {
+                            'unconfirmed_coin_id': null,
+                            'coin_id': coin.coinid,
+                            'status': 'sold',
+                            'notification': 'true'
+                        }, function (result) {
+                        })
+                    }
+                });
             });
-        });
+        }
     });
 }
 
@@ -475,7 +438,7 @@ function processPurchaseReceipt(entity) {
 
 
 function processAvailabilityResponse(entity) {
-    if (logs) { MDS.log(`processing availability response...${entity}`); }
+    if (logs) { MDS.log(`processing availability response...${JSON.stringify(entity)}`); }
     updateListing(entity.listing_id, { "status": entity.status, "purchase_code": entity.purchase_code });
 }
 
@@ -598,21 +561,6 @@ function getMLS() {
     return mls;
 }
 
-/*
-function getPublicKey() {
-    var pb = '';
-    MDS.cmd('maxima', function (res) {
-        if (logs) { MDS.log(JSON.stringify(res)); }
-        if (res.status) {
-            pb = res.response.publickey;
-        } else {
-            return Error(`Couldn't fetch maxima public key ${res.error}`);
-        }
-    })
-    return pb;
-}
-*/
-
 function getMaximaContactName() {
     var mcn = '';
     MDS.cmd('maxima', function (res) {
@@ -630,7 +578,7 @@ function getMaximaContactName() {
 */
 function getListingsWithUnconfirmedCoins(callback) {
     if (logs) { MDS.log("Getting unconfirmed coins"); }
-    MDS.sql("SELECT * FROM listing WHERE unconfirmed_coin_id IS NOT NULL", function (result) {
+    MDS.sql(`SELECT * FROM "${LISTINGSTABLE}" WHERE "unconfirmed_coin_id" IS NOT NULL`, function (result) {
         if (result && callback) {
             callback(result);
         } else {
@@ -642,10 +590,9 @@ function getListingsWithUnconfirmedCoins(callback) {
 
 function getListingsWithPendingUID(callback) {
     if (logs) { MDS.log("Getting pending listings"); }
-    MDS.sql("SELECT * FROM listing WHERE pendinguid IS NOT NULL", function (result) {
+    MDS.sql(`SELECT * FROM "${LISTINGSTABLE}" WHERE "pendinguid" IS NOT NULL`, function (result) {
         if (result && callback) {
-            if (logs) { MDS.log(`Listings Found: ${JSON.stringify(result)}`); }
-            callback(result);
+            callback(result.rows);
         } else {
             callback([]);
             if (logs) { MDS.log("No pending listings found"); }
@@ -678,7 +625,7 @@ function createListingTable(callback) {
             "buyer_name" char(50),
             "buyer_pk" varchar(330),
             "purchase_code" varchar(30),
-            "pendinguid" varchar(34),
+            "pendinguid" varchar(34) default null,
             "coin_id" varchar(80),
             "unconfirmed_coin_id" varchar(80) default null,
             "notification" boolean default false,
