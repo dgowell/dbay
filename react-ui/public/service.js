@@ -156,11 +156,11 @@ function processMaximaEvent(msg) {
         //determine what type of message you're receiving
         switch (entity.type) {
             case 'availability_check':
-                //buyer checks listing availability with seller
+                //seller must process request to check availability of listing from buyer
                 processAvailabilityCheck(entity);
                 break;
             case 'availability_response':
-                //seller sends status of listing to buyer
+                //buyer must process response from seller
                 processAvailabilityResponse(entity);
                 break;
             case 'listing':
@@ -168,7 +168,7 @@ function processMaximaEvent(msg) {
                 processListing(entity);
                 break;
             case 'purchase_receipt':
-                //buyer sends seller their address and coin id
+                //seller must process purchase receipt from buyer
                 processPurchaseReceipt(entity);
                 break;
             case 'collection_confirmation':
@@ -289,46 +289,41 @@ function generateCode(length) {
     return result;
 }
 
+
+/*
+* Seller processes availability check from buyer
+*/
 function processAvailabilityCheck(entity) {
     MDS.log(`received availability check for listing: ${JSON.stringify(entity)}`);
 
+    //create the data for the response
     const data = {
         "type": "availability_response",
         "status": "unavailable",
         "listing_id": entity.listing_id
     }
 
-    try {
-        //is listing available
-        const listingStatus = getStatus(entity.listing_id);
-        MDS.log(`status of listing is: ${JSON.stringify(listingStatus)}`);
+    //check the status of the listing
+    const listingStatus = getStatus(entity.listing_id);
+    MDS.log(`status of listing is: ${JSON.stringify(listingStatus)}`);
 
-        if (listingStatus) {
-            data.status = listingStatus;
-            //generate unique identifier for transaction
-            const purchaseCode = generateCode(20);
-            //generate purchase code and send to buyer
-            MDS.log(`generating purchase code: ${purchaseCode}`);
-            data.purchase_code = purchaseCode;
+    if (listingStatus) {
+        //reduce the amount of statuses for the buyer to process
+        if (listingStatus === 'available' || listingStatus === 'ongoing') {
+            //send back the status of the listing
+            data.status = 'available';
+        } else if (listingStatus === 'unconfirmed_payment' || listingStatus === 'collection_confirmed' || listingStatus === 'completed') {
+            data.status = 'completed';
+        }
+    }
+    //Note: if there is no status then we will return unavailable
 
-            MDS.log(`sending the responose to buyer..`);
-            send(data, entity.buyer_pk);
-
-            MDS.log(`updating listing in db to pending`);
-            updateListing(entity.listing_id, { "purchase_code": purchaseCode });
-
-            //if listing available change to pending to stop other users buying it
-            if (listingStatus === 'available') {
-                updateListing(entity.listing_id, { "status": "pending" });
-            }
-        };
-    } catch (error) {
-        if (logs) { MDS.log(`There was an error processing availability check: ${JSON.stringify(error)}`); }
-    };
+    MDS.log(`sending the responose to buyer..`);
+    send(data, entity.buyer_pk);
 }
 
 /*
-*   
+*
 */
 function processNewBalanceEvent() {
     if (logs) { MDS.log("Processing new balance event"); }
@@ -645,7 +640,7 @@ function createListingTable(callback) {
             "sent_by_name" char(50),
             "created_at" int not null,
             "wallet_address" varchar(80) not null,
-            "status" char(50) not null default 'available',
+            "status" char(40) not null default 'available',
             "buyer_message" varchar(1000),
             "buyer_name" char(50),
             "buyer_pk" varchar(330),

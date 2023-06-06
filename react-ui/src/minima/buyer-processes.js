@@ -232,25 +232,7 @@ export function checkAvailability({
                             removeListing(listingId)
                                 .then(() => console.log('Sucessfully removed listing'))
                                 .catch((e) => console.error(e));
-                            resolve('This item is unavailable');
-                            break;
-                        case "unconfirmed_payment":
-                            clearInterval(interval);
-                            updateListing(listingId, { 'status': 'unchecked' })
-                                .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
-                            resolve('Item not currently available, please try again later')
-                            break;
-                        case "ongoing":
-                            clearInterval(interval);
-                            updateListing(listingId, { 'status': 'unchecked' })
-                                .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
-                            resolve('Item not currently available, please try again later')
-                            break;
-                        case "collection_confirmed":
-                            clearInterval(interval);
-                            updateListing(listingId, { 'status': 'unchecked' })
-                                .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
-                            resolve('Item not currently available, please try again later')
+                            resolve('This item is unavailable and has been removed from the marketplace');
                             break;
                         case "completed":
                             clearInterval(interval);
