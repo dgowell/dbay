@@ -221,7 +221,7 @@ export function checkAvailability({
                     console.log(listing);
                     switch (listing.status) {
                         case "unchecked":
-                            console.log("Still waiting for response from seller...");
+                            console.log("Waiting for response from seller...");
                             break;
                         case "available":
                             clearInterval(interval);
@@ -234,13 +234,25 @@ export function checkAvailability({
                                 .catch((e) => console.error(e));
                             resolve('This item is unavailable');
                             break;
-                        case "pending":
+                        case "unconfirmed_payment":
                             clearInterval(interval);
                             updateListing(listingId, { 'status': 'unchecked' })
                                 .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
                             resolve('Item not currently available, please try again later')
                             break;
-                        case "sold":
+                        case "ongoing":
+                            clearInterval(interval);
+                            updateListing(listingId, { 'status': 'unchecked' })
+                                .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
+                            resolve('Item not currently available, please try again later')
+                            break;
+                        case "collection_confirmed":
+                            clearInterval(interval);
+                            updateListing(listingId, { 'status': 'unchecked' })
+                                .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
+                            resolve('Item not currently available, please try again later')
+                            break;
+                        case "completed":
                             clearInterval(interval);
                             removeListing(listingId)
                                 .then(() => console.log('Sucessfully removed listing'))
