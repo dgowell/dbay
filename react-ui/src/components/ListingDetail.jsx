@@ -147,20 +147,16 @@ function ListingDetail() {
     setLoading(true);
 
     //reset listing in order to check the availability
-    updateListing(listing.listing_id, {"status": "unchecked"})
+    updateListing(listing.listing_id, { "status": "unchecked" })
       .catch((e) => console.error(`Error resetting listing status to unchecked: ${e}`));
 
 
     //check there is money to pay for the item first
     const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
-      if (process.env.REACT_APP_MODE !== "testvalue") {
-        navigate(`/info`, { state: { action: "error", main: "Insufficient Funds!", sub: "It looks like you don't have enough $M to purchase this item" } });
-        setLoading(false);
-      }
-      console.log(`Insufficient funds: ${error}`);
-      return false;
+      navigate(`/info`, { state: { action: "error", main: "Insufficient Funds!", sub: "It looks like you don't have enough $M to purchase this item" } });
+      setLoading(false);
     });
-    console.log("hasFunds", hasFunds);
+    console.log(`hasFunds: ${hasFunds}`);
 
     if (hasFunds) {
       const isAvailable = await checkAvailability({
@@ -170,7 +166,7 @@ function ListingDetail() {
       }).catch(
         error => {
           if (error.message.includes('connect timed out')) {
-           console.log(`Problem checking item availability ${error}`);
+            console.log(`Problem checking item availability ${error}`);
             navigate(`/info`, { state: { action: "error", main: 'Network timeout', sub: "couldnt reach seller, check your maxima connection and try again in a few minutes" } });
             setError(`Network timeout`);
             setLoading(false);
@@ -180,7 +176,7 @@ function ListingDetail() {
             setError(`There was a problem`);
             setLoading(false);
           }
-      });
+        });
 
       if (isAvailable) {
         //take the user to pay for the item
