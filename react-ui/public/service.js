@@ -24,9 +24,11 @@ MDS.init(function (msg) {
         case "NEWBALANCE":
             //check coins against unconfirmed/pending payemnts
             //if (logs) { MDS.log("NEWBALANCE EVENT received: "); }
+            //seller side new balance
             processNewBalanceEvent();
             break;
         case "MINIMALOG":
+            //buyer side new spent coin
             processMinimaLogEvent(msg.data);
             break;
         default:
@@ -173,7 +175,6 @@ function processMaximaEvent(msg) {
                 processCollectionConfirmation(entity);
                 break;
             case 'cancel_collection':
-                //buyer sends seller their number to arrange collection
                 processCancelCollection(entity);
                 break;
             default:
@@ -324,9 +325,11 @@ function processAvailabilityCheck(entity) {
 
 function processNewBalanceEvent() {
     if (logs) { MDS.log("Processing new balance event"); }
+    //TODO: update this function to only return last 3 transactions
     getHistoryTransactions(function (transactions) {
         if (transactions.length > 0) {
 
+            //TODO: update this function to use the status field instead of the boolean
             getListingsWithUnconfirmedCoins(function (listings) {
                 if (logs) {
                     MDS.log(`Found ${JSON.stringify(listings.count)} listings with unconfirmed coins`);
@@ -338,7 +341,7 @@ function processNewBalanceEvent() {
 
                         if (logs) { MDS.log(`Transactions found: ${JSON.stringify(transactions.length)}`); }
                         confirmCoin(listing.purchase_code, transactions, function (coin) {
-
+                            //if theres a match, assume buyer has paid for listing
                             if (coin) {
                                 MDS.log(`About to check coin amount: ${JSON.stringify(coin)}`);
                                 //if coin is confirmed then check the amount of the coin matches the amount on the listing
@@ -350,8 +353,7 @@ function processNewBalanceEvent() {
                                     updateListing(id,
                                         {
                                             'buyer_message': entity.buyer_message,
-                                            'status': 'sold',
-                                            'unconfirmed_coin': false,
+                                            'status': 'paid',
                                             'notification': true,
                                             'buyer_name': entity.buyer_name
                                         });
@@ -400,7 +402,7 @@ function processPurchaseReceipt(entity) {
                                 updateListing(id,
                                     {
                                         'buyer_message': entity.buyer_message,
-                                        'status': 'completed',
+                                        'status': 'sold',
                                         'notification': true,
                                         'buyer_name': entity.buyer_name
                                     });
@@ -410,7 +412,7 @@ function processPurchaseReceipt(entity) {
                         } else {
                             updateListing(id, {
                                 'buyer_message': entity.buyer_message,
-                                'unconfirmed_coin': true,
+                                'status': 'unconfirmed_coin',
                                 'buyer_name': entity.buyer_name
                             });
                             //check for coin when rew balance comes in
@@ -465,7 +467,6 @@ function processCollectionConfirmation(entity) {
 }
 
 function processCancelCollection(entity) {
-    //TODO: rewrite function that updates the listing all at once instead of hitting database x times
     if (logs) { MDS.log(`Message received for cancelling collection`); }
     const listing = getListingById(entity.listing_id);
     if (listing.buyer_name === entity.buyer_name) {
@@ -637,7 +638,7 @@ function createListingTable(callback) {
             "sent_by_name" char(50),
             "created_at" int not null,
             "wallet_address" varchar(80) not null,
-            "status" char(12) not null default 'available',
+            "status" char(50) not null default 'available',
             "buyer_message" varchar(1000),
             "buyer_name" char(50),
             "buyer_pk" varchar(330),
