@@ -18,12 +18,10 @@ MDS.init(function (msg) {
             setup();
             break;
         case "MAXIMA":
-            //if (logs) { MDS.log("MAXIMA EVENT received: "); }
             processMaximaEvent(msg);
             break;
         case "NEWBALANCE":
             //check coins against unconfirmed/pending payemnts
-            //if (logs) { MDS.log("NEWBALANCE EVENT received: "); }
             //seller side new balance
             processNewBalanceEvent();
             break;
@@ -32,7 +30,6 @@ MDS.init(function (msg) {
             processMinimaLogEvent(msg.data);
             break;
         default:
-            //if (logs) { MDS.log(JSON.stringify(msg)); }
             break;
     }
 });
@@ -87,7 +84,9 @@ function setup() {
 /*
 ************************************************* PROCESS EVENTS *************************************************
 */
-
+/*
+*  BUYER SIDE: Use the new spent coin event to trigger a check for pending transactions
+*/
 function processMinimaLogEvent(data) {
     //if we have a new spent coin
     if (data.message.includes("NEW Spent Coin")) {
@@ -119,7 +118,9 @@ function processMinimaLogEvent(data) {
     }
 }
 
-
+/*
+*   BUYER & SELLER SIDE: Handle the maxima messages sent between the buyer and seller
+*/
 function processMaximaEvent(msg) {
 
     //Is it for us.. ?
@@ -241,6 +242,9 @@ function processMaximaEvent(msg) {
         });
     }
 }
+/*
+*   Recieve and save a listing from a contact
+*/
 function processListing(entity) {
     if (logs) { MDS.log(`processing listing...${entity}`) }
 
@@ -323,6 +327,9 @@ function processAvailabilityCheck(entity) {
     };
 }
 
+/*
+*   
+*/
 function processNewBalanceEvent() {
     if (logs) { MDS.log("Processing new balance event"); }
     //TODO: update this function to only return last 3 transactions
