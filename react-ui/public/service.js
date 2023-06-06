@@ -452,11 +452,17 @@ function confirmCoin(purchaseCode, transactions, callback) {
     callback(response);
 }
 
+/*
+*   BUYER FUNCTION: update the listing with the returned status from seller
+*/
 function processAvailabilityResponse(entity) {
-    if (logs) { MDS.log(`processing availability response...${JSON.stringify(entity)}`); }
-    updateListing(entity.listing_id, { "status": entity.status, "purchase_code": entity.purchase_code });
+    if (logs) { MDS.log(`received availability response and updatuing listing status ${JSON.stringify(entity)}`); }
+    updateListing(entity.listing_id, { "status": entity.status });
 }
 
+/*
+*   SELLER FUNCTION: process the collection confirmation
+*/
 function processCollectionConfirmation(entity) {
     if (logs) { MDS.log(`Message received for collection of listing, updating..`); }
     updateListing(entity.listing_id, {
@@ -468,6 +474,9 @@ function processCollectionConfirmation(entity) {
     });
 }
 
+/*
+*   SELLER FUNCTION: process the collection cancellation
+*/
 function processCancelCollection(entity) {
     if (logs) { MDS.log(`Message received for cancelling collection`); }
     const listing = getListingById(entity.listing_id);
@@ -483,17 +492,19 @@ function processCancelCollection(entity) {
 ***************************************************** GET FUNCTIONS *****************************************************
 */
 function getStatus(listingId) {
-    var st = '';
+    var status = '';
     MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
         if (res) {
             if (logs) { MDS.log(`Response from get status is: ${JSON.stringify(res)}`); }
-            st = res.rows[0].status;
+            if (res.count > 0) {
+                status = res.rows[0].status;
+            }
         }
         else {
-            if (logs) { MDS.log(`MDS.SQL ERROR, could get status of listing ${res.error}`); }
+            if (logs) { MDS.log(`MDS.SQL ERROR, couldn't get status of listing ${res.error}`); }
         }
     });
-    return st;
+    return status;
 }
 
 function getHost() {

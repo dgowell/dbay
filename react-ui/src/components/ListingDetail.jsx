@@ -159,29 +159,37 @@ function ListingDetail() {
     console.log(`hasFunds: ${hasFunds}`);
 
     if (hasFunds) {
-      const isAvailable = await checkAvailability({
+      await checkAvailability({
         seller: listing.created_by_pk,
         buyerPk: buyerAddress,
         listingId: listing.listing_id,
-      }).catch(
-        error => {
-          if (error.message.includes('connect timed out')) {
-            console.log(`Problem checking item availability ${error}`);
-            navigate(`/info`, { state: { action: "error", main: 'Network timeout', sub: "couldnt reach seller, check your maxima connection and try again in a few minutes" } });
-            setError(`Network timeout`);
-            setLoading(false);
+      }).then(
+        result => {
+          if (result === true) {
+            navigate(`/listing/${listing.listing_id}/purchase`)
           } else {
-            console.log(`Problem checking item availability ${error}`);
-            navigate(`/info`, { state: { action: "error", main: "There was a problem", sub: (error.message ? error.message : `There was a problem, please try again later.`) } });
-            setError(`There was a problem`);
-            setLoading(false);
+            setError(result);
+            navigate(`/info`, { state: { action: "error", main: '', sub: result } });
+            console.log(`${result}`);
           }
+        }
+      )
+        .catch(
+          error => {
+            if (error.message.includes('connect timed out')) {
+              console.log(`Problem checking item availability ${error}`);
+              navigate(`/info`, { state: { action: "error", main: 'Network timeout', sub: "couldnt reach seller, check your maxima connection and try again in a few minutes" } });
+              setError(`Network timeout`);
+            } else {
+              console.log(`Problem checking item availability ${error}`);
+              navigate(`/info`, { state: { action: "error", main: "There was a problem", sub: (error.message ? error.message : `There was a problem, please try again later.`) } });
+              setError(`There was a problem`);
+            }
+          })
+        .finally(() => {
+          setCheckingAvailability(false);
+          setLoading(false);
         });
-
-      if (isAvailable) {
-        //take the user to pay for the item
-        navigate(`/listing/${listing.listing_id}/purchase`)
-      }
     }//close if
   }
 

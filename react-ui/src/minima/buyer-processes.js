@@ -184,7 +184,7 @@ processAvailabilityResponse.proptypes = {
 }
 
 /**
-* Sends availablity check to the seller node then checks the databse for an updated response
+* Sends availablity check to the seller node then checks the database for an updated response
 * @param {string} seller - Sellers hex address
 * @param {string} buyerPk - Buyers primary key to identify the buyer
 * @param {string} listingId - The id of the listing that is being purchased
