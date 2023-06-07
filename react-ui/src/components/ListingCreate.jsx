@@ -64,7 +64,12 @@ const validationSchema = yup.object({
     .required('Price is required'),
   deliveryCost: yup
     .number('Enter the delivery cost')
-    .integer('Price must be an integer')
+    .integer('Price must be an integer'),
+  collection: yup.boolean(),
+  delivery: yup.boolean(),
+}).test('hasDeliveryOrCollection', 'Please select at least one option', function (values) {
+  const { collection, delivery } = values;
+  return collection || delivery;
 });
 
 
@@ -124,17 +129,12 @@ export default function ListingCreate() {
       deliveryCost: 0,
       description: '',
       locationDescription: '',
+      hasDeliveryOrCollection: false,
     },
-    validationSchema: validationSchema,
+    validationSchema,
     onSubmit: (values) => {
+      values.hasDeliveryOrCollection = values.collection || values.delivery;
       onSubmit(values);
-    },
-    validate: (values) => {
-      const errors = {};
-      if (!Object.values(values).some((value) => value)) {
-        errors.checkbox = "At least one checkbox must be selected";
-      }
-      return errors;
     },
   });
 
@@ -155,6 +155,16 @@ export default function ListingCreate() {
   async function onSubmit(e) {
     setLoading(true);
     setError(null);
+
+    const isValid = await validationSchema.validate(formik.values, { abortEarly: false })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isValid) {
+      setLoading(false);
+      setError('Please select at least one shipping option');
+      return;
+    }
 
     //pass each image through the handleUpload function
     const compressedImages = await Promise.all( // eslint-disable-line no-undef
