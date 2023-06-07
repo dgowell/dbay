@@ -140,7 +140,7 @@ export function getMiniAddress() {
  * @param {*} address
  * @param {*} callback
  */
-function sendMessage(message, address, app, callback) {
+export function sendMessage(message, address, app, callback) {
     window.MDS.log("Sending message to " + address);
     var maxcmd = "maxima action:send poll:true to:" + address + " application:" + app + " data:" + JSON.stringify(message);
     window.MDS.log(maxcmd);

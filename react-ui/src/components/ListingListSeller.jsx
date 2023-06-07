@@ -100,13 +100,13 @@ function ListingListSeller() {
       <TabPanel value={value} index={0}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'available' || o.status === 'pending')} />
+          : <ListingList link='/seller/listing' listings={filter(listings, o => o.status === 'available')} />
         }
       </TabPanel>
       <TabPanel value={value} index={1}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link='/seller/listing/delivery' listings={filter(listings, o => o.status === 'sold')} />
+          : <ListingList link='/seller/listing/delivery' listings={filter(listings, o => o.status === 'ongoing' || o.status === 'unconfirmed_payment' || o.status === 'collection_confirmed')} />
         }
       </TabPanel>
       <TabPanel value={value} index={2}>

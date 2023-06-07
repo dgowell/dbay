@@ -48,22 +48,30 @@ function ListingDeliverySeller() {
 
     function handleConfirmCollection() {
         setLoading(true);
-        updateListing(listing.listing_id, {"status": "collection_confirmed"})
-        //TODO: implement this if will agrees -> sendMessage(listing.buyer_name, listing.listing_id, "collection_confirmed")
+        updateListing(listing.listing_id, { "status": "collection_confirmed" })
             .then(() => {
-                setLoading(false);
-                navigate('/seller/listings')
-            })
-            .catch((e) => console.error(`Could not update listing as collection_confirmed: ${e}`));
+
+                const message = { "type": "COLLECTION_CONFIRMED", "data": { "listing_id": listing.listing_id } };
+                const address = listing.buyer_pk;
+                const app = 'dbay';
+
+                sendMessage(message, address, app, function (res) {
+                    console.log(res);
+                    setLoading(false);
+                    navigate('/seller/listings')
+                });
+            });
     }
 
-    function handleCollectionRejection() {
+    function handleRejectCollection() {
         setLoading(true);
-        updateListing(listing.listing_id, {"status": "available"})
+        updateListing(listing.listing_id, { "status": "available" })
             .then(() => {
+
                 const message = { "type": "COLLECTION_REJECTED", "data": { "listing_id": listing.listing_id } };
                 const address = listing.buyer_pk;
                 const app = 'dbay';
+
                 sendMessage(message, address, app, function (res) {
                     console.log(res);
                     setLoading(false);
@@ -75,7 +83,7 @@ function ListingDeliverySeller() {
 
     function handleItemSent() {
         setLoading(true);
-        updateListing(listing.listing_id, {"status": "completed"})
+        updateListing(listing.listing_id, { "status": "completed" })
             .then(() => {
                 setLoading(false);
                 navigate('/seller/listings')
@@ -85,7 +93,7 @@ function ListingDeliverySeller() {
 
     useEffect(() => {
         if (listing) {
-            updateListing(listing.listing_id, {'notification': 'false'}).catch(e => console.error(`Couldn't reset notification ${e}`));
+            updateListing(listing.listing_id, { 'notification': 'false' }).catch(e => console.error(`Couldn't reset notification ${e}`));
         }
     }, [listing]);
 
@@ -100,23 +108,24 @@ function ListingDeliverySeller() {
                             subheader={`${listing.title} $M${listing.price}`}
                         />
                         <CardContent>
-                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', boxShadow: "none" }}>
-                                <Alert sx={{ width: "100%" }} severity='success' variant="outlined">
-                                    {listing.transmission_type === "collection" ? `@${listing.buyer_name} has agreed to collect your item` : `@${listing.buyer_name} is waiting for the item to be sent`}
-                                </Alert>
+                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'space-between', justifyContent: 'space-between' , boxShadow: "none" }}>
+                                {/*`@${listing.buyer_name} is waiting for the item to be sent`*/}
                                 {listing.transmission_type === "collection" &&
                                     <>
+                                        {listing.status === "ongoing" &&
+                                            <>
+                                        <Typography>@{listing.buyer_name} has requested to collect your item. Please confirm or reject this request to notify the user.</Typography>
+
+                                                <Stack direction="row" spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
+                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Confirm</LoadingButton>
+                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="outlined" color={"secondary"} onClick={handleRejectCollection}>Reject</LoadingButton>
+                                                </Stack>
+                                            </>
+                                        }
                                         <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
-                                            <Typography sx={{}} variant="h3">MaxSolo</Typography>
+                                            <Typography >MaxSolo</Typography>
                                             <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `The buyer is already one of your contacts. Get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
                                         </Stack>
-                                        {listing.status === "ongoing" && 
-                                        //button to confirm collection
-                                        <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Confirm Collection</LoadingButton>
-                                    }
-                                        <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} color="secondary" onClick={() => navigate("/")} variant="outlined">
-                                            Close
-                                        </LoadingButton>
                                     </>
                                 }
                                 {listing.transmission_type === "delivery" &&
