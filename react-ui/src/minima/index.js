@@ -135,14 +135,14 @@ export function getMiniAddress() {
 }
 
 /**
- * Send message via Maxima to contat address or permanent address
+ * Send message via Maxima to contact address or permanent address
  * @param {*} message
  * @param {*} address
  * @param {*} callback
  */
-export function sendMaximaMessage(message, address, callback) {
+function sendMessage(message, address, app, callback) {
     window.MDS.log("Sending message to " + address);
-    var maxcmd = "maxima action:send poll:true to:" + address + " application:dmax data:" + JSON.stringify(message);
+    var maxcmd = "maxima action:send poll:true to:" + address + " application:" + app + " data:" + JSON.stringify(message);
     window.MDS.log(maxcmd);
     window.MDS.cmd(maxcmd, function (msg) {
         window.MDS.log(JSON.stringify(msg));
@@ -160,11 +160,15 @@ export function sendMaximaMessage(message, address, callback) {
 export async function handleDmaxClientSubmit(amount) {
 
     ///get the clients contact address
-    getContactAddress(function (address) {
+    getContactAddress(function (clientAddress) {
+
+        const message = { "type": "P2P_REQUEST", "data": { "amount": amount, "contact": clientAddress } };
+        const address = SERVER_ADDRESS;
+        const app = 'dmax';
 
         //create p2pidentity request
-        sendMaximaMessage({ "type": "P2P_REQUEST", "data": { "amount": amount, "contact": address } }, SERVER_ADDRESS, function (msg) {
-            window.MDS.log("Sent P2P request to " + SERVER_ADDRESS);
+        sendMessage(message, address, app, function (msg) {
+            window.MDS.log("Sent P2P request to " + address);
 
             //remove the form from the UI and replace with a message
             document.getElementById("js-main").innerHTML = "Your request has been sent to the MLS server. Please wait for confirmation.";
