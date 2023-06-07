@@ -363,3 +363,15 @@ sendMoney.propTypes = {
     amount: PropTypes.number.isRequired,
     purchaseCode: PropTypes.string.isRequired
 }
+
+
+/**
+ * Links to another minidapp
+ * @param {string} minidapp - The minidapp to link to
+ */
+export function link(minidapp, callback) {
+    window.MDS.dapplink(minidapp, function (res) {
+        console.log(JSON.stringify(res));
+        callback(res);
+    })
+}

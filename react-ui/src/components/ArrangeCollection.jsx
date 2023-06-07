@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Alert from '@mui/material/Alert';
 import { getListingById } from "../database/listing";
-import { addContact, isContact } from "../minima";
+import { addContact, isContact, link } from "../minima";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import Box from "@mui/material/Box";
 import Timeline from '@mui/lab/Timeline';
@@ -14,6 +14,7 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
 import TimelineDot from '@mui/lab/TimelineDot';
+import { Button } from "@mui/material";
 
 export default function InfoPage() {
   const params = useParams();
@@ -23,6 +24,7 @@ export default function InfoPage() {
   const [msg, setMsg] = useState();
   const [status, setStatus] = useState();
   const [isFriend, setIsFriend] = useState(false);
+  const [maxsoloError, setMaxsoloError] = useState('');
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
@@ -37,6 +39,24 @@ export default function InfoPage() {
       })
     }).catch((e) => console.error(e));
   }, [params.id]);
+
+  function handleMaxSoloLink() {
+    if (!isFriend) {
+      handleAdd();
+    }
+    link('maxsolo', function (res) {
+      if (res.status === false) {
+        if (res.error.includes('permission escalation')) {
+          setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+        } else {
+          setMaxsoloError(res.error);
+        }
+      } else if (res.status === true) {
+        setMaxsoloError('');
+        window.open(res.base, '_blank');
+      }
+    });
+  }
 
   async function handleAdd() {
     const { msg, status } = await addContact(seller);
@@ -75,7 +95,8 @@ export default function InfoPage() {
               <Typography variant="h6" component="span">
                 Contact Seller
               </Typography>
-              <Typography>communicate using MaxSolo</Typography>
+              <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Chat Now</Button>
+              {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
             </TimelineContent>
           </TimelineItem>
           <TimelineItem>

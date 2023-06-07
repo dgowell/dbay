@@ -7,13 +7,14 @@ import CardContent from "@mui/material/CardContent";
 import Card from "@mui/material/Card";
 import LoadingButton from "@mui/lab/LoadingButton";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
-import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import { useNavigate } from "react-router";
 import { isContactByName, sendMessage } from "../minima";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
-import { addContact } from "../minima";
+import { addContact, link } from "../minima";
+import Alert from '@mui/material/Alert';
+import { Button } from "@mui/material";
 
 function ListingDeliverySeller() {
     const [listing, setListing] = useState();
@@ -23,7 +24,7 @@ function ListingDeliverySeller() {
     const [isFriend, setIsFriend] = useState(false);
     const [status, setStatus] = useState();
     const [msg, setMsg] = useState();
-
+    const [maxsoloError, setMaxsoloError] = useState('');
 
     async function handleAdd() {
         const { msg, status } = await addContact(listing.created_by_pk);
@@ -80,6 +81,23 @@ function ListingDeliverySeller() {
             })
             .catch((e) => console.error(`Could not update listing as available: ${e}`));
     }
+    function handleMaxSoloLink() {
+        if (!isFriend) {
+            handleAdd();
+        }
+        link('maxsolo', function (res) {
+            if (res.status === false) {
+                if (res.error.includes('permission escalation')) {
+                    setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+                } else {
+                    setMaxsoloError(res.error);
+                }
+            } else if (res.status === true) {
+                setMaxsoloError('');
+                window.open(res.base, '_blank');
+            }
+        });
+    }
 
     function handleItemSent() {
         setLoading(true);
@@ -108,25 +126,25 @@ function ListingDeliverySeller() {
                             subheader={`${listing.title} $M${listing.price}`}
                         />
                         <CardContent>
-                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'space-between', justifyContent: 'space-between' , boxShadow: "none" }}>
+                            <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'space-between', justifyContent: 'space-between', boxShadow: "none" }}>
                                 {/*`@${listing.buyer_name} is waiting for the item to be sent`*/}
                                 {listing.transmission_type === "collection" &&
                                     <>
-                                        {listing.status === "ongoing" &&
-                                            <>
-                                        <Typography>@{listing.buyer_name} has requested to collect your item. Please confirm or reject this request to notify the user.</Typography>
-
-                                                <Stack direction="row" spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
-                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Confirm</LoadingButton>
-                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="outlined" color={"secondary"} onClick={handleRejectCollection}>Reject</LoadingButton>
-                                                </Stack>
-                                            </>
-                                        }
-                                        <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
-                                            <Typography >MaxSolo</Typography>
-                                            <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `The buyer is already one of your contacts. Get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
+                                        <Typography>@{listing.buyer_name} has requested to collect your item.</Typography>
+                                        <Stack direction="column" spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
+                                        <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Chat Now</Button>
+                                            {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
+                                            {listing.status === "ongoing" &&
+                                                <>
+                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Confirm request</LoadingButton>
+                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="outlined" color={"secondary"} onClick={handleRejectCollection}>Reject request</LoadingButton>
+                                                </>
+                                            }
                                         </Stack>
                                     </>
+
+
+
                                 }
                                 {listing.transmission_type === "delivery" &&
                                     <>
@@ -147,8 +165,9 @@ function ListingDeliverySeller() {
                         </CardContent>
                     </Card>
                 </div>
-            ) : <ListingDetailSkeleton />}
-        </div>
+            ) : <ListingDetailSkeleton />
+            }
+        </div >
     );
 }
 export default ListingDeliverySeller;
