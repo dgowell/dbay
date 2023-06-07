@@ -24,7 +24,6 @@ export async function createListing({
     location,
     locationDescription,
     shippingCost,
-    shippingCountries
 }) {
     let id = '';
     if (!listingId) {
@@ -52,8 +51,7 @@ export async function createListing({
             "description",
             ${location ? '"location",' : ''}
             ${locationDescription ? '"location_description",' : ''}
-            ${shippingCost ? '"shipping_cost",' : ''}
-            ${shippingCountries ? '"shipping_countries",' : ''}
+            ${(typeof shippingCost === 'number') ? '"shipping_cost",' : ''}
             "created_at"
         )
 
@@ -72,9 +70,8 @@ export async function createListing({
             '${image}',
             '${description}',
             ${location ? `'${location}',` : ''}
-            ${locationDescription ? `'${locationDescription}',` : ''} 
-            ${shippingCost ? `'${shippingCost}',` : ''}
-            ${shippingCountries ? `'${shippingCountries}',` : ''}
+            ${locationDescription ? `'${locationDescription}',` : ''}
+            ${(typeof shippingCost === 'number') ? `'${shippingCost}',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
         );`;
 
