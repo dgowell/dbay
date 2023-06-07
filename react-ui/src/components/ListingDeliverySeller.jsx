@@ -10,7 +10,7 @@ import ListingDetailSkeleton from './ListingDetailSkeleton';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import { useNavigate } from "react-router";
-import { isContactByName } from "../minima";
+import { isContactByName, sendMessage } from "../minima";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
 import { addContact } from "../minima";
@@ -45,6 +45,33 @@ function ListingDeliverySeller() {
         });
 
     }, [params.id]);
+
+    function handleConfirmCollection() {
+        setLoading(true);
+        updateListing(listing.listing_id, {"status": "collection_confirmed"})
+        //TODO: implement this if will agrees -> sendMessage(listing.buyer_name, listing.listing_id, "collection_confirmed")
+            .then(() => {
+                setLoading(false);
+                navigate('/seller/listings')
+            })
+            .catch((e) => console.error(`Could not update listing as collection_confirmed: ${e}`));
+    }
+
+    function handleCollectionRejection() {
+        setLoading(true);
+        updateListing(listing.listing_id, {"status": "available"})
+            .then(() => {
+                const message = { "type": "COLLECTION_REJECTED", "data": { "listing_id": listing.listing_id } };
+                const address = listing.buyer_pk;
+                const app = 'dbay';
+                sendMessage(message, address, app, function (res) {
+                    console.log(res);
+                    setLoading(false);
+                    navigate('/seller/listings')
+                });
+            })
+            .catch((e) => console.error(`Could not update listing as available: ${e}`));
+    }
 
     function handleItemSent() {
         setLoading(true);
@@ -82,12 +109,11 @@ function ListingDeliverySeller() {
                                         <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
                                             <Typography sx={{}} variant="h3">MaxSolo</Typography>
                                             <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `The buyer is already one of your contacts. Get in touch with @${listing.buyer_name} to arrange collection`}</Typography>
-                                            {/*!isFriend &&
-                                            <>
-                                                <LoadingButton className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
-                                                {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-            </>*/}
                                         </Stack>
+                                        {listing.status === "ongoing" && 
+                                        //button to confirm collection
+                                        <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Confirm Collection</LoadingButton>
+                                    }
                                         <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} color="secondary" onClick={() => navigate("/")} variant="outlined">
                                             Close
                                         </LoadingButton>
@@ -105,13 +131,6 @@ function ListingDeliverySeller() {
                                             : "Buyer has missed the delivery details , you can contact buyer via maxSolo for missing details"
                                         }
                                         <Divider />
-                                        {/*!isFriend && <Stack spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
-                                            <Typography sx={{}} variant="h3">MaxSolo</Typography>
-                                            <Typography sx={{ fontSize: 15, paddingBottom: '30px' }} variant="p">{!isFriend ? `Add the @${listing.buyer_name} as a contact and get in touch with them using the MaxSolo MiniDapp.` : `Great the buyer is already one of your contacts. get in touch with @${listing.buyer_name}`}</Typography>
-                                            {!isFriend && <><LoadingButton className={"custom-loading"} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
-                                                {msg && <Alert sx={{ width: "100%", backgroundColor: '#FFF' }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-                                                <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">The @{listing.buyer_name} is expecting you to get in touch.</Typography></>}
-                                    </Stack>*/}
                                         <LoadingButton className={"custom-loading"} sx={{ marginTop: "60%" }} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Item Sent</LoadingButton>
                                     </>
                                 }
