@@ -28,10 +28,10 @@ async function getSellerAddress(address) {
     });
 }
 
-export async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType }) {
+export async function sendPaymentReceipt({ message, listingId, coinId, seller, transmissionType }) {
     const host = await getHost();
     const data = {
-        "type": "purchase_receipt",
+        "type": "payment_receipt",
         "buyer_message": message,
         "listing_id": listingId,
         "coin_id": coinId,
@@ -49,10 +49,10 @@ export async function sendPurchaseReceipt({ message, listingId, coinId, seller, 
     });
 }
 
-async function sendCollectionConfirmation({ message, listingId, seller, transmissionType }) {
+async function sendCollectionRequest({ message, listingId, seller, transmissionType }) {
     const host = await getHost();
     const data = {
-        "type": "collection_confirmation",
+        "type": "collection_request",
         "message": message,
         "listing_id": listingId,
         "transmission_type": transmissionType,
@@ -110,7 +110,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
                     console.log(`Money sent, coin id: ${coinId}`);
 
                     console.log(`Sending purchase receipt to seller..`);
-                    sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
+                    sendPaymentReceipt({ message, listingId, coinId, seller, transmissionType })
                         .then(() => resolve(true))
                         .catch(Error(`Couldn't send purchase receipt`));
                 } else {
@@ -153,10 +153,10 @@ purchaseListing.proptypes = {
 */
 export function collectListing({ seller, message, listingId, transmissionType }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, { 'status': 'in progress' }).catch((e) => console.error(e));
-        updateListing(listingId, { 'transmission_type': transmissionType }).catch((e) => console.error(e));
-        console.log(`Sending collection confirmation and phone numeber to seller.. ${message}`);
-        sendCollectionConfirmation({ message, listingId, seller, transmissionType })
+        updateListing(listingId, { 'status': 'in progress', 'transmission_type': transmissionType }).catch((e) => console.error(e));
+
+        console.log(`Sending collection confirmation to seller..`);
+        sendCollectionRequest({ message, listingId, seller, transmissionType })
             .then(() => resolve(true))
             .catch(Error(`Couldn't send collection confirmation`)
             );

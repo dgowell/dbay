@@ -171,9 +171,13 @@ function processMaximaEvent(msg) {
                 //seller must process purchase receipt from buyer
                 processPurchaseReceipt(entity);
                 break;
-            case 'collection_confirmation':
-                //buyer sends seller their number to arrange collection
-                processCollectionConfirmation(entity);
+            case 'collection_request':
+                //seller must process collection request from buyer
+                processCollectionRequest(entity);
+                break;
+            case 'collection_rejection':
+                //buyer must process collection rejection from seller
+                processCollectionRejection(entity);
                 break;
             case 'cancel_collection':
                 processCancelCollection(entity);
@@ -463,7 +467,7 @@ function processAvailabilityResponse(entity) {
 /*
 *   SELLER FUNCTION: process the collection confirmation
 */
-function processCollectionConfirmation(entity) {
+function processCollectionRequest(entity) {
     if (logs) { MDS.log(`Message received for collection of listing, updating..`); }
     updateListing(entity.listing_id, {
         'buyer_message': entity.message,
@@ -472,6 +476,14 @@ function processCollectionConfirmation(entity) {
         'transmission_type': entity.transmission_type,
         'buyer_name': entity.buyer_name
     });
+}
+
+/*
+*  BUYER FUNCTION: process the collection rejection
+*/
+function processCollectionRejection(entity) {
+    if (logs) { MDS.log(`Message received for collection rejection, updating..`); }
+    updateListing(entity.listing_id, { 'status': 'collection_rejected' });
 }
 
 /*

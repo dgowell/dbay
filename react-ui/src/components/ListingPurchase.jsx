@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
-import { getListingById } from '../database/listing';
+import { getListingById, deleteListing } from '../database/listing';
 import { useNavigate } from "react-router";
 import { purchaseListing, collectListing } from '../minima/buyer-processes';
 import List from '@mui/material/List';
@@ -46,7 +46,6 @@ function DeliveryConfirmation({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isLocked, setIsLocked] = useState(false);
   const [psdError, setPsdError] = useState(false);
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
@@ -335,12 +334,18 @@ function ListingPurchase(props) {
                 value={transmissionType}
                 onChange={handleChange}
               >
-                {listing.collection === "true" && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
+                {listing.collection === "true" && <>
+                  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
                   <Typography variant="caption" color="grey" mt='-12px'>{isNaN(distance) ? null : `${distance}km`}</Typography>
                   {transmissionType === 'collection' && latitude.includes('.')
                     ? <Box p={2} >
                       <Button variant="outlined" color="secondary" className={"custom-loading"} href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">See location</Button>
                       <List>
+                        {listing.status === 'collection_rejected' && <>
+                        <Alert severity="error">Collection request was rejected</Alert>
+                          <Button variant="outlined" color="secondary" onClick={() => {deleteListing(listing.listing_id)}}>Remove listing</Button>
+                        </>
+                        }
                         <ListItem >
                           <ListItemIcon sx={{ fontSize: "16px", minWidth: "45px" }}>
                             <InfoIcon />
@@ -349,7 +354,8 @@ function ListingPurchase(props) {
                         </ListItem>
                       </List>
                     </Box>
-                    : null}</>}
+                    : null}
+                </>}
                 {listing.delivery === "true" &&
                   <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="delivery" control={<Radio />} label={`Delivery`} />
                     <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
