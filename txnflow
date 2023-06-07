@@ -1,0 +1,291 @@
+# Basic Txn flow in dBay
+
+Statuses:
+
+**Buyer**                                                                            
+unchecked                                                                   
+available                                                                      
+in progress [collection only]
+pending confirmation 
+collection rejected
+completed
+
+
+**Seller**
+available
+unconfirmed payment
+ongoing
+collection confirmed
+completed
+
+Maxima Message Types: 
+
+CHECK_AVAILABILITY (buyer > seller)
+CONFIRM_AVAILABILITY (buyer > seller)
+PAYMENT_RECEIPT_READ (buyer > seller)
+PAYMENT_RECEIPT_WRITE (buyer > seller)
+COLLECTION_REQUEST (buyer > seller)
+COLLECTION_CANCELLED (buyer > seller)
+ITEM_SENT_CLICKED (seller > buyer) 
+COLLECTION_REJECTED (seller > buyer)
+
+
+
+# Delivery [READ]
+
+## --- BUYER ---
+
+1. Listing: **UNCHECKED**
+2. [Before sending money]: Sends message type: **CONFIRM_AVAILABILITY**
+3. Assuming available... Listing status changed **UNCHECKED > AVAILABLE**
+4. Make a Send Transaction
+   - Send
+   - Amount: `item_cost`
+   - Address: `seller_wallet`
+   - State: `{"99": "purchase_code"}`
+5. 'Send' it and fail, it returns in terminal:
+   - `//othercode`
+   - `pendinguid: 0x...`
+   - `//other code`
+6. Save `pendinguid` to listing
+7. Status change: **AVAILABLE > PENDING_CONFIRMATION**
+8. Wait for **MINIMALOGS**: New spent coin
+9. Triggers...
+10. Run checkpending `uid:0x...`
+    - Status: `true`
+    - Status change: **PENDING_CONFIRMATION > PAID** (instead of purchased)
+11. Buyer sends seller a maxima message **PAYMENT_RECEIPT_READ**
+    - State99 = "purchase_code"
+    - ListingID = "listingID"
+12. Buyer receives message confirming that seller has sent the item **ITEM_SENT_CLICKED** (need to create)
+13. Status change: **PAID > COMPLETED**
+
+---
+
+# Delivery [READ]
+
+## --- SELLER ---
+
+1. Listing: **AVAILABLE**
+2. Receives **CONFIRM_AVAILABILITY** message from buyer
+3. Receives maxima message **PAYMENT_RECEIPT_READ** from buyer (listingID)
+   - Status change: **AVAILABLE > UNCONFIRMED_PAYMENT**
+   - Runs history
+   - Search returned array for state 99 = "purchase_code"
+     - Wait for **NEW BALANCE**
+     - Check for listings with unconfirmed_payment
+       - Search for listings where state var 99 = purchase_code
+       - If found...
+         - ConfirmCoin: Check amount to ensure `totalAmount === history.coin.amount` (including shipping if relevant)
+         - Status change: **PAID**
+     - As seller, click 'item sent' in 'my listings' --> sending maxima message to buyer **ITEM_SENT_CLICKED** triggers status change from
+     - Status change: **PAID > COMPLETED**
+
+---
+
+# Collection [READ]
+
+## --- BUYER ---
+
+1. Listing: **UNCHECKED**
+2. Sends **CHECK_AVAILABILITY**
+   - Status change: **UNCHECKED > AVAILABLE**
+3. Send message to seller confirming intent to collect - **COLLECTION_REQUEST**
+4. Status change: **AVAILABLE > IN_PROGRESS**
+
+{
+   - Buyer receives **COLLECTION_REJECTED**, and rejection notice placed on item status: **COLLECTION_REJECTED**
+     - This adds 'item no longer available' message/warning to page: `mypurchases.ongoing.listingdetail`
+
+     - Button that says 'cancel collection' in `myListings.inProgress.listingDetail`
+     - This sends message to seller
+       - **COLLECTION_CANCELLED**
+       - Seller receives **COLLECTION_CANCELLED** message > change status in progress > available
+     - Buyer's side: Change status in progress > unchecked
+}
+
+// Arrive at collection location
+
+1. Make a Send Transaction
+   - Send
+   - Amount: `item_cost`
+   - Address: `seller_wallet`
+   - State: `{"99": "purchase_code"}`
+2. 'Send' it and fail, it returns in terminal:
+   - `//othercode`
+   - `pendinguid: 0x...`
+   - `//other code`
+3. Save `pendinguid: 0x...` to listing
+4. Change status: **IN_PROGRESS > PENDING_CONFIRMATION**
+5. Wait for **MINIMALOGS**: New spent coin
+   - Run checkpending `uid:0x...`
+   - It returns:
+     - If status === true
+       - Status change: **PENDING_CONFIRMATION > COMPLETED**
+
+9. Buyer sends seller a maxima message: **PAYMENT_RECEIPT_READ**
+   - State99 = "purchase_code"
+   - ListingID = "listingID"
+
+---
+
+# Collection [READ]
+
+## --- SELLER ---
+
+1. Status at **AVAILABLE**
+
+2. Receive **CHECK_AVAILABILITY** message, status remains at available
+
+3. Receive **COLLECTION_REQUEST** maxima message from buyer
+   - Status change: **AVAILABLE > ONGOING**
+     - This triggers buttons added to page @ `my_listings.ongoing.listing_detail`. Seller can now:
+       - Confirm collection: Take the listing off the market (`ongoing > COLLECTION_CONFIRMED`)
+       OR
+       - Reject collection:
+         - Send message to the buyer: **COLLECTION_REJECTED** (listingID)
+         - Status change: **ONGOING > AVAILABLE**
+       OR
+       - Receives **COLLECTION_CANCELLED** message from buyer
+         - `my_listings.ongoing.listing_detail` no longer states
+         - Status change: **ONGOING > AVAILABLE**
+
+// Buyer arrives for pickup
+
+4. Receives maxima message **PAYMENT_RECEIPT_READ** from buyer (purchase_code, listingID)
+   - Status change: **UNCONFIRMED_PAYMENT**
+   - Runs history
+     - Search returned array for purchase_code (state var)
+     - If found, do ConfirmCoin: Check amount of listing to ensure `amount === history.txpow.coin.amount` (including shipping if relevant)
+   - Status update: **UNCONFIRMED_PAYMENT > COMPLETED**
+
+   NEW BALANCE EVENT
+   - Run history
+   - Check for listings with the status: **UNCONFIRMED_PAYMENT**
+     - Search found listings for state var ... assume found...
+     - Do ConfirmCoin: Check amount of listing to ensure `amount === history.txpow.coin.amount` (including shipping if relevant)
+   - Status update: **UNCONFIRMED_PAYMENT > COMPLETED**
+
+---
+
+# WRITE PERMISSIONS - ENABLED (COINID, ETC)
+
+---
+
+# Delivery [WRITE]
+
+## ---- BUYER ----
+
+1. Listing: **UNCHECKED**
+2. [Before sending money]: Sends message type: **CONFIRM_AVAILABILITY**
+3. Assuming available... Listing status changed **UNCHECKED > AVAILABLE**
+4. Make a Send Transaction
+   - Send
+   - Amount: `item_cost`
+   - Address: `seller_wallet`
+   - State: `{"99": "purchase_code"}`
+5. Status change from **AVAILABLE > COMPLETED**
+6.
+7. Sends seller **PAYMENT_RECEIPT_WRITE** message
+   - ListingID
+   - Buyer's address
+   - Transmission type
+   - Buyer's name
+   - CoinID
+
+---
+
+# Delivery [WRITE]
+
+## --- SELLER ---
+
+1. Listing: **AVAILABLE**
+2. Receives **CONFIRM_AVAILABILITY** message from buyer
+
+1. Receives maxima message **PAYMENT_RECEIPT_WRITE** from buyer
+   - Status change: **UNCONFIRMED_PAYMENT**
+   - Runs coins `coinID: coinID`
+     - If coin found
+       - Check `totalPrice === coin.output.amount`
+       - Change status to **PAID** (typically this will happen immediately)
+     - If coin not found,
+
+
+   - NEW BALANCE event
+     - Triggers processNewBalanceEvent
+       - Differentiates between READ / WRITE (`purchase_code` / `coinID`)
+
+---
+
+# Collection [WRITE]
+
+## --- BUYER ---
+
+1. Listing: **UNCHECKED**
+2. Sends **CHECK_AVAILABILITY**
+   - If available, triggers status change: **UNCHECKED > AVAILABLE**
+3. Send **COLLECTION_REQUEST** message to seller confirming intent to collect
+4. Status change: **AVAILABLE > IN_PROGRESS**
+
+Various possibilities:
+
+1. Receives **COLLECTION_REJECTED**, changing status of item to `COLLECTION_REJECTED`
+   - This may just delete the item for now or puts a notice on listing detail saying "item no longer available"
+2. Buyer presses the 'cancel collection' button on page: `my_listings.in_progress.listing_detail`
+   - This sends message to seller
+     - **COLLECTION_CANCELLED**
+   - Buyer's side changes status: **IN_PROGRESS > UNCHECKED**
+
+Assuming neither buyer nor seller cancel or reject collection...
+
+// Arrive at collection location
+
+1. Make a Send Transaction
+   - Send
+   - Amount: `item_cost`
+   - Address: `seller_wallet`
+   - State: `{"99": "purchase_code"}`
+
+- If send transaction `response.status === 'true'`
+  - Status change: **PENDING_CONFIRMATION > COMPLETED** (because we know the payment has worked and can leapfrog 'paid')
+
+9. Buyer sends seller a maxima message: **PAYMENT_RECEIPT_WRITE**
+   - State99 = "purchase_code"
+   - ListingID = "listingID"
+   - CoinID?
+
+---
+
+# Collection [WRITE]
+
+## --- SELLER ---
+
+1. Status at **AVAILABLE**
+
+2. Receive **CHECK_AVAILABILITY** message, status remains at available
+
+3. Receive **COLLECTION_REQUEST** maxima message from buyer
+   - Status change: **AVAILABLE > ONGOING**
+     - This triggers buttons added to page @ `my_listings.ongoing.listing_detail`. Seller can now:
+       - Confirm collection: Take the listing off the market (`ongoing > COLLECTION_CONFIRMED`)
+       OR
+       - Reject collection:
+         - Set status to **ONGOING > AVAILABLE**
+         - Send message to the buyer: **COLLECTION_REJECTED** (listingID)
+       OR
+       - Receives **COLLECTION_CANCELLED** message from buyer
+         - Status change: **ONGOING OR COLLECTION_CONFIRMED > AVAILABLE**
+         - [I don't really like this UX of receiving a max message from buyer who you thought was coming to pick up the item and your item automatically being made available again. Something feels off about it, but for now it's fine!]
+
+// Buyer arrives for pickup
+
+4. Receives maxima message (**PAYMENT_RECEIPT_WRITE**) from buyer (listingID)
+   - ListingID
+   - Buyer's address
+   - Transmission type
+   - Buyer's name
+   - CoinID
+     - Run coins `coinID: coinID`
+     - If coin found
+       - Check `totalPrice === coin.output.amount`
+       - Change status to **COLLECTION_CONFIRMED > PAID**
