@@ -3,4 +3,4 @@ export const buyerConstants = {
     AVAILABILITY_TIMEOUT: 20, //seconds
 }
 
-export const APPLICATION_NAME = 'stampd';
+export const APPLICATION_NAME = 'dbay';

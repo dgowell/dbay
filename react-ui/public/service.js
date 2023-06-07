@@ -4,7 +4,7 @@ MDS.load("dmax.js");
 /* eslint-disable no-undef */
 var LISTINGSTABLE = 'LISTING';
 var SETTINGSTABLE = 'SETTINGS';
-var APPLICATION_NAME = 'stampd';
+var APPLICATION_NAME = 'dbay';
 
 const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001'
 const SERVER_WALLET = 'MxG083U3R8H31Z30H7Z6T0KM1Z9GJ978NCDGBJU42JTSZS18ZW4GFDF43EH519U'
@@ -107,7 +107,7 @@ function processMinimaLogEvent(data) {
                                 "buyer_name": listing.buyer_name
                             }
                             MDS.log('SUPER LISTING: ' + JSON.stringify(listing));
-                            sendMaximaMessage(data, listing.created_by_pk, "stampd", function (result) {
+                            sendMaximaMessage(data, listing.created_by_pk, "dbay", function (result) {
                                 if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
                             });
                         }
@@ -124,7 +124,7 @@ function processMinimaLogEvent(data) {
 function processMaximaEvent(msg) {
 
     //Is it for us.. ?
-    if (msg.data.application === "stampd") {
+    if (msg.data.application === "dbay") {
 
 
         //Get the data packet..
@@ -471,7 +471,7 @@ function processCollectionRequest(entity) {
     if (logs) { MDS.log(`Message received for collection of listing, updating..`); }
     updateListing(entity.listing_id, {
         'buyer_message': entity.message,
-        'status': 'sold',
+        'status': 'ongoing',
         'notification': true,
         'transmission_type': entity.transmission_type,
         'buyer_name': entity.buyer_name
