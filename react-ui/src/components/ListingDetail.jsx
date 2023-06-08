@@ -297,7 +297,7 @@ function ListingDetail() {
               </Alert>}
             </Snackbar>
             <Stack spacing={2} mt={4}>
-              {listing.status === "purchased"
+              {listing.status === "completed"
                 ? null
                 : <LoadingButton
                   className={"custom-loading"}

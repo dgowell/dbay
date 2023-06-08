@@ -60,7 +60,7 @@ function Purchases() {
         let latest = [...data].sort((a, b) => b.created_at - a.created_at)[0];
        if(latest.status === 'in_progress' || latest.status === 'collection_rejected' || latest.status === 'pending_confirmation'){
           setValue(0);
-        }else if(latest.status === 'purchased'){
+        }else if(latest.status === 'completed'){
           setValue(1);
         }
         console.log(`results:`,latest.status);
@@ -89,7 +89,7 @@ function Purchases() {
       <TabPanel value={value} index={1}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link='/listing' listings={filter(listings, o => o.status === 'purchased')} />
+          : <ListingList link='/listing' listings={filter(listings, o => o.status === 'completed')} />
         }
       </TabPanel>
     </Box>

@@ -28,27 +28,6 @@ async function getSellerAddress(address) {
     });
 }
 
-export async function sendPaymentReceipt({ message, listingId, coinId, seller, transmissionType }) {
-    const host = await getHost();
-    const data = {
-        "type": "payment_receipt",
-        "buyer_message": message,
-        "listing_id": listingId,
-        "coin_id": coinId,
-        "transmission_type": transmissionType,
-        "buyer_name": host.name
-    }
-    const sellerAddress = await getSellerAddress(seller);
-
-    return new Promise(function (resolve, reject) {
-        send(data, sellerAddress).then(
-            () => {
-                console.log(`sent customer message to seller: ${message}`);
-                resolve(true);
-            }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
-    });
-}
-
 async function sendCollectionRequest({ message, listingId, seller, transmissionType }) {
     const host = await getHost();
     const data = {
@@ -112,7 +91,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
     const purchaseCode = generateCode(10);
     console.log(`purchase coee is ${purchaseCode}`);
     return new Promise(function (resolve, reject) {
-        sendMoney({ walletAddress, amount, purchaseCode, password }, function(res) {
+        sendMoney({ walletAddress, amount, purchaseCode, password }, async function(res) {
             console.log("Response from sendMoney function:", res);
 
             //if the payemnt was successful
@@ -121,13 +100,27 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
                 const coinId = res.response.body.txn.outputs[0].coinid;
 
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, { 'status': 'purchased', 'transmission_type': transmissionType , 'purchase_code' : purchaseCode }).catch((e) => console.error(e));
+                    updateListing(listingId, { 'status': 'completed', 'transmission_type': transmissionType , 'purchase_code' : purchaseCode }).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
 
-                    console.log(`Sending purchase receipt to seller..`);
-                    sendPaymentReceipt({ message, listingId, coinId, seller, transmissionType })
-                        .then(() => resolve(true))
-                        .catch(Error(`Couldn't send purchase receipt`));
+                    const host = await getHost();
+                    const sellerAddress = await getSellerAddress(seller);
+                    const data = {
+                        "type": "PAYMENT_RECEIPT_WRITE",
+                        "buyer_message": message,
+                        "listing_id": listingId,
+                        "coin_id": coinId,
+                        "transmission_type": transmissionType,
+                        "purchase_code": purchaseCode,
+                        "buyer_name": host.name
+                    }
+
+                    console.log(`Sending payment receipt to seller..`);
+                    send(data, sellerAddress).then(
+                        () => {
+                            console.log(`sent customer message to seller: ${message}`);
+                            resolve(true);
+                        }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
                     resetListingState(listingId);
@@ -139,6 +132,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
                 console.log(`Transaction pending. saving uid: ${res.pendinguid}`);
                 updateListing(listingId, {
                     'status': 'pending_confirmation',
+                    'purchase_code': purchaseCode,
                     'pendinguid': res.pendinguid,
                     'transmission_type': transmissionType,
                     'buyer_message': message,

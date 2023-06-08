@@ -105,10 +105,11 @@ function processMinimaLogEvent(data) {
                                 "buyer_message": listing.buyer_message,
                                 "listing_id": listing.listing_id,
                                 "transmission_type": listing.transmission_type,
+                                "purchase_code": listing.purchase_code,
                                 "buyer_name": listing.buyer_name
                             }
                             MDS.log('SUPER LISTING: ' + JSON.stringify(listing));
-                            sendMaximaMessage(data, listing.created_by_pk, "dbay", function (result) {
+                            sendMessage(data, listing.created_by_pk, "dbay", function (result) {
                                 if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
                             });
                         }
@@ -172,6 +173,10 @@ function processMaximaEvent(msg) {
                 //seller must process purchase receipt from buyer
                 processPaymentReceiptRead(entity);
                 break;
+            case 'PAYMENT_RECEIPT_WRITE':
+                //seller must process purchase receipt from buyer
+                processPaymentReceiptWrite(entity);
+                break;
             case 'collection_request':
                 //seller must process collection request from buyer
                 processCollectionRequest(entity);
@@ -226,7 +231,7 @@ function processMaximaEvent(msg) {
                             MDS.log("Got public key");
 
                             //send via maxima coinID, clientPK
-                            sendMaximaMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": amount } }, SERVER_ADDRESS, "dmax", function (msg) {
+                            sendMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": amount } }, SERVER_ADDRESS, "dmax", function (msg) {
                                 MDS.log("Sent response to " + SERVER_ADDRESS);
                             });
                         });
@@ -280,20 +285,6 @@ function processListing(entity) {
     });
     if (logs) { MDS.log(`Listing ${entity.title} added!`); }
 }
-
-
-function generateCode(length) {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    let counter = 0;
-    while (counter < length) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        counter += 1;
-    }
-    return result;
-}
-
 
 /*
 * Seller processes availability check from buyer
@@ -379,10 +370,63 @@ function processNewBalanceEvent() {
 
 
 /*
-*   Process a purchase receipt
+*   Process a purchase receipt with READ permissions
 *   @param {object} entity - the entity object
 */
 function processPaymentReceiptRead(entity) {
+    if (logs) { MDS.log(`Message received for purchased listing: ${JSON.stringify(entity)}`); }
+
+    const id = entity.listing_id;
+    const purchaseCode = entity.purchase_code;
+
+    updateListing(id, {
+        "status": "unconfirmed_payment",
+        'buyer_message': entity.buyer_message,
+        'buyer_name': entity.buyer_name });
+
+    getHistoryTransactions(function (transactions) {
+        if (transactions.length > 0) {
+
+            getListingById(id, function (listing) {
+                if (logs) { MDS.log(`Listing found: ${JSON.stringify(listing)}`); }
+
+                if (listing) {
+                    if (logs) { MDS.log(`Transactions found: ${JSON.stringify(transactions.length)}`); }
+                    confirmCoin(purchaseCode, transactions, function (coin) {
+
+                        if (coin) {
+                            //if coin found check amount of coin matches amount on listing
+                            MDS.log(`About to check coin amount: ${JSON.stringify(coin)}`);
+                            //if coin is confirmed then check the amount of the coin matches the amount on the listing
+                            var totalCost = parseInt(parseInt(listing.price) + (listing.shipping_cost ? parseInt(listing.shipping_cost) : 0));
+                            MDS.log("listing amount: " + totalCost);
+                            MDS.log("coin amount: " + coin.amount);
+                            MDS.log("total cost: " + totalCost);
+                            if (parseInt(coin.amount) === totalCost) {
+                                MDS.log("coin amount matches total cost");
+                                updateListing(id,
+                                    {
+                                        'buyer_message': entity.buyer_message,
+                                        'status': 'completed',
+                                        'notification': true,
+                                        'buyer_name': entity.buyer_name
+                                    });
+                            } else {
+                                MDS.log("coin amount does not match total cost");
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+/*
+*   Process a purchase receipt with WRITE permissions
+*   @param {object} entity - the entity object
+*/
+function processPaymentReceiptWrite(entity) {
     var id = entity.listing_id;
     if (logs) { MDS.log(`Message received for purchased listing: ${JSON.stringify(entity)}`); }
 
