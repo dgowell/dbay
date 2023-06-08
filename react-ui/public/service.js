@@ -1,3 +1,4 @@
+
 //Load dmax.js
 MDS.load("dmax.js");
 
@@ -106,12 +107,20 @@ function processMinimaLogEvent(data) {
                                 "listing_id": listing.listing_id,
                                 "transmission_type": listing.transmission_type,
                                 "purchase_code": listing.purchase_code,
-                                "buyer_name": listing.buyer_name
+                                "buyer_name": listing.buyer_name,
+                                "buyer_pk": listing.buyer_pk,
                             }
                             MDS.log('SUPER LISTING: ' + JSON.stringify(listing));
                             sendMessage(data, listing.created_by_pk, "dbay", function (result) {
                                 if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
                             });
+
+                            //need to add the seller as a contact so they can let us know when the item has been shipped
+                            if (listing.transmission_type === "delivery") {
+                             addContact(listing.created_by_pk, function (result) {
+                                MDS.log('Contact added: ' + JSON.stringify(result));
+                             });
+                            }
                         }
                     });
                 });
@@ -177,7 +186,7 @@ function processMaximaEvent(msg) {
                 //seller must process purchase receipt from buyer
                 processPaymentReceiptWrite(entity);
                 break;
-            case 'collection_request':
+            case 'COLLECTION_REQUEST':
                 //seller must process collection request from buyer
                 processCollectionRequest(entity);
                 break;
@@ -185,8 +194,12 @@ function processMaximaEvent(msg) {
                 //buyer must process collection rejection from seller
                 processCollectionRejected(entity);
                 break;
-            case 'cancel_collection':
+            case 'CANCEL_COLLECTION':
                 processCancelCollection(entity);
+                break;
+            case 'ITEM_SENT_CLICKED':
+                //buyer must process item sent clicked from seller
+                processItemSentClicked(entity);
                 break;
             default:
                 if (logs) { MDS.log(entity); }
@@ -353,7 +366,8 @@ function processNewBalanceEvent() {
                                             'buyer_message': entity.buyer_message,
                                             'status': 'paid',
                                             'notification': true,
-                                            'buyer_name': entity.buyer_name
+                                            'buyer_name': entity.buyer_name,
+                                            'buyer_pk': entity.buyer_pk,
                                         });
                                 } else {
                                     MDS.log("Coin amount does not match listing amount");
@@ -383,6 +397,7 @@ function processPaymentReceiptRead(entity) {
         "status": "unconfirmed_payment",
         'buyer_message': entity.buyer_message,
         'buyer_name': entity.buyer_name,
+        'buyer_pk': entity.buyer_pk,
         'transmission_type': entity.transmission_type
     });
 
@@ -411,7 +426,8 @@ function processPaymentReceiptRead(entity) {
                                         'buyer_message': entity.buyer_message,
                                         'status': entity.transmission_type === 'collection' ? 'completed' : 'paid',
                                         'notification': true,
-                                        'buyer_name': entity.buyer_name
+                                        'buyer_name': entity.buyer_name,
+                                        'buyer_pk': entity.buyer_pk,
                                     });
 
                             } else {
@@ -458,7 +474,8 @@ function processPaymentReceiptWrite(entity) {
                                         'buyer_message': entity.buyer_message,
                                         'status': 'sold',
                                         'notification': true,
-                                        'buyer_name': entity.buyer_name
+                                        'buyer_name': entity.buyer_name,
+                                        'buyer_pk': entity.buyer_pk,
                                     });
                             } else {
                                 MDS.log("coin amount does not match total cost");
@@ -467,7 +484,8 @@ function processPaymentReceiptWrite(entity) {
                             updateListing(id, {
                                 'buyer_message': entity.buyer_message,
                                 'status': 'unconfirmed_coin',
-                                'buyer_name': entity.buyer_name
+                                'buyer_name': entity.buyer_name,
+                                'buyer_pk': entity.buyer_pk,
                             });
                             //check for coin when rew balance comes in
                         }
@@ -476,6 +494,17 @@ function processPaymentReceiptWrite(entity) {
                 }
             });
         }
+    });
+}
+
+
+function processItemSentClicked(entity) {
+    if (logs) { MDS.log(`Message received for item sent: ${JSON.stringify(entity)}`); }
+    const id = entity.data.listing_id;
+    updateListing(id, { "status": "completed", 'notification': true });
+    getListingById(id, function (listing) {
+        MDS.log(`Listing found: ${JSON.stringify(listing)}`);
+        notification(`${listing.title} has been sent!`);
     });
 }
 
@@ -522,7 +551,8 @@ function processCollectionRequest(entity) {
         'status': 'ongoing',
         'notification': true,
         'transmission_type': entity.transmission_type,
-        'buyer_name': entity.buyer_name
+        'buyer_name': entity.buyer_name,
+        'buyer_pk': entity.buyer_pk,
     });
 }
 
@@ -546,6 +576,7 @@ function processCancelCollection(entity) {
         if (logs) { MDS.log("buyer name not the same as on listing so cancel averted!"); }
     }
 }
+
 
 
 /*
@@ -858,6 +889,15 @@ function createListing({
     });
 }
 
+/*
+*   Show notificatio to the user in the minidapp
+*/
+function notification(message) {
+    MDS.notify(message);
+    MDS.log('Notification sent: ' + message);
+}
+
+
 function addLocationDescriptionColumn(callback) {
     const Q = `alter table ${LISTINGSTABLE} add column if not exists "location_description" varchar(150);`;
     MDS.sql(Q, function (res) {
@@ -868,6 +908,16 @@ function addLocationDescriptionColumn(callback) {
             callback(Error(`Adding location_description column to listing table ${res.error}`));
         }
     })
+}
+
+function addContact(address, callback) {
+    MDS.cmd(`maxcontacts action:add contact:${address}`, function (res) {
+        if (res.status) {
+            callback(true);
+        } else {
+            callback(Error(`Adding contact ${address} to maxcontacts ${res.error}`));
+        }
+    });
 }
 
 function addUnconfirmedCoinColumn(callback) {

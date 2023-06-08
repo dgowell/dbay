@@ -3,7 +3,6 @@ import { send, sendMoney, isContact } from './index';
 import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
-import { getHost } from '../database/settings';
 
 async function getSellerAddress(address) {
     //get name of node that create item
@@ -28,40 +27,58 @@ async function getSellerAddress(address) {
     });
 }
 
-async function sendCollectionRequest({ message, listingId, seller, transmissionType }) {
-    const host = await getHost();
-    const data = {
-        "type": "collection_request",
-        "message": message,
-        "listing_id": listingId,
-        "transmission_type": transmissionType,
-        "buyer_name": host.name
-    }
-    const sellerAddress = await getSellerAddress(seller);
 
-    return new Promise(function (resolve, reject) {
-        send(data, sellerAddress).then(
-            () => {
-                console.log(`sent customer message to seller: ${message}`);
-                return resolve(true);
-            }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
+function getMaximaInfo(callback) {
+    var maxcmd = "maxima";
+    window.MDS.cmd(maxcmd, function (msg) {
+        window.MDS.log(JSON.stringify(msg));
+        if (callback) {
+            callback(msg.response);
+        }
+    });
+}
+
+
+async function sendCollectionRequest({ message, listingId, seller, transmissionType }) {
+    getMaximaInfo(async function (res) {
+        const name = res.name;
+        const pk = res.publickey;
+        const data = {
+            "type": "COLLECTION_REQUEST",
+            "message": message,
+            "listing_id": listingId,
+            "transmission_type": transmissionType,
+            "buyer_name": name,
+            "buyer_pk": pk
+        }
+        const sellerAddress = await getSellerAddress(seller);
+
+        return new Promise(function (resolve, reject) {
+            send(data, sellerAddress).then(
+                () => {
+                    console.log(`sent customer message to seller: ${message}`);
+                    return resolve(true);
+                }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
+        });
     });
 }
 
 async function sendCancellationNotification({ listingId, seller }) {
-    const host = await getHost();
-    const data = {
-        "type": "cancel_collection",
-        "listing_id": listingId,
-        "buyer_name": host.name
-    }
-    const sellerAddress = await getSellerAddress(seller);
-    return new Promise(function (resolve, reject) {
-        send(data, sellerAddress).then(
-            () => {
-                console.log(`sent cancellation to seller.`);
-                resolve(true);
-            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+    getMaximaInfo(async function (res) {
+        const data = {
+            "type": "CANCEL_COLLECTION",
+            "listing_id": listingId,
+            "buyer_name": res.name,
+            "buyer_pk": res.publickey
+        }
+        const sellerAddress = await getSellerAddress(seller);
+        return new Promise(function (resolve, reject) {
+            send(data, sellerAddress).then(
+                () => {
+                    console.log(`sent cancellation to seller.`);
+                    resolve(true);
+                }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+        });
     });
 }
 
@@ -91,7 +108,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
     const purchaseCode = generateCode(10);
     console.log(`purchase coee is ${purchaseCode}`);
     return new Promise(function (resolve, reject) {
-        sendMoney({ walletAddress, amount, purchaseCode, password }, async function(res) {
+        sendMoney({ walletAddress, amount, purchaseCode, password }, async function (res) {
             console.log("Response from sendMoney function:", res);
 
             //if the payemnt was successful
@@ -100,44 +117,50 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
                 const coinId = res.response.body.txn.outputs[0].coinid;
 
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, { 'status': 'completed', 'transmission_type': transmissionType , 'purchase_code' : purchaseCode }).catch((e) => console.error(e));
+                    updateListing(listingId, { 'status': 'completed', 'transmission_type': transmissionType, 'purchase_code': purchaseCode }).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
 
-                    const host = await getHost();
-                    const sellerAddress = await getSellerAddress(seller);
-                    const data = {
-                        "type": "PAYMENT_RECEIPT_WRITE",
-                        "buyer_message": message,
-                        "listing_id": listingId,
-                        "coin_id": coinId,
-                        "transmission_type": transmissionType,
-                        "purchase_code": purchaseCode,
-                        "buyer_name": host.name
-                    }
+                    getMaximaInfo(async function (res) {
+                        const sellerAddress = await getSellerAddress(seller);
+                        const data = {
+                            "type": "PAYMENT_RECEIPT_WRITE",
+                            "buyer_message": message,
+                            "listing_id": listingId,
+                            "coin_id": coinId,
+                            "transmission_type": transmissionType,
+                            "purchase_code": purchaseCode,
+                            "buyer_name": res.name,
+                            "buyer_pk": res.publickey,
+                        }
 
-                    console.log(`Sending payment receipt to seller..`);
-                    send(data, sellerAddress).then(
-                        () => {
-                            console.log(`sent customer message to seller: ${message}`);
-                            resolve(true);
-                        }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
+                        console.log(`Sending payment receipt to seller..`);
+                        send(data, sellerAddress).then(
+                            () => {
+                                console.log(`sent customer message to seller: ${message}`);
+                                resolve(true);
+                            }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
+                    });
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
                     resetListingState(listingId);
                     reject(Error(`There was a problem with the payment`));
                 }
 
-            //if the payement is pending and needs accepting
+                //if the payement is pending and needs accepting
             } else if (res.pending === true) {
-                console.log(`Transaction pending. saving uid: ${res.pendinguid}`);
-                updateListing(listingId, {
-                    'status': 'pending_confirmation',
-                    'purchase_code': purchaseCode,
-                    'pendinguid': res.pendinguid,
-                    'transmission_type': transmissionType,
-                    'buyer_message': message,
-                }).catch((e) => console.error(e));
-                reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
+                getMaximaInfo(async function (res) {
+                    console.log(`Transaction pending. saving uid: ${res.pendinguid}`);
+                    updateListing(listingId, {
+                        'status': 'pending_confirmation',
+                        'purchase_code': purchaseCode,
+                        'pendinguid': res.pendinguid,
+                        'transmission_type': transmissionType,
+                        'buyer_message': message,
+                        'buyer_name': res.name,
+                        'buyer_pk': res.publickey,
+                    }).catch((e) => console.error(e));
+                    reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
+                });
             } else {
                 reject(Error(res.error));
             }
@@ -184,7 +207,7 @@ collectListing.proptypes = {
 */
 export function processAvailabilityResponse(entity) {
     console.log("processing availability response..." + JSON.stringify(entity));
-    updateListing(entity.listing_id, { "status": entity.status, "purchase_code" : entity.purchase_code })
+    updateListing(entity.listing_id, { "status": entity.status, "purchase_code": entity.purchase_code })
         .catch((e) => console.error(e));
 }
 processAvailabilityResponse.proptypes = {

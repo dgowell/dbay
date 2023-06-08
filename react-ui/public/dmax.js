@@ -23,7 +23,8 @@ function setStaticMLS(p2pidentity, callback) {
  */
 function sendMessage(message, address, app, callback) {
     MDS.log("Sending message to " + address);
-    var maxcmd = "maxima action:send poll:true to:" + address + " application:" + app + " data:" + JSON.stringify(message);
+    const formatAddress = address.includes('MAX') || address.includes('Mx') ? `to:${address}` : `publickey:${address}`;
+    var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(message);
     MDS.log(maxcmd);
     MDS.cmd(maxcmd, function (msg) {
         MDS.log(JSON.stringify(msg));
