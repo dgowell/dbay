@@ -58,7 +58,7 @@ function Purchases() {
       .then((data) => {
         setListings(data);
         let latest = [...data].sort((a, b) => b.created_at - a.created_at)[0];
-       if(latest.status === 'in_progress' || latest.status === 'collection_rejected'){
+       if(latest.status === 'in_progress' || latest.status === 'collection_rejected' || latest.status === 'pending_confirmation'){
           setValue(0);
         }else if(latest.status === 'purchased'){
           setValue(1);
@@ -83,7 +83,7 @@ function Purchases() {
       <TabPanel value={value} index={0}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link={`/listing/transmission`} listings={filter(listings, o => o.status === 'in_progress' || o.status === 'collection_rejected')} />
+          : <ListingList link={`/listing/transmission`} listings={filter(listings, o => o.status === 'in_progress' || o.status === 'collection_rejected' || o.status === 'pending_confirmation')} />
         }
       </TabPanel>
       <TabPanel value={value} index={1}>

@@ -99,8 +99,9 @@ function processMinimaLogEvent(data) {
                     let cmd = `checkpending uid:${listing.pendinguid}`;
                     MDS.cmd(cmd, function (response) {
                         if (response.status === true) {
+                            updateListing(listing.listing_id, { "status": "completed" });
                             const data = {
-                                "type": "purchase_receipt",
+                                "type": "PAYMENT_RECEIPT_READ",
                                 "buyer_message": listing.buyer_message,
                                 "listing_id": listing.listing_id,
                                 "transmission_type": listing.transmission_type,
@@ -167,9 +168,9 @@ function processMaximaEvent(msg) {
                 //a contact has shared a listing with you
                 processListing(entity);
                 break;
-            case 'purchase_receipt':
+            case 'PAYMENT_RECEIPT_READ':
                 //seller must process purchase receipt from buyer
-                processPurchaseReceipt(entity);
+                processPaymentReceiptRead(entity);
                 break;
             case 'collection_request':
                 //seller must process collection request from buyer
@@ -381,7 +382,7 @@ function processNewBalanceEvent() {
 *   Process a purchase receipt
 *   @param {object} entity - the entity object
 */
-function processPurchaseReceipt(entity) {
+function processPaymentReceiptRead(entity) {
     var id = entity.listing_id;
     if (logs) { MDS.log(`Message received for purchased listing: ${JSON.stringify(entity)}`); }
 

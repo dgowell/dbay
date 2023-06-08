@@ -215,18 +215,19 @@ function ListingCollectionBuyer(props) {
                                 {maxsoloError && <Alert sx={{ width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
                             </Stack>
                         </ListItem>
-
-                        <ListItem>
-                            <ListItemText primary={listing.transmission_type === 'collection'
-                                ? "When you are with the seller in person and you are happy with the item, click below to initiate your payment. "
-                                : "When you have received your item click below to confirm"} />
-                        </ListItem>
+                        {listing.status !== 'pending_confirmation' &&
+                            <ListItem>
+                                <ListItemText primary={listing.transmission_type === 'collection'
+                                    ? "When you are with the seller in person and you are happy with the item, click below to initiate your payment. "
+                                    : "When you have received your item click below to confirm"} />
+                            </ListItem>
+                        }
                     </List>
 
 
                     <List>
                         <ListItem sx={{ mb: 2 }}>
-                            <Typography variant="h4">Total: <span style={{ color: "#888787" }}>{`$M${listing.price}`}</span></Typography>
+                            <Typography variant="h5">Total: <span style={{ color: "#888787" }}>{`$M${listing.price}`}</span></Typography>
                         </ListItem>
                     </List>
 
@@ -238,7 +239,7 @@ function ListingCollectionBuyer(props) {
                         justifyContent="center"
                         alignItems="center"
                     >
-                        {listing.transmission_type === 'collection' &&
+                        {listing.transmission_type === 'collection' && listing.status === "in_progress" &&
                             <Stack direction="column" spacing={2} width={"100%"}>
                                 <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
                                 <FormControl variant="outlined">
@@ -270,7 +271,9 @@ function ListingCollectionBuyer(props) {
                                 {msg && <Alert severity="warning">{msg}</Alert>}
                             </Stack>
                         }
-                        {listing.transmission_type === 'delivery' && <></>}
+                        {listing.status === "pending_confirmation" &&
+                            <Alert severity="warning">You must confirm the transaction in the MDS menu in 'Pending Actions' to complete the order.</Alert>
+                        }
                     </Box>
                     <Modal
                         open={open}
