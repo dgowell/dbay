@@ -6,6 +6,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { getListingById } from '../database/listing';
 import { useNavigate } from "react-router";
 import { purchaseListing } from '../minima/buyer-processes';
+import { link } from '../minima';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Stack from '@mui/material/Stack';
@@ -18,11 +19,6 @@ import PaymentError from './PaymentError';
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import Badge from '@mui/material/Badge';
 import { hasSufficientFunds } from '../minima/buyer-processes';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Divider from "@mui/material/Divider";
 import Modal from '@mui/material/Modal';
 import Alert from '@mui/material/Alert';
 import { isContact, addContact } from '../minima';
@@ -48,6 +44,7 @@ function ListingCollectionBuyer(props) {
     const [seller, setSeller] = useState();
     const [passwordError, setPasswordError] = useState(false);
     const [password, setPassword] = useState("");
+    const [maxsoloError, setMaxsoloError] = useState('');
 
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -99,6 +96,24 @@ function ListingCollectionBuyer(props) {
             })
         });
     }, [params.id]);
+
+    function handleMaxSoloLink() {
+        if (!isFriend) {
+            handleAdd();
+        }
+        link('maxsolo', function (res) {
+            if (res.status === false) {
+                if (res.error.includes('permission escalation')) {
+                    setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+                } else {
+                    setMaxsoloError(res.error);
+                }
+            } else if (res.status === true) {
+                setMaxsoloError('');
+                window.open(res.base, '_blank');
+            }
+        });
+    }
 
     async function handleSend() {
         setLoading(true);
@@ -155,100 +170,63 @@ function ListingCollectionBuyer(props) {
                     display: 'flex',
                     flexDirection: 'column',
                 }}>
-                    <Accordion sx={{ boxShadow: "none" }}>
-                        <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            aria-controls="panel1a-content"
-                            id="panel1a-header"
-                        >
-                            <Typography sx={{ fontWeight: 700, fontSize: "20px" }}>View Listing</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <List>
-                                <ListItem>
-                                    <ListItemAvatar>
-                                        {listing.image ? (
-                                            <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
-                                        ) : (
-                                            <Badge anchorOrigin={{
-                                                vertical: 'top',
-                                                horizontal: 'right',
-                                            }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
-                                                <Avatar>
-                                                    <BungalowIcon />
-                                                </Avatar>
-                                            </Badge>
-                                        )}
-                                    </ListItemAvatar>
-                                    <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
-                                </ListItem>
-                                {listing.delivery === "true" && <><ListItem>
-                                </ListItem>
-                                    <ListItem>
-                                        {listing.buyer_message
-                                            ? <><Typography gutterBottom sx={{ textAlign: "left" }} component="p">
-                                                {listing.buyer_message.split("\n").map((i, key) => {
-                                                    return <p key={key}>{i}</p>;
-                                                })}
-                                            </Typography></> : ""}
-                                    </ListItem></>}
-                            </List>
-                        </AccordionDetails>
-                    </Accordion>
-                    <Accordion expanded={true} sx={{ boxShadow: "none" }}>
-                        <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            aria-controls="panel1a-content"
-                            id="panel1a-header"
-                        >
-                            <Typography sx={{ fontWeight: 700, fontSize: "20px" }}>Contact Seller</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <Box sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                p: 2,
-                                gap: 3,
-                            }}>
-                                {listing.transmission_type === 'collection' &&
-                                    <List>
-                                        <ListItem>
-                                            <ListItemText primaryTypographyProps={{ fontSize: 16, fontWeight: 700 }} primary={(!isFriend ? `Add @${listing.created_by_name}.` : `@${listing.created_by_name} is already a contact. `) + `Chat over MaxSolo, meet and pay when you are with the seller.`} />
-                                        </ListItem>
-                                        <ListItem>
-                                            {!isFriend && <Stack spacing={2}><LoadingButton className={"custom-loading"} sx={{ width: "100%" }} color="primary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
-                                                {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-                                            </Stack>}
-                                        </ListItem>
-                                        <Divider />
-                                        <ListItem>
-                                            <ListItemText primary="When you are with the seller in person and you are happy with the item, click below to initiate your payment. " />
-                                        </ListItem>
-                                    </List>
-                                }
-                                {listing.transmission_type === 'delivery' &&
-                                    <List>
-                                        <ListItem>
-                                            <ListItemText primaryTypographyProps={{ fontSize: 16, fontWeight: 700 }} primary={(!isFriend ? `Add @${listing.created_by_name}. ` : `@${listing.created_by_name} is already a contact. `) + `Chat over MaxSolo, meet and pay when you are with the seller.`} />
-                                        </ListItem>
-                                        <ListItem>
-                                            {!isFriend && <Stack spacing={2}><LoadingButton className={"custom-loading"} sx={{ width: "100%" }} color="primary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>
-                                                {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-                                            </Stack>}
-                                        </ListItem>
-                                        <Divider />
-                                        <ListItem>
-                                            <ListItemText primary="When you have received your item click below to confirm " />
-                                        </ListItem>
-                                    </List>
-                                }
-                            </Box>
 
-                        </AccordionDetails>
-                    </Accordion>
+
+                    <Typography variant="h3">{listing.transmission_type === 'collection'
+                        ? "You have arranged to collect this item"
+                        : "You have arranged to have this item delivered"}</Typography>
+
+                    <List>
+                        <ListItem>
+                            <ListItemAvatar>
+                                {listing.image ? (
+                                    <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
+                                ) : (
+                                    <Badge anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
+                                        <Avatar>
+                                            <BungalowIcon />
+                                        </Avatar>
+                                    </Badge>
+                                )}
+                            </ListItemAvatar>
+                            <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
+                        </ListItem>
+                        {listing.delivery === "true" && <><ListItem>
+                        </ListItem>
+                            <ListItem>
+                                {listing.buyer_message
+                                    ? <><Typography gutterBottom sx={{ textAlign: "left" }} component="p">
+                                        {listing.buyer_message.split("\n").map((i, key) => {
+                                            return <p key={key}>{i}</p>;
+                                        })}
+                                    </Typography></> : ""}
+                            </ListItem></>}
+                    </List>
+
+
+                    <List>
+                        <ListItem>
+                            <Stack direction="column" spacing={2}>
+                                <Typography>Seller: <span style={{ color: "#888787" }}>@{listing.created_by_name}</span></Typography>
+                                <Button onClick={handleMaxSoloLink} color="secondary" variant="contained">CHAT NOW</Button>
+                                {maxsoloError && <Alert sx={{ width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
+                            </Stack>
+                        </ListItem>
+
+                        <ListItem>
+                            <ListItemText primary={listing.transmission_type === 'collection'
+                                ? "When you are with the seller in person and you are happy with the item, click below to initiate your payment. "
+                                : "When you have received your item click below to confirm"} />
+                        </ListItem>
+                    </List>
+
+
                     <List>
                         <ListItem sx={{ mb: 2 }}>
-                            <span style={{ fontWeight: 700, fontSize: "20px", color: "#2C2C2C" }}>Total</span> <span style={{ marginLeft: "60%", color: "#888787", fontSize: "20px" }}>{`$M${listing.price}`}</span>
+                            <Typography variant="h4">Total: <span style={{ color: "#888787" }}>{`$M${listing.price}`}</span></Typography>
                         </ListItem>
                     </List>
 
@@ -261,7 +239,7 @@ function ListingCollectionBuyer(props) {
                         alignItems="center"
                     >
                         {listing.transmission_type === 'collection' &&
-                            <Stack mt={15} direction="column" spacing={2} width={"100%"}>
+                            <Stack direction="column" spacing={2} width={"100%"}>
                                 <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
                                 <FormControl variant="outlined">
                                     <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
@@ -304,7 +282,7 @@ function ListingCollectionBuyer(props) {
                             <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                                 {`Pay $M${listing.price} from your Minima wallet?`}
                             </Typography>
-                            <Stack mt={15} direction="column" spacing={2} width={"100%"} sx={{ justifyContent: "center", textAlign: "center" }} >
+                            <Stack direction="column" spacing={2} width={"100%"} sx={{ justifyContent: "center", textAlign: "center" }} >
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleSend} variant="contained">
                                     PAY
                                 </LoadingButton>
@@ -312,7 +290,7 @@ function ListingCollectionBuyer(props) {
                             </Stack>
                         </Box>
                     </Modal>
-                </Box>
+                </Box >
             );
         } else {
             return (
