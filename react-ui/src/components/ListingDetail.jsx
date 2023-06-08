@@ -292,6 +292,9 @@ function ListingDetail() {
               <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
                 Item shared with contacts
               </Alert>
+              {(listing.status === "collection_rejected") && <Alert onClose={handleClose} color="warning" variant="filled" sx={{ width: '100%' }}>
+                Collection rejected
+              </Alert>}
             </Snackbar>
             <Stack spacing={2} mt={4}>
               {listing.status === "purchased"

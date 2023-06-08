@@ -153,7 +153,7 @@ purchaseListing.proptypes = {
 */
 export function collectListing({ seller, message, listingId, transmissionType }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, { 'status': 'in progress', 'transmission_type': transmissionType }).catch((e) => console.error(e));
+        updateListing(listingId, { 'status': 'in_progress', 'transmission_type': transmissionType }).catch((e) => console.error(e));
 
         console.log(`Sending collection confirmation to seller..`);
         sendCollectionRequest({ message, listingId, seller, transmissionType })

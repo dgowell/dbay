@@ -11,6 +11,7 @@ import Badge from '@mui/material/Badge';
 import Stack from '@mui/material/Stack';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import Alert from "@mui/material/Alert";
 
 function Listing(props) {
   const navigate = useNavigate();
@@ -39,23 +40,23 @@ function Listing(props) {
             </Badge>
           )}
         </ListItemAvatar>
-
+              {listing.status === 'collection_rejected' && <Alert>The seller has rejected your collection reuqest.</Alert>}
         <ListItemText
           primary={listing.title}
           secondary={listing.price ? `$M${listing.price}` : null}
         />
         <Stack direction="row" spacing={1}>
         <ListItem sx={{color:"rgba(0, 0, 0, 0.54)"}}>
-          {listing.collection==='true' && (listing.status === 'available' || listing.status === 'pending' || listing.status === 'unchecked')
+          {listing.collection==='true' && (listing.status === 'available' || listing.status === 'unchecked')
             ? <LocationOnOutlinedIcon/>
             : null}
-          {listing.delivery==='true' && (listing.status === 'available' || listing.status === 'pending' || listing.status === 'unchecked')
+          {listing.delivery==='true' && (listing.status === 'available' || listing.status === 'unchecked')
             ? <LocalShippingOutlinedIcon/>
             : null}
-          {listing.transmission_type === "collection" && (listing.status === 'sold' || listing.status === 'in progress')
+          {listing.transmission_type === "collection" && (listing.status === 'completed' || listing.status === 'in_progress' || listing.status === 'collection_rejected')
             ? <LocationOnOutlinedIcon/>
             : null}
-          {listing.transmission_type === "delivery" && (listing.status === 'sold' || listing.status === 'in progress')
+          {listing.transmission_type === "delivery" && (listing.status === 'completed' || listing.status === 'in_progress')
             ?  <LocalShippingOutlinedIcon/>
             : null}
             </ListItem>

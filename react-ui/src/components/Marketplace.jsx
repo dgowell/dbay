@@ -184,7 +184,7 @@ export default function Marketplace() {
                         <LocalShippingOutlinedIcon fontSize="2px" />
                       </IconButton>
                       : null}
-                    {item.transmission_type === "collection" && (item.status === 'sold' || item.status === 'in progress')
+                    {item.transmission_type === "collection" && (item.status === 'sold' || item.status === 'in_progress')
                       ? <IconButton
                         size="small"
                         sx={{ color: '#333333', background: "rgba(255,255,255,0.7)" }}
@@ -192,7 +192,7 @@ export default function Marketplace() {
                         <LocationOnOutlinedIcon fontSize="2px" />
                       </IconButton>
                       : null}
-                    {item.transmission_type === "delivery" && (item.status === 'sold' || item.status === 'in progress')
+                    {item.transmission_type === "delivery" && (item.status === 'sold' || item.status === 'in_progress')
                       ? <IconButton
                         size="small"
                         sx={{ color: '#333333', background: "rgba(255,255,255,0.7)" }}

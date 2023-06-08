@@ -57,9 +57,8 @@ function ListingDeliverySeller() {
                 const app = 'dbay';
 
                 sendMessage(message, address, app, function (res) {
-                    console.log(res);
                     setLoading(false);
-                    navigate('/seller/listings')
+                    navigate('/seller/listings');
                 });
             });
     }
@@ -76,7 +75,7 @@ function ListingDeliverySeller() {
                 sendMessage(message, address, app, function (res) {
                     console.log(res);
                     setLoading(false);
-                    navigate('/seller/listings')
+                    navigate('/seller/listings');
                 });
             })
             .catch((e) => console.error(`Could not update listing as available: ${e}`));
@@ -130,14 +129,15 @@ function ListingDeliverySeller() {
                                 {/*`@${listing.buyer_name} is waiting for the item to be sent`*/}
                                 {listing.transmission_type === "collection" &&
                                     <>
-                                        <Typography>@{listing.buyer_name} has requested to collect your item.</Typography>
-                                        <Stack direction="column" spacing={2} sx={{ paddingLeft: 2, paddingRight: 2 }}>
+                                    <Typography>@{listing.buyer_name} would like to collect your item, arrange collection with them below.</Typography>
+                                        <Stack direction="column" spacing={2}>
                                         <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Chat Now</Button>
                                             {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
                                             {listing.status === "ongoing" &&
                                                 <>
-                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Confirm request</LoadingButton>
-                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="outlined" color={"secondary"} onClick={handleRejectCollection}>Reject request</LoadingButton>
+                                                    <Typography>Once collection has been arranged, take it off the market to stop others seeing it by clicking below.</Typography>            
+                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Remove from market</LoadingButton>
+                                                    <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="outlined" color={"secondary"} onClick={handleRejectCollection}>Cancel collection</LoadingButton>
                                                 </>
                                             }
                                         </Stack>
