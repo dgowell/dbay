@@ -86,6 +86,19 @@ async function sendCancellationNotification({ listingId, seller }) {
     });
 }
 
+function generateCode(length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
+    }
+    return result;
+}
+
+
 /**
 * Send's buyers delivery address to seller
 * @param {string} seller - Sellers hex address
@@ -95,7 +108,9 @@ async function sendCancellationNotification({ listingId, seller }) {
 * @param {int} amount - cost of purchase
 * @param {string} transmissionType - collection or delivery
 */
-export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType, password }) {
+export function purchaseListing({ seller, message, listingId, walletAddress, amount, transmissionType, password }) {
+    const purchaseCode = generateCode(10);
+    console.log(`purchase coee is ${purchaseCode}`);
     return new Promise(function (resolve, reject) {
         sendMoney({ walletAddress, amount, purchaseCode, password }, function(res) {
             console.log("Response from sendMoney function:", res);
@@ -106,7 +121,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, pur
                 const coinId = res.response.body.txn.outputs[0].coinid;
 
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, { 'status': 'purchased', 'transmission_type': transmissionType }).catch((e) => console.error(e));
+                    updateListing(listingId, { 'status': 'purchased', 'transmission_type': transmissionType , 'purchase_code' : purchaseCode }).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
 
                     console.log(`Sending purchase receipt to seller..`);
@@ -140,7 +155,6 @@ purchaseListing.proptypes = {
     message: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired,
     walletAddress: PropTypes.string.isRequired,
-    purchaseCode: PropTypes.string.isRequired,
     amount: PropTypes.number.isRequired,
     transmissionType: PropTypes.string.isRequired,
 }

@@ -69,7 +69,6 @@ function DeliveryConfirmation({
       listingId: listing.listing_id,
       seller: listing.created_by_pk,
       walletAddress: listing.wallet_address,
-      purchaseCode: listing.purchase_code,
       message: message,
       amount: parseInt(listing.price) + parseInt(listing.shipping_cost),
       transmissionType: transmissionType,
