@@ -382,7 +382,9 @@ function processPaymentReceiptRead(entity) {
     updateListing(id, {
         "status": "unconfirmed_payment",
         'buyer_message': entity.buyer_message,
-        'buyer_name': entity.buyer_name });
+        'buyer_name': entity.buyer_name,
+        'transmission_type': entity.transmission_type
+    });
 
     getHistoryTransactions(function (transactions) {
         if (transactions.length > 0) {
@@ -407,10 +409,11 @@ function processPaymentReceiptRead(entity) {
                                 updateListing(id,
                                     {
                                         'buyer_message': entity.buyer_message,
-                                        'status': 'completed',
+                                        'status': entity.transmission_type === 'collection' ? 'completed' : 'paid',
                                         'notification': true,
                                         'buyer_name': entity.buyer_name
                                     });
+
                             } else {
                                 MDS.log("coin amount does not match total cost");
                             }

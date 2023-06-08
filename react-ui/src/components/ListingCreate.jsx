@@ -170,23 +170,21 @@ export default function ListingCreate() {
     const compressedImages = await Promise.all( // eslint-disable-line no-undef
       images.map((image) => handleUpload(image))
     );
-
-    const newListing = { ...formik.values };
-    console.log(`New listing about to be created : ${JSON.stringify(newListing)}`);
+    console.log(`New listing about to be created : ${JSON.stringify(formik.values)}`);
     let id = "";
     createListing({
-      title: newListing.title.replace(/'/g, "''"),
-      price: newListing.askingPrice,
+      title: formik.values.title.replace(/'/g, "''"),
+      price: formik.values.askingPrice,
       createdByPk: host.pk,
       createdByName: host.name,
       walletAddress: walletAddress,
       image: compressedImages.join("(+_+)"),
-      description: newListing.description.replace(/'/g, "''") ?? '',
-      collection: newListing.collection,
-      delivery: newListing.delivery,
+      description: formik.values.description.replace(/'/g, "''") ?? '',
+      collection: formik.values.collection,
+      delivery: formik.values.delivery,
       location: JSON.stringify(location),
-      locationDescription: newListing.locationDescription,
-      shippingCost: newListing.deliveryCost,
+      locationDescription: formik.values.locationDescription,
+      shippingCost: parseInt(formik.values.deliveryCost),
     }).then(function (listingId) {
       id = listingId;
       console.log(`Listing successfully added: ${listingId}`);

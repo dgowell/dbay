@@ -74,7 +74,7 @@ function ListingListSeller() {
           let latest = [...data].sort((a, b) => b.created_at - a.created_at)[0];
           if(latest.status === 'available' || latest.status === 'pending'){
             setValue(0);
-          }else if(latest.status === 'sold'){
+          } else if (latest.status === 'ongoing' || latest.status === 'unconfirmed_payment' || latest.status === 'collection_confirmed' || latest.status === 'paid'){
             setValue(1);
           }else if(latest.status === 'completed'){
             setValue(2);
@@ -106,7 +106,7 @@ function ListingListSeller() {
       <TabPanel value={value} index={1}>
         {!listings
           ? <ListingListSkeleton />
-          : <ListingList link='/seller/listing/delivery' listings={filter(listings, o => o.status === 'ongoing' || o.status === 'unconfirmed_payment' || o.status === 'collection_confirmed')} />
+          : <ListingList link='/seller/listing/delivery' listings={filter(listings, o => o.status === 'ongoing' || o.status === 'unconfirmed_payment' || o.status === 'collection_confirmed' || o.status === 'paid')} />
         }
       </TabPanel>
       <TabPanel value={value} index={2}>

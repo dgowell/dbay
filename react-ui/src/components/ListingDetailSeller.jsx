@@ -7,7 +7,7 @@ import CardContent from "@mui/material/CardContent";
 import Button from '@mui/material/Button';
 import CardMedia from "@mui/material/CardMedia";
 import Card from "@mui/material/Card";
-import { sendListingToContacts } from "../minima";
+import { sendListingToContacts, addContact, link } from "../minima";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
 import Carousel from 'react-material-ui-carousel'
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -22,6 +22,7 @@ import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined
 import { Stack } from "@mui/system";
 import Snackbar from '@mui/material/Snackbar';
 
+
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
@@ -35,6 +36,8 @@ function ListingDetailSeller() {
     const params = useParams();
     const navigate = useNavigate();
     const [navButtonsVisible, setNavButtonsVisible] = useState(false);
+    const [isFriend, setIsFriend] = useState(false);
+    const [maxsoloError, setMaxsoloError] = useState('');
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -52,6 +55,32 @@ function ListingDetailSeller() {
             }
         });
     }, [params.id]);
+
+    async function handleAdd() {
+        const { msg, status } = await addContact(listing.buyer_address);
+        console.log(msg, status);
+        if (status === "success") {
+            setIsFriend(true);
+        }
+    }
+
+    function handleMaxSoloLink() {
+        if (!isFriend) {
+            handleAdd();
+        }
+        link('maxsolo', function (res) {
+            if (res.status === false) {
+                if (res.error.includes('permission escalation')) {
+                    setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+                } else {
+                    setMaxsoloError(res.error);
+                }
+            } else if (res.status === true) {
+                setMaxsoloError('');
+                window.open(res.base, '_blank');
+            }
+        });
+    }
 
     function handleShare() {
         sendListingToContacts(listing.listing_id)
@@ -150,11 +179,13 @@ function ListingDetailSeller() {
                                 : null}
                         </List>
                         <Stack mt={3} direction="column" spacing={2}>
-                            <Button xs={{ width: '100%' }} aria-label="share" onClick={() => handleShare()} variant="contained" color="secondary">
-                                {error && <Alert severity="error">{error}</Alert>}
-                                Republish
-                            </Button>
-                            <Button xs={{width:'100%'}} aria-label="delete listing" onClick={() => handleDelete()} startIcon={<DeleteIcon />} variant="outlined" color="error">
+                            {listing.status === "available" &&
+                                <Button xs={{ width: '100%' }} aria-label="share" onClick={() => handleShare()} variant="contained" color="secondary">
+                                    {error && <Alert severity="error">{error}</Alert>}
+                                    Reshare Listing
+                                </Button>
+                            }
+                            <Button xs={{ width: '100%' }} aria-label="delete listing" onClick={() => handleDelete()} startIcon={<DeleteIcon />} variant="outlined" color="error">
                                 {error && <Alert severity="error">{error}</Alert>}
                                 Delete Listing
                             </Button>
