@@ -10,7 +10,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
 import Tooltip from "@mui/material/Tooltip";
 import { getHost } from "../database/settings";
-import { sendListingToContacts, getMaximaContactAddress } from "../minima";
+import { sendListingToContacts, getMaximaContactAddress, getMaximaContactName } from "../minima";
 import { checkAvailability, hasSufficientFunds } from '../minima/buyer-processes';
 import { useNavigate } from "react-router";
 import { Stack } from "@mui/system";
@@ -136,7 +136,9 @@ function ListingDetail() {
   useEffect(() => {
     if (listing) {
       getHost().then((host) => {
-        setBuyerName(host.name);
+        getMaximaContactName().then((name) => {
+          setBuyerName(name);
+        }).catch((e) => console.error(e));
       }).catch((e) => console.error(e));
     }
   }, [listing]);

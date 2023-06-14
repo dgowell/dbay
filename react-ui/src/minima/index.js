@@ -203,10 +203,11 @@ export async function sendListingToContacts(listingId) {
     let listing = await getListingById(listingId);
     const contacts = await getContacts();
     const host = await getHost();
+    const name = await getMaximaContactName();
     console.log("contacts", contacts);
     listing.version = '0.1';
     listing.type = 'listing';
-    listing.sent_by_name = host.name;
+    listing.sent_by_name = name;
     listing.sent_by_pk = host.pk;
 
     return new Promise(function (resolve, reject) {
@@ -256,9 +257,9 @@ export function send(data, address) {
         let fullfunc = '';
         console.log(`Heres the address we'll send to: ${address}`);
         if (address.includes('@')) {
-            fullfunc = `maxima action:send to:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+            fullfunc = `maxima action:send poll:true to:${address} application:${APPLICATION_NAME} data:${hexstr}`;
         } else {
-            fullfunc = `maxima action:send publickey:${address} application:${APPLICATION_NAME} data:${hexstr}`;
+            fullfunc = `maxima action:send poll:true publickey:${address} application:${APPLICATION_NAME} data:${hexstr}`;
         }
 
         //Send the message via Maxima!..
@@ -327,6 +328,42 @@ export function addContact(address) {
             }
         })
     })
+}
+
+export function getMaximaInfo(callback) {
+    var maxcmd = "maxima";
+    window.MDS.cmd(maxcmd, function (msg) {
+        window.MDS.log(JSON.stringify(msg));
+        if (callback) {
+            callback(msg.response);
+        }
+    });
+}
+
+export function getPermanentAddress(callback) {
+    var maxcmd = "maxima";
+    window.MDS.cmd(maxcmd, function (res) {
+        console.log(`Get Creator Address: ${JSON.stringify(res)}`);
+        if (res.status === true) {
+            const maxima = res.response;
+            if (maxima.staticmls === true) {
+                //consturct the perm address from the public key and mls
+                const permAddress = `MAX#${maxima.publickey}#${maxima.mls}`;
+                const cmd = `maxextra action:getaddress maxaddress:${permAddress}`;
+                window.MDS.cmd(cmd, function (maxextra) {
+                    if (maxextra.status === true && maxextra.response.success === true) {
+                        callback(permAddress);
+                    } else {
+                        callback(false);
+                    }
+                });
+            } else {
+                callback(false);
+            }
+        } else {
+            console.error(res.error);
+        }
+    });
 }
 
 export function unlockValut(pswd) {

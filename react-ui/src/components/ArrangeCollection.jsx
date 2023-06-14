@@ -29,10 +29,9 @@ export default function InfoPage() {
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
-      const slr = result.created_by_pk;
-      setSeller(slr);
-      const pk = slr.split("#")[1];
-      isContact(pk).then((res) => {
+      const seller = result.created_by_pk;
+      setSeller(seller);
+      isContact(seller).then((res) => {
         if (res !== false) {
           setIsFriend(true);
         }

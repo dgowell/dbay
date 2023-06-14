@@ -40,46 +40,53 @@ MDS.init(function (msg) {
 * store id = current public key
 */
 function setup() {
-    let pk = '';
-    getPublicKey(function (res) {
-        pk = res;
+    getPublicKey(function (pk) {
+        getMLS(function (mls) {
+
+            let permanentAddress = '';
+
+            hasStaticMLS(function (result) {
+                if (result === true) {
+                    permanentAddress = `MAX#${pk}#${mls}`;
+                }
+            });
+
+            if (logs) { MDS.log(`Permanent Address: ${permanentAddress}`) }
+
+            //create listing table
+            createListingTable(function (result) {
+                if (logs) { MDS.log('Listing table created or exists') }
+            });
+
+            //add location description column
+            addLocationDescriptionColumn(function (result) {
+                if (logs) { MDS.log('Added location description Column: ' + result) }
+            });
+
+            addPendingUIDColumn(function (result) {
+                if (logs) { MDS.log('Added pending UID Column: ' + result) }
+            });
+
+            addSellerHasPermAddressColumn(function (result) {
+                if (logs) { MDS.log('Added seller has permanent address Column: ' + result) }
+            });
+
+            addSellerPermAddressColumn(function (result) {
+                if (logs) { MDS.log('Added seller permanent address Column: ' + result) }
+            });
+
+            createSettingsTable(function (result) {
+                if (result === true) {
+
+                    //check if store exists
+                    createHost(pk, permanentAddress, function (result) {
+                        if (logs) { MDS.log('Host created: ' + result) }
+                    }
+                    );
+                }
+            });
+        });
     });
-    let hostName = getMaximaContactName();
-    let mls = getMLS();
-    const permanentAddress = `MAX#${pk}#${mls}`;
-
-    if (logs) { MDS.log(`Permanent Address: ${permanentAddress}`) }
-
-    //create listing table
-    createListingTable(function (result) {
-        if (logs) { MDS.log('Listing table created or exists') }
-    });
-
-    //add location description column
-    addLocationDescriptionColumn(function (result) {
-        if (logs) { MDS.log('Added location description Column: ' + result) }
-    });
-
-    //add location description column
-    addUnconfirmedCoinColumn(function (result) {
-        if (logs) { MDS.log('Added unconfirmed coin Column: ' + result) }
-    });
-
-    addPendingUIDColumn(function (result) {
-        if (logs) { MDS.log('Added pending UID Column: ' + result) }
-    });
-
-
-    //create settings table
-    createSettingsTable(function (result) {
-        if (logs) { MDS.log('Settings table created or exists:' + hostName); }
-
-        //check if store exists
-        createHost(hostName, permanentAddress);
-        if (logs) { MDS.log('Local hosting info stored in database') }
-
-    });
-
 }
 
 /*
@@ -117,9 +124,9 @@ function processMinimaLogEvent(data) {
 
                             //need to add the seller as a contact so they can let us know when the item has been shipped
                             if (listing.transmission_type === "delivery") {
-                             addContact(listing.created_by_pk, function (result) {
-                                MDS.log('Contact added: ' + JSON.stringify(result));
-                             });
+                                addContact(listing.created_by_pk, function (result) {
+                                    MDS.log('Contact added: ' + JSON.stringify(result));
+                                });
                             }
                         }
                     });
@@ -283,6 +290,8 @@ function processListing(entity) {
         price: entity.price,
         createdByPk: entity.created_by_pk,
         createdByName: entity.created_by_name,
+        sellerHasPermAddress: entity.seller_has_perm_address,
+        sellerPermAddress: entity.seller_perm_address,
         sentByName: entity.sent_by_name,
         sentByPk: entity.sent_by_pk,
         walletAddress: entity.wallet_address,
@@ -341,11 +350,12 @@ function processNewBalanceEvent() {
         if (transactions.length > 0) {
 
             //TODO: update this function to use the status field instead of the boolean
-            getListingsWithUnconfirmedCoins(function (listings) {
+            getListingsWithUnconfirmedPayments(function (listings) {
                 if (logs) {
-                    MDS.log(`Found ${JSON.stringify(listings.count)} listings with unconfirmed coins`);
+                    MDS.log(`Found ${JSON.stringify(listings.count)} listings with unconfirmed payments`);
                 }
-
+                MDS.log(`Listings found: ${JSON.stringify(listings)}`);
+                MDS.log(`Listings type ${JSON.stringify(typeof listings)}`);
                 if (listings.length > 0) {
                     //loop therough coins and check each one against the coins list returned by mds.cmd('coins')
                     listings.forEach(function (listing) {
@@ -361,14 +371,9 @@ function processNewBalanceEvent() {
                                 MDS.log("coin amount: " + coin.amount);
                                 MDS.log("total cost: " + totalCost);
                                 if (parseInt(coin.amount) === totalCost) {
-                                    updateListing(id,
-                                        {
-                                            'buyer_message': entity.buyer_message,
-                                            'status': 'paid',
-                                            'notification': true,
-                                            'buyer_name': entity.buyer_name,
-                                            'buyer_pk': entity.buyer_pk,
-                                        });
+                                    MDS.log("Coin amount matches listing amount");
+                                    updateListing(listing.listing_id, { 'status': 'completed', 'notification': true });
+                                    MDS.log("Listing updated to completed");
                                 } else {
                                     MDS.log("Coin amount does not match listing amount");
                                 }
@@ -398,7 +403,8 @@ function processPaymentReceiptRead(entity) {
         'buyer_message': entity.buyer_message,
         'buyer_name': entity.buyer_name,
         'buyer_pk': entity.buyer_pk,
-        'transmission_type': entity.transmission_type
+        'transmission_type': entity.transmission_type,
+        'purchase_code': entity.purchase_code,
     });
 
     getHistoryTransactions(function (transactions) {
@@ -457,7 +463,7 @@ function processPaymentReceiptWrite(entity) {
 
                 if (listing) {
                     if (logs) { MDS.log(`Transactions found: ${JSON.stringify(transactions.length)}`); }
-                    confirmCoin(listing.purchase_code, transactions, function (coin) {
+                    confirmCoin(entity.purchase_code, transactions, function (coin) {
 
                         if (coin) {
                             //if coin found check amount of coin matches amount on listing
@@ -472,20 +478,23 @@ function processPaymentReceiptWrite(entity) {
                                 updateListing(id,
                                     {
                                         'buyer_message': entity.buyer_message,
-                                        'status': 'sold',
+                                        'status': 'completed',
                                         'notification': true,
                                         'buyer_name': entity.buyer_name,
                                         'buyer_pk': entity.buyer_pk,
+                                        'purchase_code': entity.purchase_code,
                                     });
                             } else {
                                 MDS.log("coin amount does not match total cost");
                             }
                         } else {
+                            MDS.log("coin not found");
                             updateListing(id, {
                                 'buyer_message': entity.buyer_message,
-                                'status': 'unconfirmed_coin',
+                                'status': 'unconfirmed_payment',
                                 'buyer_name': entity.buyer_name,
                                 'buyer_pk': entity.buyer_pk,
+                                'purchase_code': entity.purchase_code,
                             });
                             //check for coin when rew balance comes in
                         }
@@ -518,10 +527,10 @@ function confirmCoin(purchaseCode, transactions, callback) {
     if (logs) { MDS.log(`Confirming coin for purchase code: ${purchaseCode}`); }
     var response = null;
     transactions.forEach(function (transaction) {
-        if (logs) { MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state)}`); }
+        //if (logs) { MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state)}`); }
         if (transaction.body.txn.state[0]) {
             if (transaction.body.txn.state[0].data) {
-                MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state[0].data)}`);
+                //MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state[0].data)}`);
 
                 if (transaction.body.txn.state[0].data === "[" + purchaseCode + "]") {
                     if (logs) { MDS.log(`Coin confirmed: ${JSON.stringify(transaction.body.txn.outputs[0].coinid)}`); }
@@ -600,7 +609,7 @@ function getStatus(listingId) {
 
 function getHost() {
     var host = '';
-    MDS.sql(`select "pk", "name" FROM SETTINGS;`, function (res) {
+    MDS.sql(`select * FROM SETTINGS;`, function (res) {
         if (res.status && res.count === 1) {
             host = res.rows[0];
         } else if (res.error.includes('Table \"SETTINGS\" not found')) {
@@ -664,45 +673,43 @@ function getListingById(id, callback) {
     return listings;
 }
 
-function getMLS() {
-    var mls = '';
+function getMLS(callback) {
     MDS.cmd('maxima', function (res) {
         if (logs) { MDS.log('Get MLS: ' + JSON.stringify(res)); }
         if (res.status) {
-            mls = res.response.mls;
+            callback(res.response.mls);
         } else {
-            return Error(`Couldn't fetch maxima public key ${res.error}`);
+            callback(Error(`Couldn't fetch maxima public key ${res.error}`));
         }
     })
-    return mls;
 }
 
-function getMaximaContactName() {
-    var mcn = '';
+function getMaximaContactName(callback) {
     MDS.cmd('maxima', function (res) {
         if (res.status) {
-            mcn = res.response.name;
+            callback(res.response.name);
         } else {
-            return Error(`Couldn't fetch maxima contact name ${res.error}`);
+            callback(Error(`Couldn't fetch maxima contact name ${res.error}`));
         }
     })
-    return mcn;
 }
 
-/*
-* Return all listings with unconfirmed coins
-*/
-function getListingsWithUnconfirmedCoins(callback) {
-    if (logs) { MDS.log("Getting unconfirmed coins"); }
-    MDS.sql(`SELECT * FROM "${LISTINGSTABLE}" WHERE "unconfirmed_coin" IS true`, function (result) {
+
+
+function getListingsWithUnconfirmedPayments(callback) {
+    if (logs) { MDS.log("Getting unconfirmed payments"); }
+    MDS.sql(`SELECT * FROM "${LISTINGSTABLE}" WHERE "status"='unconfirmed_payment'`, function (result) {
         if (result && callback) {
-            callback(result);
+            if (result.count > 0) {
+                callback(result.rows);
+            }
         } else {
             callback([]);
-            if (logs) { MDS.log("No unconfirmed coins found"); }
+            if (logs) { MDS.log("No unconfirmed payments found"); }
         }
     });
 }
+
 
 function getListingsWithPendingUID(callback) {
     if (logs) { MDS.log("Getting pending listings"); }
@@ -727,6 +734,20 @@ function getHistoryTransactions(callback) {
         else { callback([]); }
     });
 }
+
+function hasStaticMLS(callback) {
+    MDS.cmd('maxima', function (res) {
+        if (res.status) {
+            if (res.staticmls === true) {
+                callback(res.static);
+            } else {
+                callback(false);
+            }
+        } else {
+            callback(false);
+        }
+    })
+}
 /*
 ***************************************************** DATABASE FUNCTIONS *****************************************************
 */
@@ -738,6 +759,8 @@ function createListingTable(callback) {
             "price" INT NOT NULL,
             "created_by_pk" varchar(640) NOT NULL,
             "created_by_name" char(50),
+            "seller_has_perm_address" boolean default false,
+            "seller_perm_address" varchar(640),
             "sent_by_pk" varchar(640),
             "sent_by_name" char(50),
             "created_at" int not null,
@@ -749,7 +772,6 @@ function createListingTable(callback) {
             "purchase_code" varchar(30),
             "pendinguid" varchar(34) default null,
             "coin_id" varchar(80),
-            "unconfirmed_coin" boolean default false,
             "notification" boolean default false,
             "collection" boolean default false,
             "delivery" boolean default false,
@@ -777,8 +799,8 @@ function createListingTable(callback) {
 function createSettingsTable(callback) {
     const Q = `create table if not exists ${SETTINGSTABLE} (
             "pk" varchar(640),
-            "name" varchar(50),
-            CONSTRAINT AK_name UNIQUE("name"),
+            "perm_address" varchar(80),
+            CONSTRAINT AK_name UNIQUE("perm_address"),
             CONSTRAINT AK_pk UNIQUE("pk")
             )`;
 
@@ -791,14 +813,16 @@ function createSettingsTable(callback) {
         }
     })
 }
-function createHost(name, pk) {
-    let fullsql = `insert into ${SETTINGSTABLE}("name", "pk") values('${name}', '${pk}');`;
-    if (logs) { MDS.log(`Host added to settings table: ${name}`); }
+function createHost(pk, permAddress, callback) {
+    let fullsql = `insert into ${SETTINGSTABLE}("pk", "perm_address") values('${pk}', '${permAddress}');`;
+    if (permAddress === '') {
+        fullsql = `insert into ${SETTINGSTABLE}("pk") values('${pk}');`;
+    }
     MDS.sql(fullsql, (res) => {
         if (res.status) {
-            return true;
+            callback(true);
         } else {
-            return Error(res.error);
+            callback(Error(res.error));
         }
     });
 }
@@ -808,6 +832,8 @@ function createListing({
     price,
     createdByPk,
     createdByName,
+    sellerHasPermAddress,
+    sellerPermAddress,
     listingId,
     sentByName,
     sentByPk,
@@ -845,6 +871,8 @@ function createListing({
             "delivery",
             "created_by_pk",
             "created_by_name",
+            "seller_has_perm_address",
+            "seller_perm_address",
             ${sentByName ? '"sent_by_name",' : ''}
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
@@ -866,6 +894,8 @@ function createListing({
             '${delivery}',
             '${createdByPk}',
             '${createdByName}',
+            '${sellerHasPermAddress}',
+            '${sellerPermAddress}',
             ${sentByName ? `'${sentByName}',` : ''}
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
@@ -920,17 +950,6 @@ function addContact(address, callback) {
     });
 }
 
-function addUnconfirmedCoinColumn(callback) {
-    const Q = `alter table ${LISTINGSTABLE} add column if not exists "unconfirmed_coin" boolean default false;`;
-    MDS.sql(Q, function (res) {
-        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
-        if (res.status) {
-            callback(true)
-        } else {
-            callback(Error(`Adding unconfirmed_coin column to listing table ${res.error}`));
-        }
-    })
-}
 
 function addPendingUIDColumn(callback) {
     const Q = `alter table ${LISTINGSTABLE} add column if not exists "pendinguid" varchar(34) default null;`;
@@ -943,6 +962,33 @@ function addPendingUIDColumn(callback) {
         }
     })
 }
+
+//add "seller_has_perm_address" boolean default false column
+function addSellerHasPermAddressColumn(callback) {
+    const Q = `alter table ${LISTINGSTABLE} add column if not exists "seller_has_perm_address" boolean default false;`;
+    MDS.sql(Q, function (res) {
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
+        if (res.status) {
+            callback(true)
+        } else {
+            callback(Error(`Adding seller_has_perm_address column to listing table ${res.error}`));
+        }
+    })
+}
+
+//add "seller_perm_address" varchar(34) default null column
+function addSellerPermAddressColumn(callback) {
+    const Q = `alter table ${LISTINGSTABLE} add column if not exists "seller_perm_address" varchar(640) default null;`;
+    MDS.sql(Q, function (res) {
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
+        if (res.status) {
+            callback(true)
+        } else {
+            callback(Error(`Adding seller_perm_address column to listing table ${res.error}`));
+        }
+    })
+}
+
 
 function updateListing(listingId, data) {
     var formattedData = '';

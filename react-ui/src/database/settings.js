@@ -1,25 +1,9 @@
 const SETTINGSTABLE = 'SETTINGS';
 
-/* adds a setting to the database */
-export async function createHost(name, pk) {
-    return new Promise(function (resolve, reject) {
-        let fullsql = `insert into ${SETTINGSTABLE}("name", "pk") values('${name}', '${pk}');`;
-        console.log(`Store added to settings: ${name}`);
-        console.log(`with permnanent address ${pk}`);
-        window.MDS.sql(fullsql, (res) => {
-            if (res.status) {
-                resolve(true);
-            } else {
-                reject(res.error);
-            }
-        });
-    });
-}
-
 /* returns store by pubkey */
 export function getHost() {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`select "pk", "name" FROM SETTINGS;`, function (res) {
+        window.MDS.sql(`select "pk", "perm_address" FROM SETTINGS;`, function (res) {
             console.log("res_Host",res);
             if (res.status && res.count === 1) {
                 resolve(res.rows[0]);

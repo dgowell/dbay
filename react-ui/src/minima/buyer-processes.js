@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types';
-import { send, sendMoney, isContact } from './index';
-import { updateListing, getStatus, removeListing, resetListingState } from '../database/listing';
+import { send, sendMoney, isContact, getMaximaInfo } from './index';
+import { updateListing, getStatus, removeListing, resetListingState, getListingById } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
 
 async function getSellerAddress(address) {
+
     //get name of node that create item
     const e = address.split('#');
     const pk = e[1];
@@ -27,18 +28,6 @@ async function getSellerAddress(address) {
     });
 }
 
-
-function getMaximaInfo(callback) {
-    var maxcmd = "maxima";
-    window.MDS.cmd(maxcmd, function (msg) {
-        window.MDS.log(JSON.stringify(msg));
-        if (callback) {
-            callback(msg.response);
-        }
-    });
-}
-
-
 async function sendCollectionRequest({ message, listingId, seller, transmissionType }) {
     getMaximaInfo(async function (res) {
         const name = res.name;
@@ -51,14 +40,19 @@ async function sendCollectionRequest({ message, listingId, seller, transmissionT
             "buyer_name": name,
             "buyer_pk": pk
         }
-        const sellerAddress = await getSellerAddress(seller);
+        getListingById(listingId).then(async (listing) => {
+            let sellerAddress = listing.created_by_pk;
+            if (listing.seller_has_permanent_address === true) {
+                sellerAddress = await getSellerAddress(listing.seller_permanent_address);
+            }
 
-        return new Promise(function (resolve, reject) {
-            send(data, sellerAddress).then(
-                () => {
-                    console.log(`sent customer message to seller: ${message}`);
-                    return resolve(true);
-                }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
+            return new Promise(function (resolve, reject) {
+                send(data, sellerAddress).then(
+                    () => {
+                        console.log(`sent customer message to seller: ${message}`);
+                        return resolve(true);
+                    }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
+            });
         });
     });
 }
@@ -71,13 +65,18 @@ async function sendCancellationNotification({ listingId, seller }) {
             "buyer_name": res.name,
             "buyer_pk": res.publickey
         }
-        const sellerAddress = await getSellerAddress(seller);
-        return new Promise(function (resolve, reject) {
-            send(data, sellerAddress).then(
-                () => {
-                    console.log(`sent cancellation to seller.`);
-                    resolve(true);
-                }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+        getListingById(listingId).then(async (listing) => {
+            let sellerAddress = listing.created_by_pk;
+            if (listing.seller_has_permanent_address === true) {
+                sellerAddress = await getSellerAddress(listing.seller_permanent_address);
+            }
+            return new Promise(function (resolve, reject) {
+                send(data, sellerAddress).then(
+                    () => {
+                        console.log(`sent cancellation to seller.`);
+                        resolve(true);
+                    }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+            });
         });
     });
 }
@@ -121,24 +120,30 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
                     console.log(`Money sent, coin id: ${coinId}`);
 
                     getMaximaInfo(async function (res) {
-                        const sellerAddress = await getSellerAddress(seller);
-                        const data = {
-                            "type": "PAYMENT_RECEIPT_WRITE",
-                            "buyer_message": message,
-                            "listing_id": listingId,
-                            "coin_id": coinId,
-                            "transmission_type": transmissionType,
-                            "purchase_code": purchaseCode,
-                            "buyer_name": res.name,
-                            "buyer_pk": res.publickey,
-                        }
+                        getListingById(listingId).then(async (listing) => {
+                            let sellerAddress = listing.created_by_pk;
+                            if (listing.seller_has_permanent_address === true) {
+                                sellerAddress = await getSellerAddress(listing.seller_permanent_address);
+                            }
 
-                        console.log(`Sending payment receipt to seller..`);
-                        send(data, sellerAddress).then(
-                            () => {
-                                console.log(`sent customer message to seller: ${message}`);
-                                resolve(true);
-                            }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
+                            const data = {
+                                "type": "PAYMENT_RECEIPT_WRITE",
+                                "buyer_message": message,
+                                "listing_id": listingId,
+                                "coin_id": coinId,
+                                "transmission_type": transmissionType,
+                                "purchase_code": purchaseCode,
+                                "buyer_name": res.name,
+                                "buyer_pk": res.publickey,
+                            }
+
+                            console.log(`Sending payment receipt to seller. seller address: ${sellerAddress}`);
+                            send(data, sellerAddress).then(
+                                (message) => {
+                                    console.log(`sent customer message to seller: ${message}`);
+                                    resolve(true);
+                                }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
+                        });
                     });
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
@@ -233,8 +238,12 @@ export function checkAvailability({
     console.log(`checking availability`);
 
     return new Promise(async function (resolve, reject) {
-        //get sellers address from permanent address
-        let sellerAddress = await getSellerAddress(seller).catch(e => { reject(e); Error(console.error(e)) });
+
+        //if it's a MAX address, get the sellers contact address
+        let sellerAddress = seller;
+        if (seller.includes('MAX')) {
+            sellerAddress = await getSellerAddress(seller).catch(e => { reject(e); Error(console.error(e)) });
+        }
 
         //send request to seller
         send(data, sellerAddress)

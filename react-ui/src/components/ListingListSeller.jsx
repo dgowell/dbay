@@ -60,7 +60,6 @@ function ListingListSeller() {
   useEffect(() => {
     getHost().then((host) => {
       setHost({
-        name: host.name,
         pk: host.pk,
       });
     });

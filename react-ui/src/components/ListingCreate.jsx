@@ -33,6 +33,7 @@ import { styled } from '@mui/material/styles';
 import { ReactComponent as MatterIcon } from '../assets/images/box.svg';
 import { ReactComponent as SpaceIcon } from '../assets/images/space.svg';
 import { ReactComponent as TimeIcon } from '../assets/images/time.svg';
+import { getMaximaInfo, getPermanentAddress } from "../minima";
 
 function ComingSoon() {
   return (
@@ -172,44 +173,51 @@ export default function ListingCreate() {
     );
     console.log(`New listing about to be created : ${JSON.stringify(formik.values)}`);
     let id = "";
-    createListing({
-      title: formik.values.title.replace(/'/g, "''"),
-      price: formik.values.askingPrice,
-      createdByPk: host.pk,
-      createdByName: host.name,
-      walletAddress: walletAddress,
-      image: compressedImages.join("(+_+)"),
-      description: formik.values.description.replace(/'/g, "''") ?? '',
-      collection: formik.values.collection,
-      delivery: formik.values.delivery,
-      location: JSON.stringify(location),
-      locationDescription: formik.values.locationDescription,
-      shippingCost: parseInt(formik.values.deliveryCost),
-    }).then(function (listingId) {
-      id = listingId;
-      console.log(`Listing successfully added: ${listingId}`);
-      console.log(`Attempting to send listing to contacts...`);
-      return sendListingToContacts(listingId);
-    }).then((result) => {
-      if (result.message) {
-        setError(`Could not send listing to contacts`);
-        console.error(result.message);
-        setLoading(false);
-      } else {
-        console.log('Successfully sent listing to contacts');
-        setLoading(false);
-        setSuccess(true);
-        console.log(`/seller/listing/${id}`);
-        setTimeout(() => {
-          navigate(`/info`, { state: { main: "Successfully published!", sub: "" } });
-        }, 100);
-      }
-    }).catch((e) => {
-      setError(`There was an error creating or sending your listing`);
-      console.error(`Could not create or send listing ${e}`);
-      setLoading(false);
+    getMaximaInfo(function (maxima) {
+      getPermanentAddress(function (address) {
+        createListing({
+          title: formik.values.title.replace(/'/g, "''"),
+          price: formik.values.askingPrice,
+          createdByPk: maxima.publickey,
+          createdByName: maxima.name,
+          sellerHasPermanentAddress: address ? true : false,
+          sellerPermanentAddress: address ? address : '',
+          walletAddress: walletAddress,
+          image: compressedImages.join("(+_+)"),
+          description: formik.values.description.replace(/'/g, "''") ?? '',
+          collection: formik.values.collection,
+          delivery: formik.values.delivery,
+          location: JSON.stringify(location),
+          locationDescription: formik.values.locationDescription,
+          shippingCost: parseInt(formik.values.deliveryCost),
+        }).then(function (listingId) {
+          id = listingId;
+          console.log(`Listing successfully added: ${listingId}`);
+          console.log(`Attempting to send listing to contacts...`);
+          return sendListingToContacts(listingId);
+        }).then((result) => {
+          if (result.message) {
+            setError(`Could not send listing to contacts`);
+            console.error(result.message);
+            setLoading(false);
+          } else {
+            console.log('Successfully sent listing to contacts');
+            setLoading(false);
+            setSuccess(true);
+            console.log(`/seller/listing/${id}`);
+            setTimeout(() => {
+              navigate(`/info`, { state: { main: "Successfully published!", sub: "" } });
+            }, 100);
+          }
+        }).catch((e) => {
+          setError(`There was an error creating or sending your listing`);
+          console.error(`Could not create or send listing ${e}`);
+          setLoading(false);
+        });
+      });
     });
   }
+
 
   const handleGoHome = () => {
     navigate(-1);
@@ -221,32 +229,32 @@ export default function ListingCreate() {
 
   function handleLocation() {
     setLoadingCoorindates(true);
-    
-// generate random offset in meters (0.1km - 0.5km)
+
+    // generate random offset in meters (0.1km - 0.5km)
     function getRandomOffset(minMeters, maxMeters) {
       const metersPerDegreeLatitude = 111000;
       return (Math.random() * (maxMeters - minMeters) + minMeters) / metersPerDegreeLatitude;
     }
-  // get current position
+    // get current position
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(showPosition);
     } else {
       console.error("Geolocation is not supported by this browser.");
       setLoadingCoorindates(false);
     }
-  
+
     function showPosition(position) {
       const minDistance = 100; // meters
       const maxDistance = 500; // meters
-  
+
       // Generate random offsets for latitude and longitude
       const latOffset = getRandomOffset(minDistance, maxDistance);
       const lngOffset = getRandomOffset(minDistance, maxDistance);
-  
+
       // Randomly choose the direction (north/south and east/west) for the offset
       const newLatitude = position.coords.latitude + (Math.random() < 0.5 ? latOffset : -latOffset);
       const newLongitude = position.coords.longitude + (Math.random() < 0.5 ? lngOffset : -lngOffset);
-  
+
       setLocation({
         latitude: newLatitude.toFixed(3),
         longitude: newLongitude.toFixed(3),
@@ -254,14 +262,14 @@ export default function ListingCreate() {
       setLoadingCoorindates(false);
     }
   }
-  
+
   const fileToDataUri = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
   })
-  
+
 
   const handleUpload = async (imageFile) => {
     //convert imageFile to blob
@@ -340,7 +348,7 @@ export default function ListingCreate() {
 
             <Box sx={{ flexGrow: 1 }}>
               <Grid container spacing={2} style={{ marginBottom: "2rem" }}>
-                <Grid item xs={6} style={{height:"150px"}} onClick={() => { handleModalOpen(0) }}>
+                <Grid item xs={6} style={{ height: "150px" }} onClick={() => { handleModalOpen(0) }}>
                   {images[0] ? <img src={images[0]} alt="" style={{
                     width: "100%",
                     height: "100%",
@@ -477,48 +485,48 @@ export default function ListingCreate() {
                       }
                       label="Collection"
                     />
-             {formik.values.collection ? (
-        <Paper
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          p: 2,
-          gap: 2,
-          mt: 3,
-          mb: 3,
-        }}
-        elevation={2}
-      >
-        <Typography>
-        Boost your listing's visibility by providing approximate coordinates or a location description, like a nearby town, city, or well-known venue
-        </Typography>
-        <LoadingButton
-          color="secondary"
-          className={'custom-loading'}
-          mt={2}
-          loading={loadingCoordinates}
-          variant="outlined"
-          onClick={handleLocation}
-        >
-          Add Coordinates
-        </LoadingButton>
-        {location.latitude !== '' ? (
-          <Alert variant="success">coordinates added!</Alert>
-        ) : null}
-        <Grid item xs={12}>
-          <TextField
-            label="Location Description"
-            id="locationDescription"
-            name="locationDescription"
-            className="form-field"
-            type="text"
-            fullWidth
-            value={formik.values.locationDescription}
-            onChange={formik.handleChange}
-            variant="outlined"
-            error={formik.touched.locationDescription && formik.errors.locationDescription}
-            helperText={formik.touched.locationDescription && formik.errors.locationDescription}
-          />
+                    {formik.values.collection ? (
+                      <Paper
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          p: 2,
+                          gap: 2,
+                          mt: 3,
+                          mb: 3,
+                        }}
+                        elevation={2}
+                      >
+                        <Typography>
+                          Boost your listing's visibility by providing approximate coordinates or a location description, like a nearby town, city, or well-known venue
+                        </Typography>
+                        <LoadingButton
+                          color="secondary"
+                          className={'custom-loading'}
+                          mt={2}
+                          loading={loadingCoordinates}
+                          variant="outlined"
+                          onClick={handleLocation}
+                        >
+                          Add Coordinates
+                        </LoadingButton>
+                        {location.latitude !== '' ? (
+                          <Alert variant="success">coordinates added!</Alert>
+                        ) : null}
+                        <Grid item xs={12}>
+                          <TextField
+                            label="Location Description"
+                            id="locationDescription"
+                            name="locationDescription"
+                            className="form-field"
+                            type="text"
+                            fullWidth
+                            value={formik.values.locationDescription}
+                            onChange={formik.handleChange}
+                            variant="outlined"
+                            error={formik.touched.locationDescription && formik.errors.locationDescription}
+                            helperText={formik.touched.locationDescription && formik.errors.locationDescription}
+                          />
                         </Grid>
                       </Paper>
                     ) : null}
