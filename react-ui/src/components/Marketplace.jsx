@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
-import { getListings } from "../database/listing";
+import { getAvailableListings } from "../database/listing";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import filter from 'lodash/filter';
@@ -49,7 +49,7 @@ export default function Marketplace() {
   /* fetches the listings from local database */
   useEffect(() => {
     setLoading(true);
-    getListings()
+    getAvailableListings()
       .then((data) => {
         console.log(`results:`, data);
         const sort = [...data].sort((a, b) => b.created_at - a.created_at)

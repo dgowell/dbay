@@ -109,11 +109,33 @@ createListing.propTypes = {
 
 /**
 * Fetches all listings listings using a particular Id
-* @param {string} storeId - The Id of the store/creator
+* @param {string} pk - The id of the creator
 */
-export function getListings(storeId) {
-    const store = `where "created_by_pk"='${storeId}'`;
-    const Q = `select * from ${LISTINGSTABLE} ${storeId ? `${store}` : ''};`
+export function getListings(pk) {
+    const store = `where "created_by_pk"='${pk}'`;
+    const Q = `select * from ${LISTINGSTABLE} ${pk ? `${store}` : ''};`
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(Q, (res) => {
+            if (res.status) {
+                resolve(res.rows);
+            } else {
+                reject(Error(`MDS.SQL ERROR, could get listings ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get listings ${res.error}`);
+            }
+        });
+    });
+}
+getListings.propTypes = {
+    storeId: PropTypes.string,
+}
+
+/**
+* Fetches all listings listings using a particular Id
+* @param {string} pk - The id of the creator
+*/
+export function getAvailableListings(pk) {
+    const store = `where "created_by_pk"='${pk}' and "status"='unchecked' or "status"='available'`;
+    const Q = `select * from ${LISTINGSTABLE} ${pk ? `${store}` : ''};`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
