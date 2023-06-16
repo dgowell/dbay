@@ -337,6 +337,7 @@ export function getMaximaInfo(callback) {
         if (callback) {
             callback(msg.response);
         }
+        callback(false);
     });
 }
 

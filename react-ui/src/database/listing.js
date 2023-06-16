@@ -12,6 +12,8 @@ export async function createListing({
     price,
     createdByPk,
     createdByName,
+    sellerHasPermAddress,
+    sellerPermAddress,
     listingId,
     sentByName,
     sentByPk,
@@ -43,6 +45,8 @@ export async function createListing({
             "delivery",
             "created_by_pk",
             "created_by_name",
+            "seller_has_perm_address",
+            ${sellerHasPermAddress ? '"seller_perm_address",' : ''}
             ${sentByName ? '"sent_by_name",' : ''}
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
@@ -63,6 +67,8 @@ export async function createListing({
             '${delivery}',
             '${createdByPk}',
             '${createdByName}',
+            '${sellerHasPermAddress}',
+            ${sellerHasPermAddress ? `'${sellerPermAddress}',` : ''}
             ${sentByName ? `'${sentByName}',` : ''}
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
@@ -93,6 +99,8 @@ createListing.propTypes = {
     price: PropTypes.number.isRequired,
     createdByPk: PropTypes.string.isRequired,
     createdByName: PropTypes.string.isRequired,
+    sellerHasPermAddress: PropTypes.bool,
+    sellerPermAddress: PropTypes.string,
     listingId: PropTypes.string,
     sentByName: PropTypes.string,
     sentByPk: PropTypes.string,
@@ -154,9 +162,10 @@ getListings.propTypes = {
 /**
 * Fetches all listings that are the user has purchased
 */
-export function getMyPurchases() {
-    const Q = `select * from ${LISTINGSTABLE} where "status"='completed' or "status"='in_progress' or "status"='pending_confirmation' or "status"='collection_rejected';`
-    return new Promise(function (resolve, reject) {
+export function getMyPurchases(pk) {
+    const Q = `SELECT * FROM ${LISTINGSTABLE} WHERE "created_by_pk" <> '${pk}' AND ("status" = 'completed' OR "status" = 'in_progress' OR "status" = 'pending_confirmation' OR "status" = 'collection_rejected');`
+
+    return new Promise((resolve, reject) => {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
                 resolve(res.rows);
@@ -166,7 +175,6 @@ export function getMyPurchases() {
         });
     });
 }
-
 
 /**
 * Fetches a listing with a particular Id

@@ -118,7 +118,8 @@ function processMinimaLogEvent(data) {
                                 "buyer_pk": listing.buyer_pk,
                             }
                             MDS.log('SUPER LISTING: ' + JSON.stringify(listing));
-                            sendMessage(data, listing.created_by_pk, "dbay", function (result) {
+                            let sellerAddress = listing.seller_has_perm_address ? listing.seller_perm_address : listing.created_by_pk;
+                            sendMessage(data, sellerAddress, "dbay", function (result) {
                                 if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
                             });
 
@@ -372,8 +373,8 @@ function processNewBalanceEvent() {
                                 MDS.log("total cost: " + totalCost);
                                 if (parseInt(coin.amount) === totalCost) {
                                     MDS.log("Coin amount matches listing amount");
-                                    updateListing(listing.listing_id, { 'status': 'completed', 'notification': true });
-                                    MDS.log("Listing updated to completed");
+                                    updateListing(listing.listing_id, {'status': 'paid','notification': true}); 
+                                        MDS.log("Listing updated to paid");
                                 } else {
                                     MDS.log("Coin amount does not match listing amount");
                                 }
@@ -872,7 +873,7 @@ function createListing({
             "created_by_pk",
             "created_by_name",
             "seller_has_perm_address",
-            "seller_perm_address",
+            ${sellerHasPermAddress ? '"seller_perm_address",' : ''}
             ${sentByName ? '"sent_by_name",' : ''}
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
@@ -895,7 +896,7 @@ function createListing({
             '${createdByPk}',
             '${createdByName}',
             '${sellerHasPermAddress}',
-            '${sellerPermAddress}',
+            ${sellerHasPermAddress ? `'${sellerPermAddress}',` : ''}
             ${sentByName ? `'${sentByName}',` : ''}
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',

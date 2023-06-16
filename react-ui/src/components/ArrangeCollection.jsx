@@ -47,6 +47,8 @@ export default function InfoPage() {
       if (res.status === false) {
         if (res.error.includes('permission escalation')) {
           setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+        } else if (res.error.includes('not found')) {
+          setMaxsoloError('MaxSolo is not installed on your device.');
         } else {
           setMaxsoloError(res.error);
         }
@@ -68,12 +70,9 @@ export default function InfoPage() {
   }
   if (listing) {
     return (
-      <Box sx={{textAlign: 'center'}} mt={3}>
+      <Box sx={{ textAlign: 'center' }} mt={3}>
         <Typography sx={{ fontSize: "24px", textAlign: "center" }} variant="h1">Arrange Collection</Typography>
         <Typography mt={3} mb={3} variant="h3">What are my next steps?</Typography>
-        {!isFriend && <LoadingButton mb={1} className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>}
-        {msg && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-        {!isFriend && <Typography sx={{ textAlign: 'center', marginTop: '15px' }} variant="caption">The seller is expecting you to get in touch.</Typography>}
         <Timeline position="alternate">
           <TimelineItem>
             <TimelineOppositeContent
@@ -82,7 +81,8 @@ export default function InfoPage() {
               variant="body2"
               color="text.secondary"
             >
-              @{listing.created_by_name}
+              <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Chat Now</Button>
+              {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
             </TimelineOppositeContent>
             <TimelineSeparator>
               <TimelineConnector sx={{ bgcolor: 'secondary.main' }} />
@@ -91,11 +91,12 @@ export default function InfoPage() {
               <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent sx={{ py: '12px', px: 2 }}>
-              <Typography variant="h6" component="span">
+              <Typography variant="h6">
                 Contact Seller
               </Typography>
-              <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Chat Now</Button>
-              {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
+              <Typography variant="h5">
+                @{listing.created_by_name}
+              </Typography>
             </TimelineContent>
           </TimelineItem>
           <TimelineItem>
@@ -134,7 +135,7 @@ export default function InfoPage() {
           </TimelineItem>
           <TimelineItem>
             <TimelineSeparator>
-              <TimelineConnector  />
+              <TimelineConnector />
               <TimelineDot>
               </TimelineDot>
               <TimelineConnector />

@@ -89,7 +89,6 @@ export default function Marketplace() {
 
   function marketplaceFilter(o) {
     return (o.status === 'unchecked' || o.status === 'available');
-    //return o.created_by_pk !== host.pk && (o.status === 'unchecked' || o.status === 'available');
   }
 
   function handleSearch(e) {

@@ -271,7 +271,7 @@ function ListingCollectionBuyer(props) {
                             </Stack>
                         }
                         {listing.status === "pending_confirmation" &&
-                            <Alert severity="warning">You must confirm the transaction in the MDS menu in 'Pending Actions' to complete the order.</Alert>
+                            <Alert severity="warning">You must confirm the transaction in the MDS menu in 'Pending Actions' to complete the order. Once accepted please check the confirmation message if the password is wrong you will have to contact the seller to complete the transaction outside of dbay.</Alert>
                         }
                     </Box>
                     <Modal

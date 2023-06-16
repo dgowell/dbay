@@ -1,49 +1,24 @@
 import PropTypes from 'prop-types';
-import { send, sendMoney, isContact, getMaximaInfo } from './index';
+import { send, sendMoney, getMaximaInfo } from './index';
 import { updateListing, getStatus, removeListing, resetListingState, getListingById } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
 
-async function getSellerAddress(address) {
-
-    //get name of node that create item
-    const e = address.split('#');
-    const pk = e[1];
-    var currentAddress = "";
-    return new Promise(async function (resolve, reject) {
-        //find out if they're a contact
-        currentAddress = await isContact(pk);
-        console.log("iscontact", currentAddress);
-        if (currentAddress && currentAddress.includes('@')) {
-            resolve(currentAddress);
-        } else {
-            currentAddress = address;
-            console.log("here", currentAddress);
-            if (currentAddress) {
-                resolve(currentAddress);
-            } else {
-                reject(currentAddress);
-            }
-        }
-    });
-}
-
-async function sendCollectionRequest({ message, listingId, seller, transmissionType }) {
+async function sendCollectionRequest({ message, listingId, transmissionType }) {
     getMaximaInfo(async function (res) {
-        const name = res.name;
-        const pk = res.publickey;
         const data = {
             "type": "COLLECTION_REQUEST",
             "message": message,
             "listing_id": listingId,
             "transmission_type": transmissionType,
-            "buyer_name": name,
-            "buyer_pk": pk
+            "buyer_name": res.name,
+            "buyer_pk": res.publickey
         }
         getListingById(listingId).then(async (listing) => {
+
             let sellerAddress = listing.created_by_pk;
-            if (listing.seller_has_permanent_address === true) {
-                sellerAddress = await getSellerAddress(listing.seller_permanent_address);
+            if (listing.seller_has_perm_address) {
+                sellerAddress = listing.seller_perm_address;
             }
 
             return new Promise(function (resolve, reject) {
@@ -57,7 +32,7 @@ async function sendCollectionRequest({ message, listingId, seller, transmissionT
     });
 }
 
-async function sendCancellationNotification({ listingId, seller }) {
+async function sendCancellationNotification({ listingId }) {
     getMaximaInfo(async function (res) {
         const data = {
             "type": "CANCEL_COLLECTION",
@@ -67,8 +42,8 @@ async function sendCancellationNotification({ listingId, seller }) {
         }
         getListingById(listingId).then(async (listing) => {
             let sellerAddress = listing.created_by_pk;
-            if (listing.seller_has_permanent_address === true) {
-                sellerAddress = await getSellerAddress(listing.seller_permanent_address);
+            if (listing.seller_has_perm_address) {
+                sellerAddress = listing.seller_perm_address;
             }
             return new Promise(function (resolve, reject) {
                 send(data, sellerAddress).then(
@@ -122,8 +97,8 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
                     getMaximaInfo(async function (res) {
                         getListingById(listingId).then(async (listing) => {
                             let sellerAddress = listing.created_by_pk;
-                            if (listing.seller_has_permanent_address === true) {
-                                sellerAddress = await getSellerAddress(listing.seller_permanent_address);
+                            if (listing.seller_has_perm_address === true) {
+                                sellerAddress = listing.seller_perm_address;
                             }
 
                             const data = {
@@ -153,23 +128,24 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
 
                 //if the payement is pending and needs accepting
             } else if (res.pending === true) {
-                getMaximaInfo(async function (res) {
-                    console.log(`Transaction pending. saving uid: ${res.pendinguid}`);
+                const pendinguid = res.pendinguid;
+                getMaximaInfo(async function (maxima) {
+                    console.log(`Transaction pending. saving uid: ${pendinguid}`);
                     updateListing(listingId, {
                         'status': 'pending_confirmation',
                         'purchase_code': purchaseCode,
-                        'pendinguid': res.pendinguid,
+                        'pendinguid': pendinguid,
                         'transmission_type': transmissionType,
                         'buyer_message': message,
-                        'buyer_name': res.name,
-                        'buyer_pk': res.publickey,
+                        'buyer_name': maxima.name,
+                        'buyer_pk': maxima.publickey,
                     }).catch((e) => console.error(e));
-                    reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
                 });
+                reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
             } else {
                 reject(Error(res.error));
             }
-        });
+        }); //end of sendMoney
     })
 }
 purchaseListing.proptypes = {
@@ -187,19 +163,18 @@ purchaseListing.proptypes = {
 * @param {string} address - Buyers physical address to send item to
 * @param {string} listingId - The id of the listing that is being purchased
 */
-export function collectListing({ seller, message, listingId, transmissionType }) {
+export function collectListing({ message, listingId, transmissionType }) {
     return new Promise(function (resolve, reject) {
         updateListing(listingId, { 'status': 'in_progress', 'transmission_type': transmissionType }).catch((e) => console.error(e));
 
         console.log(`Sending collection confirmation to seller..`);
-        sendCollectionRequest({ message, listingId, seller, transmissionType })
+        sendCollectionRequest({ message, listingId, transmissionType })
             .then(() => resolve(true))
             .catch(Error(`Couldn't send collection confirmation`)
             );
     });
 }
 collectListing.proptypes = {
-    seller: PropTypes.string.isRequired,
     address: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired,
     walletAddress: PropTypes.string.isRequired,
@@ -239,14 +214,8 @@ export function checkAvailability({
 
     return new Promise(async function (resolve, reject) {
 
-        //if it's a MAX address, get the sellers contact address
-        let sellerAddress = seller;
-        if (seller.includes('MAX')) {
-            sellerAddress = await getSellerAddress(seller).catch(e => { reject(e); Error(console.error(e)) });
-        }
-
         //send request to seller
-        send(data, sellerAddress)
+        send(data, seller)
             .then(() => console.log(`successfully sent check request to seller`))
             .catch(error => reject(Error(error)));
 
@@ -341,15 +310,14 @@ hasSufficientFunds.PropTypes = {
 * @param {string} seller - Sellers hex address
 * @param {string} listingId - The id of the listing that is being cancelled
 */
-export function cancelCollection({ seller, listingId }) {
+export function cancelCollection({ listingId }) {
     return new Promise(function (resolve, reject) {
         updateListing(listingId, { 'status': 'unchecked' }).catch((e) => console.error(e));
         console.log(`Sending cancel notification to seller..`);
-        sendCancellationNotification({ listingId, seller })
+        sendCancellationNotification({ listingId })
     })
 }
 cancelCollection.proptypes = {
-    seller: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired,
     walletAddress: PropTypes.string.isRequired,
     purchaseListing: PropTypes.string.isRequired,

@@ -9,8 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
 import Tooltip from "@mui/material/Tooltip";
-import { getHost } from "../database/settings";
-import { sendListingToContacts, getMaximaContactAddress, getMaximaContactName } from "../minima";
+import { sendListingToContacts, getMaximaContactAddress, getMaximaContactName, isContact } from "../minima";
 import { checkAvailability, hasSufficientFunds } from '../minima/buyer-processes';
 import { useNavigate } from "react-router";
 import { Stack } from "@mui/system";
@@ -76,7 +75,6 @@ function ListingDetail() {
     if (reason === 'clickaway') {
       return;
     }
-
     setSent(false);
   };
 
@@ -135,10 +133,8 @@ function ListingDetail() {
   //get the host name and pk
   useEffect(() => {
     if (listing) {
-      getHost().then((host) => {
-        getMaximaContactName().then((name) => {
-          setBuyerName(name);
-        }).catch((e) => console.error(e));
+      getMaximaContactName().then((name) => {
+        setBuyerName(name);
       }).catch((e) => console.error(e));
     }
   }, [listing]);
@@ -161,38 +157,53 @@ function ListingDetail() {
     console.log(`hasFunds: ${hasFunds}`);
 
     if (hasFunds) {
-      await checkAvailability({
-        seller: listing.created_by_pk,
-        buyerPk: buyerAddress,
-        listingId: listing.listing_id,
-      }).then(
-        result => {
-          if (result === true) {
-            navigate(`/listing/${listing.listing_id}/purchase`)
-          } else {
-            setError(result);
-            navigate(`/info`, { state: { action: "error", main: '', sub: result } });
-            console.log(`${result}`);
-          }
-        }
-      )
-        .catch(
-          error => {
-            if (error.message.includes('connect timed out')) {
-              console.log(`Problem checking item availability ${error}`);
-              navigate(`/info`, { state: { action: "error", main: 'Network timeout', sub: "couldnt reach seller, check your maxima connection and try again in a few minutes" } });
-              setError(`Network timeout`);
+      let sellerIsContact = await isContact(listing.created_by_pk).catch(error => {
+        console.log(`Error checking if seller is a contact: ${error}`);
+      });
+      let sellerAddress = '';
+      if (sellerIsContact) {
+        sellerAddress = listing.created_by_pk;
+      } else if (listing.seller_has_perm_address) {
+       sellerAddress = listing.seller_perm_address;
+      }
+      if (sellerAddress) {
+        await checkAvailability({
+          seller: sellerAddress,
+          buyerPk: buyerAddress,
+          listingId: listing.listing_id,
+        }).then(
+          result => {
+            if (result === true) {
+              navigate(`/listing/${listing.listing_id}/purchase`)
             } else {
-              console.log(`Problem checking item availability ${error}`);
-              navigate(`/info`, { state: { action: "error", main: "There was a problem", sub: (error.message ? error.message : `There was a problem, please try again later.`) } });
-              setError(`There was a problem`);
+              setError(result);
+              navigate(`/info`, { state: { action: "error", main: '', sub: result } });
+              console.log(`${result}`);
             }
-          })
-        .finally(() => {
-          setCheckingAvailability(false);
-          setLoading(false);
-        });
-    }//close if
+          }
+        )
+          .catch(
+            error => {
+              if (error.message.includes('connect timed out')) {
+                console.log(`Problem checking item availability ${error}`);
+                navigate(`/info`, { state: { action: "error", main: 'Network timeout', sub: "couldnt reach seller, check your maxima connection and try again in a few minutes" } });
+                setError(`Network timeout`);
+              } else {
+                console.log(`Problem checking item availability ${error}`);
+                navigate(`/info`, { state: { action: "error", main: "There was a problem", sub: (error.message ? error.message : `There was a problem, please try again later.`) } });
+                setError(`There was a problem`);
+              }
+            })
+          .finally(() => {
+            setCheckingAvailability(false);
+            setLoading(false);
+          });
+      }  else {
+      setCheckingAvailability(false);
+      setLoading(false);
+      setError(`Insufficient Funds`);
+    }
+    }
   }
 
   checkingAvailability && <AvailabilityCheckScreen />
@@ -280,24 +291,26 @@ function ListingDetail() {
                   </ListItemIcon>
                   <ListItemText primary="Seller" secondary={`@${listing.created_by_name}`} />
                 </ListItem>
-                <ListItem disablePadding>
-                  <ListItemIcon>
-                    <ForwardOutlinedIcon color="secondary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Shared by" secondary={`@${listing.sent_by_name}`} />
-                </ListItem>
+                {listing.created_by_name !== listing.sent_by_name &&
+                  <ListItem disablePadding>
+                    <ListItemIcon>
+                      <ForwardOutlinedIcon color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Shared by" secondary={`@${listing.sent_by_name}`} />
+                  </ListItem>
+                }
               </List>
 
 
             </Card>
-            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-              <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
-                Item shared with contacts
-              </Alert>
-              {(listing.status === "collection_rejected") && <Alert onClose={handleClose} color="warning" variant="filled" sx={{ width: '100%' }}>
-                Collection rejected
-              </Alert>}
-            </Snackbar>
+              <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
+                  Item shared with contacts
+                </Alert>
+              </Snackbar>
+            {(listing.status === "collection_rejected") && <Alert onClose={handleClose} color="warning" variant="filled" sx={{ width: '100%' }}>
+              Collection rejected
+            </Alert>}
             <Stack spacing={2} mt={4}>
               {listing.status === "completed"
                 ? null

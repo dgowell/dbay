@@ -83,7 +83,9 @@ function DeliveryConfirmation({
             setLoading(false);
             setError(false);
           } else {
-            navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: error.message } })
+            setError(error.message);
+            setLoading(false);
+            setMsg(error.message);
           }
         }
       )
@@ -263,7 +265,6 @@ function ListingPurchase(props) {
 
     collectListing({
       listingId: listing.listing_id,
-      seller: listing.created_by_pk,
       message: message,
       transmissionType: transmissionType,
     }).then(

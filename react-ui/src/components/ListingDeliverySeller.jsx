@@ -88,6 +88,8 @@ function ListingDeliverySeller() {
             if (res.status === false) {
                 if (res.error.includes('permission escalation')) {
                     setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+                } else if (res.error.includes('not found')) {
+                    setMaxsoloError('MaxSolo is not installed on your device.');
                 } else {
                     setMaxsoloError(res.error);
                 }

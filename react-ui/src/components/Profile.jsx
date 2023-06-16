@@ -9,7 +9,7 @@ import ListItemText from '@mui/material/ListItemText';
 import { useNavigate } from "react-router-dom";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from '../database/listing';
-import { getHost } from "../database/settings";
+import { getMaximaContactName } from "../minima";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import IconButton from '@mui/material/IconButton';
 
@@ -23,9 +23,9 @@ function Profile() {
             status => setHasNotification(status),
             error => console.error(`couldn't get notification status ${error}`)
         )
-        getHost().then((data)=>{
-            setName(data.name);
-        }
+        getMaximaContactName().then(
+            name => setName(name),
+            error => console.error(`couldn't get name ${error}`)
         )
     });
 
