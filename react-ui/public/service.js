@@ -40,6 +40,7 @@ MDS.init(function (msg) {
 * store id = current public key
 */
 function setup() {
+    MDS.log('Setup called!');
     getPublicKey(function (pk) {
         getMLS(function (mls) {
 
@@ -83,11 +84,22 @@ function setup() {
                         if (logs) { MDS.log('Host created: ' + result) }
                     }
                     );
+                    addDmaxServerP2p2IdentityColumn(function (result) {
+                        if (logs) { MDS.log('Added dmax server p2p2 identity Column: ' + result) }
+                    });
                 }
             });
+
+
+            //setup dmax transactions
+            createTransactionTable(function (result) {
+                if (logs) { MDS.log('Transaction table created or exists') }
+            });
+
         });
     });
 }
+
 
 /*
 ************************************************* PROCESS EVENTS *************************************************
@@ -230,34 +242,7 @@ function processMaximaEvent(msg) {
             if (type === "P2P_RESPONSE") {
                 MDS.log("P2P_RESPONSE received:" + JSON.stringify(json));
                 //create two variables for the amount and the p2pidentity
-                var amount = json.data.amount;
                 var p2pIdentity = json.data.p2pidentity;
-
-                //set the static MLS
-                setStaticMLS(p2pIdentity, function (resp) {
-                    MDS.log("Set static MLS");
-
-                    //send amount of money to the server wallet
-                    sendMinima(amount, SERVER_WALLET, function (coinId, error) {
-                        if (error) {
-                            MDS.log("Error sending Minima: " + error);
-                            //update frontend document with error
-                            return;
-                        }
-                        MDS.log("Sent Minima");
-                        //coinID is returned
-
-                        //get the client public key
-                        getPublicKey(function (clientPK) {
-                            MDS.log("Got public key");
-
-                            //send via maxima coinID, clientPK
-                            sendMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": amount } }, SERVER_ADDRESS, "dmax", function (msg) {
-                                MDS.log("Sent response to " + SERVER_ADDRESS);
-                            });
-                        });
-                    });
-                });
             }
 
 
@@ -373,8 +358,8 @@ function processNewBalanceEvent() {
                                 MDS.log("total cost: " + totalCost);
                                 if (parseInt(coin.amount) === totalCost) {
                                     MDS.log("Coin amount matches listing amount");
-                                    updateListing(listing.listing_id, {'status': 'paid','notification': true}); 
-                                        MDS.log("Listing updated to paid");
+                                    updateListing(listing.listing_id, { 'status': 'paid', 'notification': true });
+                                    MDS.log("Listing updated to paid");
                                 } else {
                                     MDS.log("Coin amount does not match listing amount");
                                 }
@@ -801,6 +786,7 @@ function createSettingsTable(callback) {
     const Q = `create table if not exists ${SETTINGSTABLE} (
             "pk" varchar(640),
             "perm_address" varchar(80),
+            "dmax_server_p2p_identity" varchar(640) default null,
             CONSTRAINT AK_name UNIQUE("perm_address"),
             CONSTRAINT AK_pk UNIQUE("pk")
             )`;
@@ -986,6 +972,20 @@ function addSellerPermAddressColumn(callback) {
             callback(true)
         } else {
             callback(Error(`Adding seller_perm_address column to listing table ${res.error}`));
+        }
+    })
+}
+
+
+//add dmax_server_p2p2_identity column
+function addDmaxServerP2p2IdentityColumn(callback) {
+    const Q = `alter table ${SETTINGSTABLE} add column if not exists "dmax_server_p2p_identity" varchar(640) default null;`;
+    MDS.sql(Q, function (res) {
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
+        if (res.status) {
+            callback(true)
+        } else {
+            callback(Error(`Adding dmax_server_p2p2_identity column to listing table ${res.error}`));
         }
     })
 }

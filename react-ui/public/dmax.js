@@ -1,3 +1,48 @@
+// CREATE TXN TABLE
+var TRANSACTIONSTABLE = 'TRANSACTIONS';
+
+function createTransactionTable(callback) {
+    const Q = `create table if not exists ${TRANSACTIONSTABLE} (
+            "txn_id" varchar(50) primary key,
+            "created_at" int not null,
+            "pending_uid" varchar(34),
+            "amount" int not null,
+            "status" varchar(50) not null
+            )`;
+
+    MDS.sql(Q, function (res) {
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
+        if (res.status && callback) {
+            callback(true);
+        } else {
+            return Error(`${res.error}`);
+        }
+    })
+}
+
+/**
+ * Add transaction to the transaction table
+
+ */
+
+function addTransaction(created_at, pending_uid, amount, status, callback) {
+    const Q = `INSERT INTO ${TRANSACTIONSTABLE} (txn_id, created_at, pending_uid, amount, status) VALUES ('${created_at}', '${pending_uid}', '${amount}', '${status}')`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+
+        MDS.log(`Adding transaction ${res.status}`);
+
+        if (res.status && callback) {
+            callback(true);
+        } else {
+            throw new Error(`Adding transaction ${res.error}`);
+        }
+    });
+}
+
+
 /*
 * Set Static MLS
 * @param {*} callback
@@ -72,8 +117,10 @@ function getPublicKey(callback) {
  * @param {*} callback
  * @returns coin data
  */
-function sendMinima(amount, address, callback) {
-    var maxcmd = "send amount:" + amount + " address:" + address;
+function sendMinima(amount, address, password, purchaseCode, callback) {
+    const passwordPart = password ? `password:${password}` : "";
+    const purchaseCodePart = purchaseCode ? `state:{"99":"[${purchaseCode}]"}` : "";
+    var maxcmd = `send address:${address} amount:${amount} ${passwordPart} ${purchaseCodePart}`;
     MDS.cmd(maxcmd, function (msg) {
         MDS.log(`sendMinima function response: ${JSON.stringify(msg)}`);
         if (callback) {
@@ -87,4 +134,20 @@ function sendMinima(amount, address, callback) {
             }
         }
     });
+}
+
+/*
+* Generate a random code of given length
+* @param {*} length
+*/
+function generateCode(length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
+    }
+    return result;
 }

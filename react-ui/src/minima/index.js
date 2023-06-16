@@ -153,28 +153,64 @@ export function sendMessage(message, address, app, callback) {
     });
 }
 
-/**
-* Called when form is submitted
-* @param amount
+
+
+/*
+* Send request to server for p2p identity
+*
 */
-
-export async function handleDmaxClientSubmit(amount) {
-
+export function sendP2PIdentityRequest(callback) {
     ///get the clients contact address
     getContactAddress(function (clientAddress) {
 
-        const message = { "type": "P2P_REQUEST", "data": { "amount": amount, "contact": clientAddress } };
+        const message = { "type": "P2P_REQUEST", "data": { "contact": clientAddress } };
         const address = SERVER_ADDRESS;
         const app = 'dmax';
 
         //create p2pidentity request
         sendMessage(message, address, app, function (msg) {
             window.MDS.log("Sent P2P request to " + address);
+        });
+        callback(true)
+    });
+}
 
-            //remove the form from the UI and replace with a message
-            document.getElementById("js-main").innerHTML = "Your request has been sent to the MLS server. Please wait for confirmation.";
+
+/**
+* Called when form is submitted
+* @param amount
+*/
+
+export async function handleDmaxClientSubmit(values) {
+console.log(values);
+/*
+    //set the static MLS
+    setStaticMLS(p2pIdentity, function (resp) {
+        MDS.log("Set static MLS");
+
+        //send amount of money to the server wallet
+        sendMinima(amount, SERVER_WALLET, function (coinId, error) {
+            if (error) {
+                MDS.log("Error sending Minima: " + error);
+                //update frontend document with error
+                return;
+            }
+            MDS.log("Sent Minima");
+            //coinID is returned
+
+            //get the client public key
+            getPublicKey(function (clientPK) {
+                MDS.log("Got public key");
+
+                //send via maxima coinID, clientPK
+                sendMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": amount } }, SERVER_ADDRESS, "dmax", function (msg) {
+                    MDS.log("Sent response to " + SERVER_ADDRESS);
+                });
+            });
         });
     });
+    */
+
 }
 
 

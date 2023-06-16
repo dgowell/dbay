@@ -30,3 +30,22 @@ export function checkTableExists(tableName) {
         });
     });
 }
+
+/*
+*   Send minima to a wallet address
+*/
+
+export function getServerP2PIdentity() {
+    const Q = `SELECT "dmax_server_p2p_identity" FROM ${SETTINGSTABLE};`;
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(Q, function (res) {
+            if (res.status) {
+                console.log("Result of getServerP2PIdentity", JSON.stringify(res.rows[0]));
+                resolve(res.rows[0]);
+            } else {
+                reject(res.error);
+            }
+        }
+        );
+    });
+}
