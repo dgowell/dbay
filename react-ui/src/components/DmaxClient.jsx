@@ -30,7 +30,8 @@ const DmaxClient = () => {
             getServerP2PIdentity()
                 .then((response) => {
                     // Check if the desired response is received
-                    if (response) {
+                    if (typeof response === "string") {
+                        debugger;
                         // Perform further actions or handle the response
                         setP2PIdentity(response);   
                     } else {

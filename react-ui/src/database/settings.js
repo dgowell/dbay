@@ -41,7 +41,7 @@ export function getServerP2PIdentity() {
         window.MDS.sql(Q, function (res) {
             if (res.status) {
                 console.log("Result of getServerP2PIdentity", JSON.stringify(res.rows[0]));
-                resolve(res.rows[0]);
+                resolve(res.rows[0].dmax_server_p2p_identity);
             } else {
                 reject(res.error);
             }
