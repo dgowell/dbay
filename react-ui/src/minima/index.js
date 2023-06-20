@@ -4,6 +4,7 @@ import { utf8ToHex } from '../utils';
 import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
+import { createPendingTransaction } from '../database/transaction';
 
 //get server address env variable
 const SERVER_ADDRESS = process.env.REACT_APP_DMAX_SERVER_ADDRESS;
@@ -176,40 +177,111 @@ export function sendP2PIdentityRequest(callback) {
 }
 
 
+/*
+* Set Static MLS
+* @param {*} callback
+*/
+function setStaticMLS(p2pidentity, callback) {
+    window.MDS.log("Setting static MLS to " + p2pidentity);
+    var maxcmd = `maxextra action:staticmls host:${p2pidentity}`;
+    window.MDS.cmd(maxcmd, function (msg) {
+        window.MDS.log(JSON.stringify(msg));
+        if (callback) {
+            callback(msg);
+        }
+
+    });
+}
+
+/**
+ * Send minima to address
+ * @param {*} amount
+ * @param {*} address
+ * @param {*} callback
+ * @returns coin data
+ */
+function sendMinima(amount, address, password, purchaseCode, callback) {
+    const passwordPart = password ? `password:${password}` : "";
+    const purchaseCodePart = purchaseCode ? `state:{"99":"[${purchaseCode}]"}` : "";
+    var maxcmd = `send address:${address} amount:${amount} ${passwordPart} ${purchaseCodePart}`;
+    window.MDS.cmd(maxcmd, function (msg) {
+        window.MDS.log(`sendMinima function response: ${JSON.stringify(msg)}`);
+        if (callback) {
+            //return the coinid
+            if (msg.status) {
+                window.MDS.log(`coinid returned: ${JSON.stringify(msg.response.body.txn.outputs[0].coinid)}`);
+                callback(msg.response.body.txn.outputs[0].coinid);
+            } else if (msg.pending) {
+                createPendingTransaction(msg.pendinguid, amount, function (response, error) {
+                    window.MDS.log(`createPendingTranasction returned: ${JSON.stringify(response, error)}`);
+                });
+                callback(false, msg.error);
+            } else {
+                window.MDS.log(msg.error);
+                callback(false, msg.error);
+            }
+        }
+    });
+}
+
+
+
+
+/*
+* Generate a random code of given length
+* @param {*} length
+*/
+function generateCode(length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
+    }
+    return result;
+}
+
+
 /**
 * Called when form is submitted
 * @param amount
 */
 
-export async function handleDmaxClientSubmit(values) {
+export async function handleDmaxClientSubmit(values, p2pIdentity, callback) {
 console.log(values);
-/*
+
     //set the static MLS
     setStaticMLS(p2pIdentity, function (resp) {
-        MDS.log("Set static MLS");
+        window.MDS.log("Set static MLS");
+
+        let purchaseCode = generateCode(10);
 
         //send amount of money to the server wallet
-        sendMinima(amount, SERVER_WALLET, function (coinId, error) {
+        sendMinima(values.amount, WALLET_ADDRESS, values.password, purchaseCode, function (coinId, error) {
             if (error) {
-                MDS.log("Error sending Minima: " + error);
+                window.MDS.log("Error sending Minima: " + error);
                 //update frontend document with error
-                return;
+                callback(false, error);
             }
-            MDS.log("Sent Minima");
+            window.MDS.log("Sent Minima");
             //coinID is returned
 
             //get the client public key
             getPublicKey(function (clientPK) {
-                MDS.log("Got public key");
+                window.MDS.log("Got public key");
 
                 //send via maxima coinID, clientPK
-                sendMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": amount } }, SERVER_ADDRESS, "dmax", function (msg) {
-                    MDS.log("Sent response to " + SERVER_ADDRESS);
+                sendMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": values.amount, "purchase_code": purchaseCode } }, SERVER_ADDRESS, "dmax", function (msg) {
+                    window.MDS.log("Sent response to " + SERVER_ADDRESS);
+                    if (callback) {
+                        callback(msg);
+                    }
                 });
             });
         });
     });
-    */
 
 }
 

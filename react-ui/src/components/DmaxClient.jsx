@@ -31,7 +31,6 @@ const DmaxClient = () => {
                 .then((response) => {
                     // Check if the desired response is received
                     if (typeof response === "string") {
-                        debugger;
                         // Perform further actions or handle the response
                         setP2PIdentity(response);   
                     } else {
@@ -66,12 +65,22 @@ const DmaxClient = () => {
                 .max(100, 'Must be 100 or less')
                 .required('Required'),
             password: Yup.string()
-                .min(8, 'Must be 8 characters or more')
                 .required('Required'),
         }),
         onSubmit: values => {
             console.log(values);
-            handleDmaxClientSubmit(values);
+            handleDmaxClientSubmit(values, P2PIdentity, function (response, error) {
+                //log any errors and then set them
+                if (error) {
+                    console.log(error);
+                    setError(error);
+                }
+                //if no errors, then clear the form
+                else {
+                    formik.resetForm();
+                    console.log(response);
+                }
+            });
         },
     });
 

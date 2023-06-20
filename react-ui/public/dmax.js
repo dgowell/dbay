@@ -3,8 +3,8 @@ var TRANSACTIONSTABLE = 'TRANSACTIONS';
 
 function createTransactionTable(callback) {
     const Q = `create table if not exists ${TRANSACTIONSTABLE} (
-            "txn_id" varchar(50) primary key,
-            "created_at" int not null,
+            "txn_id" INT AUTO_INCREMENT PRIMARY KEY,
+            "created_at" bigint not null,
             "pending_uid" varchar(34),
             "amount" int not null,
             "status" varchar(50) not null
@@ -43,21 +43,7 @@ function addTransaction(created_at, pending_uid, amount, status, callback) {
 }
 
 
-/*
-* Set Static MLS
-* @param {*} callback
-*/
-function setStaticMLS(p2pidentity, callback) {
-    MDS.log("Setting static MLS to " + p2pidentity);
-    var maxcmd = `maxextra action:staticmls host:${p2pidentity}`;
-    MDS.cmd(maxcmd, function (msg) {
-        MDS.log(JSON.stringify(msg));
-        if (callback) {
-            callback(msg);
-        }
 
-    });
-}
 
 /**
  * Send message via Maxima to contat address or permanent address
@@ -110,31 +96,7 @@ function getPublicKey(callback) {
 }
 
 
-/**
- * Send minima to address
- * @param {*} amount
- * @param {*} address
- * @param {*} callback
- * @returns coin data
- */
-function sendMinima(amount, address, password, purchaseCode, callback) {
-    const passwordPart = password ? `password:${password}` : "";
-    const purchaseCodePart = purchaseCode ? `state:{"99":"[${purchaseCode}]"}` : "";
-    var maxcmd = `send address:${address} amount:${amount} ${passwordPart} ${purchaseCodePart}`;
-    MDS.cmd(maxcmd, function (msg) {
-        MDS.log(`sendMinima function response: ${JSON.stringify(msg)}`);
-        if (callback) {
-            //return the coinid
-            if (msg.status) {
-                MDS.log(`coinid returned: ${JSON.stringify(msg.response.body.txn.outputs[0].coinid)}`);
-                callback(msg.response.body.txn.outputs[0].coinid);
-            } else {
-                MDS.log(msg.error);
-                callback(false, msg.error)
-            }
-        }
-    });
-}
+
 
 /*
 * Generate a random code of given length
