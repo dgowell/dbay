@@ -5,7 +5,7 @@ import useIsVaultLocked from '../hooks/useIsVaultLocked';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
-
+import { getTransactionWithExpiryDate } from '../database/transaction';
 
 
 
@@ -14,6 +14,7 @@ const DmaxClient = () => {
     const formRef = useRef(null);
     const userLockedVault = useIsVaultLocked();
     const [error, setError] = useState(null);
+    const [expiryDate, setExpiryDate] = useState(null);
 
     useEffect(() => {
         sendP2PIdentityRequest(function (msg) {
@@ -32,7 +33,7 @@ const DmaxClient = () => {
                     // Check if the desired response is received
                     if (typeof response === "string") {
                         // Perform further actions or handle the response
-                        setP2PIdentity(response);   
+                        setP2PIdentity(response);
                     } else {
                         // If the desired response is not received, continue checking
                         setTimeout(checkDatabase, 2000); // Wait for 2 seconds before checking again
@@ -52,6 +53,20 @@ const DmaxClient = () => {
             clearTimeout(checkDatabase);
         };
     }, []); // Empty dependency array ensures that the effect runs only once on component mount
+
+
+    useEffect(() => {
+        //get Transaction
+        getTransactionWithExpiryDate(function (response, error) {
+            if (response) {
+                setExpiryDate(response);
+            }
+            if (error) {
+                setError(error);
+            }
+        });
+    }, []);
+
 
 
     const formik = useFormik({
@@ -89,7 +104,11 @@ const DmaxClient = () => {
 
     return (
         //a form with amount input and only password input if vault is locked, using mui components
-
+        (expiryDate) ?
+        <Typography variant="h5" component="div">
+            You have an active Dmax MLS until {expiryDate}
+        </Typography>
+        :
         <Card variant="outlined">
             <CardContent>
                 <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>

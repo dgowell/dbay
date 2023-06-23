@@ -52,13 +52,15 @@ function ListingDeliverySeller() {
         updateListing(listing.listing_id, { "status": "collection_confirmed" })
             .then(() => {
 
-                const message = { "type": "COLLECTION_CONFIRMED", "data": { "listing_id": listing.listing_id } };
+                const data = { "type": "COLLECTION_CONFIRMED", "data": { "listing_id": listing.listing_id } };
                 const address = listing.buyer_pk;
                 const app = 'dbay';
 
-                sendMessage(message, address, app, function (res) {
-                    setLoading(false);
-                    navigate('/seller/listings');
+                sendMessage({
+                    data, address, app, function(res) {
+                        setLoading(false);
+                        navigate('/seller/listings');
+                    }
                 });
             });
     }
@@ -68,14 +70,16 @@ function ListingDeliverySeller() {
         updateListing(listing.listing_id, { "status": "available" })
             .then(() => {
 
-                const message = { "type": "COLLECTION_REJECTED", "data": { "listing_id": listing.listing_id } };
+                const data = { "type": "COLLECTION_REJECTED", "data": { "listing_id": listing.listing_id } };
                 const address = listing.buyer_pk;
                 const app = 'dbay';
 
-                sendMessage(message, address, app, function (res) {
-                    console.log(res);
-                    setLoading(false);
-                    navigate('/seller/listings');
+                sendMessage({
+                    data, address, app, function(res) {
+                        console.log(res);
+                        setLoading(false);
+                        navigate('/seller/listings');
+                    }
                 });
             })
             .catch((e) => console.error(`Could not update listing as available: ${e}`));
@@ -111,10 +115,10 @@ function ListingDeliverySeller() {
                         "listing_id": listing.listing_id
                     }
                 }
-                sendMessage(data, listing.buyer_pk, 'dbay', function (res) {
+                sendMessage({data, address:listing.buyer_pk, app:'dbay', function (res) {
                     console.log(res);
                     navigate('/seller/listings')
-                });
+            }});
             })
             .catch((e) => console.error(`Could not update listing as completed: ${e}`));
     }
@@ -141,13 +145,13 @@ function ListingDeliverySeller() {
                             <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'space-between', justifyContent: 'space-between', boxShadow: "none" }}>
                                 {listing.transmission_type === "collection" &&
                                     <>
-                                    <Typography>@{listing.buyer_name} would like to collect your item, arrange collection with them below.</Typography>
+                                        <Typography>@{listing.buyer_name} would like to collect your item, arrange collection with them below.</Typography>
                                         <Stack direction="column" spacing={2}>
-                                        <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Chat Now</Button>
+                                            <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Chat Now</Button>
                                             {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
                                             {listing.status === "ongoing" &&
                                                 <>
-                                                    <Typography>Once collection has been arranged, take it off the market to stop others seeing it by clicking below.</Typography>            
+                                                    <Typography>Once collection has been arranged, take it off the market to stop others seeing it by clicking below.</Typography>
                                                     <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleConfirmCollection}>Remove from market</LoadingButton>
                                                     <LoadingButton className={"custom-loading"} loading={loading} fullWidth variant="outlined" color={"secondary"} onClick={handleRejectCollection}>Cancel collection</LoadingButton>
                                                 </>

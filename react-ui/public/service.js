@@ -7,10 +7,8 @@ var LISTINGSTABLE = 'LISTING';
 var SETTINGSTABLE = 'SETTINGS';
 var APPLICATION_NAME = 'dbay';
 
-//const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001'
-//const SERVER_WALLET = 'MxG083U3R8H31Z30H7Z6T0KM1Z9GJ978NCDGBJU42JTSZS18ZW4GFDF43EH519U'
-const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100BC9E165D8782CCEE0AF164F582F59B5B7FE64CD012CDFCA6F89594BF197EF7295E83A2220E91115D2E1B285573166AAE758CBF18113464ED5B5AF8F46144C0810DAA9E983575AECB871FBB986B0FE2579C3A6A97BED5AB81584F917E639F39DEE41F3ABBEF6925A32ADACFEAB8949F159D568E0DC66AAF779F184646B11B32730203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1KM9PD010KBB8TTU82F7VV2TKQU8WCUV1TC6BEP9RSB8BEQDTHVT21U9WZABSGD91MY9NTR175W45ASDRYRZUR6Q3TJSR8HWMSBMV5GDVJCW1S2AUH5QNPK3CY728Z5SK1BNMPN6MEHJ3RJFD1CD85NDYTZ6D5HTM3CCGSTPWPG32Z4HJT77QVGEYUF66HWPGJSFM3CUVWSVJ4106080078QWHJE@86.48.3.47:9001'
-const SERVER_WALLET = 'MxG0823ZCSPQP99BQPU5S3M2QK9ASSFA6NUU965EA3ZW96J15EKD9GBHPSMG08N'
+const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001'
+const SERVER_WALLET = 'MxG0800CY355Q2F0WPRAUBUTZ52CQ9MNC196PY5Z20SV6DBKEURK9P50GHY1WK2'
 
 //switch on and off logs
 var logs = true;
@@ -112,6 +110,10 @@ function setup() {
 function processMinimaLogEvent(data) {
     //if we have a new spent coin
     if (data.message.includes("NEW Spent Coin")) {
+
+
+        //DBAY LISTINGS
+
         //get all pending transactions
         getListingsWithPendingUID(function (listings) {
             if (logs) { MDS.log('Listings Found: ' + JSON.stringify(listings)); }
@@ -133,9 +135,11 @@ function processMinimaLogEvent(data) {
                             }
                             MDS.log('SUPER LISTING: ' + JSON.stringify(listing));
                             let sellerAddress = listing.seller_has_perm_address ? listing.seller_perm_address : listing.created_by_pk;
-                            sendMessage(data, sellerAddress, "dbay", function (result) {
-                                if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
-                            });
+                            sendMessage(
+                                data, sellerAddress, "dbay", function (result) {
+                                    if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+                                }
+                            );
 
                             //need to add the seller as a contact so they can let us know when the item has been shipped
                             if (listing.transmission_type === "delivery") {
@@ -148,8 +152,44 @@ function processMinimaLogEvent(data) {
                 });
             } else { if (logs) { MDS.log('No listings with pending UID') } }
         });
+
+
+        //DMAX TRANSACTIONS
+        getTransactionsWithPendingUID(function (transactions) {
+            if (logs) { MDS.log('Transactionss Found: ' + JSON.stringify(transactions)); }
+            MDS.log('transactions is a : ' + typeof (transactions));
+            if (transactions.length > 0) {
+                transactions.forEach(function (transaction) {
+                    let cmd = `checkpending uid:${transaction.pendinguid}`;
+                    MDS.cmd(cmd, function (response) {
+                        if (response.status === true) {
+                            getPublicKey(function (publickey) {
+                                updateTransaction(transaction.txn_id, { "status": "paid" });
+                                sendMessage({
+                                    "type": "PAYMENT_RECEIPT_READ",
+                                    "data": {
+                                        "purchase_code": transaction.purchase_code,
+                                        "amount": transaction.amount,
+                                        "publickey": publickey,
+                                    }
+                                },
+                                    SERVER_ADDRESS,
+                                    "dmax",
+                                    function (result) {
+                                        if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+                                    }
+                                );
+                            });
+                        }
+                    });
+                });
+            } else { if (logs) { MDS.log('No transactions with pending UID') } }
+        });
     }
 }
+
+
+
 
 /*
 *   BUYER & SELLER SIDE: Handle the maxima messages sent between the buyer and seller
@@ -254,17 +294,37 @@ function processMaximaEvent(msg) {
 
 
             else if (type === "EXPIRY_DATE") {
+                MDS.log("EXPIRY_DATE received:" + JSON.stringify(json));
                 //replace user message with the expiry date and permanent maxima address
-                var expiryDate = json.data.expiry_date;
-                var permanentAddress = json.data.permanent_address;
+                const expiryDate = json.data.expiry_date;
+                const permanentAddress = json.data.permanent_address;
 
-                document.getElementById("js-main").innerHTML = `Your MLS will expire on ${expiryDate}. Your permanent address is ${permanentAddress}.`;
+                //find the pending transaction
+                getPendingTransaction(function (transaction) {
+                    if (transaction) {
+                        //update the transaction
+                        updateTransaction(transaction.txn_id, { "expiry_date": expiryDate, "status": "complete" });
+                    }
+                });
             } else {
                 MDS.log("INVALID message type in dmax server: " + type);
             }
         });
     }
 }
+
+function getPendingTransaction(callback) {
+    MDS.cmd("SELECT * FROM transactions WHERE status='paid'", function (response) {
+        if (response.rows.length > 0) {
+            callback(response.rows[0]);
+        } else {
+            callback(null);
+        }
+    });
+}
+
+
+
 /*
 *   Recieve and save a listing from a contact
 */
@@ -716,6 +776,18 @@ function getListingsWithPendingUID(callback) {
     });
 }
 
+function getTransactionsWithPendingUID(callback) {
+    if (logs) { MDS.log("Getting pending transactions"); }
+    MDS.sql(`SELECT * FROM "${TRANSACTIONSTABLE}" WHERE "pendinguid" IS NOT NULL`, function (result) {
+        if (result && callback) {
+            callback(result.rows);
+        } else {
+            callback([]);
+            if (logs) { MDS.log("No pending listings found"); }
+        }
+    });
+}
+
 
 
 function getHistoryTransactions(callback) {
@@ -1017,6 +1089,34 @@ function updateListing(listingId, data) {
     MDS.sql(`UPDATE ${LISTINGSTABLE} SET ${formattedData} WHERE "listing_id"='${listingId}';`, function (res) {
         if (res.status) {
             if (logs) { MDS.log(`MDS.SQL, UPDATE ${LISTINGSTABLE} SET ${formattedData} WHERE "listing_id"='${listingId}';`); }
+            return res;
+        } else {
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`); }
+            return false;
+        }
+    });
+}
+
+
+function updateTransaction(transactionId, data) {
+    var formattedData = '';
+
+    var keys = Object.keys(data);
+    var totalKeys = keys.length;
+
+    for (var i = 0; i < totalKeys; i++) {
+        var key = keys[i];
+
+        // Check if it's the last iteration
+        if (i === totalKeys - 1) {
+            formattedData += `"${key}"='${data[key]}'`;
+        } else {
+            formattedData += `"${key}"='${data[key]}',`;
+        }
+    }
+    MDS.sql(`UPDATE ${TRANSACTIONSTABLE} SET ${formattedData} WHERE "txn_id"='${transactionId}';`, function (res) {
+        if (res.status) {
+            if (logs) { MDS.log(`MDS.SQL, UPDATE ${TRANSACTIONSTABLE} SET ${formattedData} WHERE "txn_id"='${transactionId}';`); }
             return res;
         } else {
             if (logs) { MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`); }

@@ -5,8 +5,9 @@ function createTransactionTable(callback) {
     const Q = `create table if not exists ${TRANSACTIONSTABLE} (
             "txn_id" INT AUTO_INCREMENT PRIMARY KEY,
             "created_at" bigint not null,
-            "pending_uid" varchar(34),
+            "pendinguid" varchar(34),
             "amount" int not null,
+            "purchase_code" varchar(20) not null,
             "status" varchar(50) not null
             )`;
 
@@ -25,8 +26,8 @@ function createTransactionTable(callback) {
 
  */
 
-function addTransaction(created_at, pending_uid, amount, status, callback) {
-    const Q = `INSERT INTO ${TRANSACTIONSTABLE} (txn_id, created_at, pending_uid, amount, status) VALUES ('${created_at}', '${pending_uid}', '${amount}', '${status}')`;
+function addTransaction({created_at, pendinguid, amount, status, callback}) {
+    const Q = `INSERT INTO ${TRANSACTIONSTABLE} (txn_id, created_at, pendinguid, amount, status) VALUES ('${created_at}', '${pendinguid}', '${amount}', '${status}')`;
     MDS.sql(Q, function (res) {
         if (logs) {
             MDS.log(`MDS.SQL, ${Q}`);
@@ -52,10 +53,10 @@ function addTransaction(created_at, pending_uid, amount, status, callback) {
  * @param {*} app
  * @param {*} callback
  */
-function sendMessage(message, address, app, callback) {
+function sendMessage(data, address, app, callback) {
     MDS.log("Sending message to " + address);
     const formatAddress = address.includes('MAX') || address.includes('Mx') ? `to:${address}` : `publickey:${address}`;
-    var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(message);
+    var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(data);
     MDS.log(maxcmd);
     MDS.cmd(maxcmd, function (msg) {
         MDS.log(JSON.stringify(msg));
