@@ -89,6 +89,9 @@ export function isContact(pk) {
         })
     })
 }
+isContact.propTypes = {
+    pk: PropTypes.string.isRequired
+};
 
 /**
 * Fetches maxima contact address
@@ -141,10 +144,10 @@ export function getMiniAddress() {
  * @param {*} address
  * @param {*} callback
  */
-export function sendMessage(message, address, app, callback) {
+export function sendMessage({ data, address, app, callback }) {
     window.MDS.log("Sending message to " + address);
     const formatAddress = address.includes('MAX') || address.includes('Mx') ? `to:${address}` : `publickey:${address}`;
-    var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(message);
+    var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(data);
     window.MDS.log(maxcmd);
     window.MDS.cmd(maxcmd, function (msg) {
         window.MDS.log(JSON.stringify(msg));
@@ -153,6 +156,12 @@ export function sendMessage(message, address, app, callback) {
         }
     });
 }
+sendMessage.propTypes = {
+    data: PropTypes.object.isRequired,
+    address: PropTypes.string.isRequired,
+    app: PropTypes.string.isRequired,
+    callback: PropTypes.func
+};
 
 
 
@@ -164,18 +173,22 @@ export function sendP2PIdentityRequest(callback) {
     ///get the clients contact address
     getContactAddress(function (clientAddress) {
 
-        const message = { "type": "P2P_REQUEST", "data": { "contact": clientAddress } };
+        const data = { "type": "P2P_REQUEST", "data": { "contact": clientAddress } };
         const address = SERVER_ADDRESS;
         const app = 'dmax';
 
         //create p2pidentity request
-        sendMessage(message, address, app, function (msg) {
-            window.MDS.log("Sent P2P request to " + address);
+        sendMessage({
+            data, address, app, function(msg) {
+                window.MDS.log("Sent P2P request to " + address);
+            }
         });
         callback(true)
     });
 }
-
+sendP2PIdentityRequest.propTypes = {
+    callback: PropTypes.func.isRequired
+};
 
 /*
 * Set Static MLS
@@ -192,6 +205,10 @@ function setStaticMLS(p2pidentity, callback) {
 
     });
 }
+setStaticMLS.propTypes = {
+    p2pidentity: PropTypes.string.isRequired,
+    callback: PropTypes.func
+};
 
 /**
  * Send minima to address
@@ -200,29 +217,44 @@ function setStaticMLS(p2pidentity, callback) {
  * @param {*} callback
  * @returns coin data
  */
-function sendMinima(amount, address, password, purchaseCode, callback) {
+function sendMinima({ amount, address, password, purchaseCode, callback }) {
     const passwordPart = password ? `password:${password}` : "";
     const purchaseCodePart = purchaseCode ? `state:{"99":"[${purchaseCode}]"}` : "";
     var maxcmd = `send address:${address} amount:${amount} ${passwordPart} ${purchaseCodePart}`;
     window.MDS.cmd(maxcmd, function (msg) {
         window.MDS.log(`sendMinima function response: ${JSON.stringify(msg)}`);
+        debugger;
         if (callback) {
             //return the coinid
             if (msg.status) {
+                console.log("success");
                 window.MDS.log(`coinid returned: ${JSON.stringify(msg.response.body.txn.outputs[0].coinid)}`);
                 callback(msg.response.body.txn.outputs[0].coinid);
             } else if (msg.pending) {
-                createPendingTransaction(msg.pendinguid, amount, function (response, error) {
-                    window.MDS.log(`createPendingTranasction returned: ${JSON.stringify(response, error)}`);
+                console.log("pending transaction");
+                createPendingTransaction({
+                    pendinguid: msg.pendinguid,
+                    amount,
+                    purchaseCode, function(response, error) {
+                        window.MDS.log(`createPendingTranasction returned: ${JSON.stringify(response, error)}`);
+                    }
                 });
                 callback(false, msg.error);
             } else {
+                console.log("error");
                 window.MDS.log(msg.error);
                 callback(false, msg.error);
             }
         }
     });
 }
+sendMinima.propTypes = {
+    amount: PropTypes.number.isRequired,
+    address: PropTypes.string.isRequired,
+    password: PropTypes.string,
+    purchaseCode: PropTypes.string,
+    callback: PropTypes.func
+};
 
 
 
@@ -242,7 +274,9 @@ function generateCode(length) {
     }
     return result;
 }
-
+generateCode.propTypes = {
+    length: PropTypes.number.isRequired
+};
 
 /**
 * Called when form is submitted
@@ -250,7 +284,7 @@ function generateCode(length) {
 */
 
 export async function handleDmaxClientSubmit(values, p2pIdentity, callback) {
-console.log(values);
+    console.log(values);
 
     //set the static MLS
     setStaticMLS(p2pIdentity, function (resp) {
@@ -259,32 +293,59 @@ console.log(values);
         let purchaseCode = generateCode(10);
 
         //send amount of money to the server wallet
-        sendMinima(values.amount, WALLET_ADDRESS, values.password, purchaseCode, function (coinId, error) {
-            if (error) {
-                window.MDS.log("Error sending Minima: " + error);
-                //update frontend document with error
-                callback(false, error);
-            }
-            window.MDS.log("Sent Minima");
-            //coinID is returned
+        sendMinima({
+            amount: values.amount,
+            address: WALLET_ADDRESS,
+            password: values.password,
+            purchaseCode,
+            callback: function(coinId, error) {
+                if (error) {
+                    window.MDS.log("Error sending Minima: " + error);
+                    //update frontend document with error
+                    callback(false, error);
+                    return;
+                }
 
-            //get the client public key
-            getPublicKey(function (clientPK) {
-                window.MDS.log("Got public key");
+                //if no error, send minima to server
 
-                //send via maxima coinID, clientPK
-                sendMessage({ "type": "PAY_CONFIRM", "data": { "status": "OK", "coin_id": coinId, "client_pk": clientPK, "amount": values.amount, "purchase_code": purchaseCode } }, SERVER_ADDRESS, "dmax", function (msg) {
-                    window.MDS.log("Sent response to " + SERVER_ADDRESS);
-                    if (callback) {
-                        callback(msg);
-                    }
+                window.MDS.log("Sent Minima");
+                //coinID is returned
+
+                //get the client public key
+                getPublicKey(function (clientPK) {
+                    window.MDS.log("Got public key");
+
+                    //send via maxima coinID, clientPK
+                    sendMessage({
+                        data: {
+                            "type": "PAY_CONFIRM",
+                            "data": {
+                                "status": "OK",
+                                "coin_id": coinId,
+                                "client_pk": clientPK,
+                                "amount": values.amount,
+                                "purchase_code": purchaseCode
+                            }
+                        },
+                        address: SERVER_ADDRESS, 
+                        app: "dmax", function(msg) {
+                            window.MDS.log("Sent response to " + SERVER_ADDRESS);
+                            if (callback) {
+                                callback(msg);
+                            }
+                        }
+                    });
                 });
-            });
+            }
         });
     });
 
 }
-
+handleDmaxClientSubmit.propTypes = {
+    values: PropTypes.object.isRequired,
+    p2pIdentity: PropTypes.string.isRequired,
+    callback: PropTypes.func
+};
 
 
 /**
@@ -414,6 +475,13 @@ export function sendMoney({
         }
     });
 }
+sendMoney.propTypes = {
+    walletAddress: PropTypes.string.isRequired,
+    amount: PropTypes.string.isRequired,
+    purchaseCode: PropTypes.string.isRequired,
+    password: PropTypes.string
+}
+
 
 /*
 * Adds a contact to the users contact list

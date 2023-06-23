@@ -1,3 +1,9 @@
+/*
+*   Send minima to a wallet address
+*/
+
+import { PropTypes } from "prop-types";
+
 const SETTINGSTABLE = 'SETTINGS';
 
 /* returns store by pubkey */
@@ -31,9 +37,9 @@ export function checkTableExists(tableName) {
     });
 }
 
-/*
-*   Send minima to a wallet address
-*/
+PropTypes.checkTableExists = {
+    tableName: PropTypes.string.isRequired
+};
 
 export function getServerP2PIdentity() {
     const Q = `SELECT "dmax_server_p2p_identity" FROM ${SETTINGSTABLE};`;
@@ -49,3 +55,7 @@ export function getServerP2PIdentity() {
         );
     });
 }
+
+PropTypes.getServerP2PIdentity = {
+    callback: PropTypes.func.isRequired
+};

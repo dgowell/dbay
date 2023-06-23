@@ -396,6 +396,9 @@ export async function processListing(entity) {
         console.log(`Listing ${entity.title} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
 }
+processListing.PropTypes = {
+    entity: PropTypes.object.isRequired
+}
 
 /**
 * Returns the status of notification on a a listing
