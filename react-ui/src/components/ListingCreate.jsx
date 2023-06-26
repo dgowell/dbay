@@ -174,12 +174,14 @@ export default function ListingCreate() {
     console.log(`New listing about to be created : ${JSON.stringify(formik.values)}`);
     let id = "";
     getMaximaInfo(function (maxima) {
+      var publickey = maxima.publickey;
+      var name = maxima.name;
       getPermanentAddress(function (address) {
         createListing({
           title: formik.values.title.replace(/'/g, "''"),
           price: formik.values.askingPrice,
-          createdByPk: maxima.publickey,
-          createdByName: maxima.name,
+          createdByPk: publickey,
+          createdByName: name,
           sellerHasPermAddress: address ? true : false,
           sellerPermAddress: address ? address : '',
           walletAddress: walletAddress,

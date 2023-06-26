@@ -509,13 +509,13 @@ export function getMaximaInfo(callback) {
     var maxcmd = "maxima";
     window.MDS.cmd(maxcmd, function (msg) {
         window.MDS.log(JSON.stringify(msg));
-        if (callback) {
+        if (msg.response) {
             callback(msg.response);
+        } else {
+            callback(false);
         }
-        callback(false);
     });
 }
-
 export function getPermanentAddress(callback) {
     var maxcmd = "maxima";
     window.MDS.cmd(maxcmd, function (res) {
@@ -523,7 +523,7 @@ export function getPermanentAddress(callback) {
         if (res.status === true) {
             const maxima = res.response;
             if (maxima.staticmls === true) {
-                //consturct the perm address from the public key and mls
+                // Construct the perm address from the public key and mls
                 const permAddress = `MAX#${maxima.publickey}#${maxima.mls}`;
                 const cmd = `maxextra action:getaddress maxaddress:${permAddress}`;
                 window.MDS.cmd(cmd, function (maxextra) {
@@ -538,9 +538,11 @@ export function getPermanentAddress(callback) {
             }
         } else {
             console.error(res.error);
+            callback(false); // Call the callback with false in case of error
         }
     });
 }
+
 
 export function unlockValut(pswd) {
     return new Promise(function (resolve, reject) {
