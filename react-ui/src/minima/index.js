@@ -377,7 +377,7 @@ export async function sendListingToContacts(listingId) {
     listing.type = 'listing';
     listing.sent_by_name = name;
     listing.sent_by_pk = host.pk;
-
+ 
     return new Promise(function (resolve, reject) {
         if (contacts.length === 0) {
             reject(Error('No contacts to send to'));
