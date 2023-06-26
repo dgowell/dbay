@@ -8,6 +8,7 @@ import Paper from "@mui/material/Paper";
 import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from "../database/listing";
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 
 function BottomNavBar() {
@@ -38,6 +39,11 @@ function BottomNavBar() {
                     component={Link}
                     to="/"
                     icon={<HomeOutlinedIcon color="grey" />}
+                />
+                <BottomNavigationAction
+                    component={Link}
+                    to="/subscriptions"
+                    icon={<FavoriteIcon color="grey" />}
                 />
                 <BottomNavigationAction
                     component={Link}

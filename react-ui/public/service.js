@@ -5,6 +5,8 @@ MDS.load("dmax.js");
 /* eslint-disable no-undef */
 var LISTINGSTABLE = 'LISTING';
 var SETTINGSTABLE = 'SETTINGS';
+var TRANSACTIONSTABLE = 'TRANSACTIONS';
+var SUBSCRIPTIONSTABLE = 'SUBSCRIPTIONS';
 var APPLICATION_NAME = 'dbay';
 
 const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001'
@@ -96,6 +98,12 @@ function setup() {
                 if (logs) { MDS.log('Transaction table created or exists') }
             });
 
+            createSubscriptionsTable(function (result) {
+                if (logs) { MDS.log('Subscriptions table created or exists') }
+            });
+
+            //send subscription requests
+            sendSubscriptionRequests();
         });
     });
 }
@@ -135,11 +143,14 @@ function processMinimaLogEvent(data) {
                             }
                             MDS.log('SUPER LISTING: ' + JSON.stringify(listing));
                             let sellerAddress = listing.seller_has_perm_address ? listing.seller_perm_address : listing.created_by_pk;
-                            sendMessage(
-                                data, sellerAddress, "dbay", function (result) {
+                            sendMessage({
+                                data: data,
+                                address: sellerAddress,
+                                app: "dbay",
+                                callback: function (result) {
                                     if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
                                 }
-                            );
+                            });
 
                             //need to add the seller as a contact so they can let us know when the item has been shipped
                             if (listing.transmission_type === "delivery") {
@@ -166,19 +177,21 @@ function processMinimaLogEvent(data) {
                             getPublicKey(function (publickey) {
                                 updateTransaction(transaction.txn_id, { "status": "paid" });
                                 sendMessage({
-                                    "type": "PAYMENT_RECEIPT_READ",
-                                    "data": {
-                                        "purchase_code": transaction.purchase_code,
-                                        "amount": transaction.amount,
-                                        "publickey": publickey,
-                                    }
-                                },
-                                    SERVER_ADDRESS,
-                                    "dmax",
-                                    function (result) {
+                                    data: {
+                                        "type": "PAYMENT_RECEIPT_READ",
+                                        "data": {
+                                            "purchase_code": transaction.purchase_code,
+                                            "amount": transaction.amount,
+                                            "publickey": publickey,
+                                        }
+                                    },
+                                    address: SERVER_ADDRESS,
+                                    app: "dmax",
+                                    callback: function (result) {
                                         if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
                                     }
-                                );
+                                });
+
                             });
                         }
                     });
@@ -263,6 +276,9 @@ function processMaximaEvent(msg) {
                 //buyer must process item sent clicked from seller
                 processItemSentClicked(entity);
                 break;
+            case 'SUBSCRIPTION_REQUEST':
+                //seller must process subscription request from buyer
+                MDS.log("SUBSCRIPTION_REQUEST received:" + JSON.stringify(entity));
             default:
                 if (logs) { MDS.log(entity); }
         }
@@ -879,6 +895,28 @@ function createSettingsTable(callback) {
         }
     })
 }
+
+//create a subscriptions table
+function createSubscriptionsTable(callback) {
+    const Q = `create table if not exists ${SUBSCRIPTIONSTABLE} (
+            "seller_permanent_address" varchar(640) NOT NULL PRIMARY KEY,
+            "seller_store_name" varchar(50) NOT NULL,
+            "seller_store_description" varchar(1500),
+            "seller_store_image" varchar(max)
+            )`;
+
+    MDS.sql(Q, function (res) {
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
+        if (res.status && callback) {
+            callback(true);
+        } else {
+            return Error(`${res.error}`);
+        }
+    })
+}
+
+
+
 function createHost(pk, permAddress, callback) {
     let fullsql = `insert into ${SETTINGSTABLE}("pk", "perm_address") values('${pk}', '${permAddress}');`;
     if (permAddress === '') {
@@ -1176,5 +1214,91 @@ function send(data, address) {
         } else if (resp.status === true) {
             return true;
         }
+    });
+}
+
+
+/**
+* Fetches maxima contact address
+*/
+function getMaximaContactAddress(callback) {
+    MDS.cmd('maxima', function (res) {
+        if (res.status) {
+            callback(res.response.contact);
+        } else {
+            callback(false, (Error(`Couldn't fetch maxima contact name ${res.error}`)));
+        }
+    })
+}
+
+
+function getListingIds(seller_address, callback) {
+    MDS.sql(`SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "created_by_pk"='${seller_address}';`, function (res) {
+        if (res.status) {
+            if (logs) { MDS.log(`MDS.SQL, SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "seller_permanent_address"='${seller_address}';`); }
+            callback(res.data);
+        } else {
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get listing ids ${res.error}`); }
+            callback(false, (Error(`Couldn't fetch listing ids ${res.error}`)));
+        }
+    });
+}
+
+
+
+//function that loops through each seller in the subscriptions table and sends them a SUBCRIPTION_REQUEST requesting they send their listings
+function sendSubscriptionRequests() {
+    getMaximaContactAddress(function (maximaContactAddress, err) {
+        //get all the sellers from the subscriptions table
+        MDS.sql(`SELECT "seller_permanent_address" FROM ${SUBSCRIPTIONSTABLE}`, function (res) {
+            if (res.status) {
+                if (logs) { MDS.log(`MDS.SQL, SELECT "seller_permanent_address" FROM ${SUBSCRIPTIONSTABLE}`); }
+                MDS.log(JSON.stringify(res));
+
+                //loop through each seller and send them a SELECT "seller_permanent_address" FROM SUBSCRIPTIONEST
+                for (var i = 0; i < res.data.length; i++) {
+                    var seller = res.data[i].seller;
+                    //get all the listings for the seller
+                    //get the publickeuy from the full MAxima address
+                    var sellerAddress = seller.split('#')[1];
+                    debugger;
+                    getListingIds(sellerAddress, function (listings, err) {
+                        if (err) {
+                            if (logs) { MDS.log(`MDS.SQL ERROR, could get listings ${err}`); }
+                            return false;
+                        }
+                        //check if the seller is a valid address
+                        if (seller.includes('MAX')) {
+                            //send the seller a SUBSCRIPTION_REQUEST
+                            var data = {
+                                "type": "SUBSCRIPTION_REQUEST",
+                                "data": {
+                                    "listing_inventory": listings,
+                                    "subscriber_address": maximaContactAddress
+                                }
+                            }
+                            sendMessage({
+                                data: data,
+                                address: seller,
+                                app: "dbay",
+                                callback: function (res) {
+                                    if (res.status) {
+                                        if (logs) { MDS.log(`Successfully sent subscription request to ${seller}`); }
+                                        return true;
+                                    } else {
+                                        if (logs) { MDS.log(`MDS.SQL ERROR, could get subscriptions ${res.error}`); }
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+
+            } else {
+                if (logs) { MDS.log(`MDS.SQL ERROR, could get subscriptions ${res.error}`); }
+                return false;
+            }
+        });
     });
 }

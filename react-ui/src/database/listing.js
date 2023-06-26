@@ -3,7 +3,7 @@ import { getHost } from "./settings";
 import { getPublicKey } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
-
+const logs = process.env.REACT_APP_LOGS;
 
 /* adds a listing to the database */
 
@@ -425,4 +425,22 @@ export function getNotificationStatus(listingId) {
 }
 getNotificationStatus.proptypes = {
     listingId: PropTypes.string.isRequired
+}
+
+
+export function getListingIds(seller_address, callback) {
+    window.MDS.sql(`SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "created_by_pk"='${seller_address}';`, function (res) {
+        if (res.status) {
+            if (res.rows.length > 0) {
+                if (logs) { window.MDS.log(`MDS.SQL, SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "seller_permanent_address"='${seller_address}';`); }
+                callback(res.rows);
+            } else {
+                if (logs) { window.MDS.log(`MDS.SQL, SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "seller_permanent_address"='${seller_address}';`); }
+                callback(false, (Error(`No listings found for seller ${seller_address}`)));
+            }
+        } else {
+            if (logs) { window.MDS.log(`MDS.SQL ERROR, could get listing ids ${res.error}`); }
+            callback(false, (Error(`Couldn't fetch listing ids ${res.error}`)));
+        }
+    });
 }

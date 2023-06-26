@@ -53,7 +53,7 @@ function addTransaction({created_at, pendinguid, amount, status, callback}) {
  * @param {*} app
  * @param {*} callback
  */
-function sendMessage(data, address, app, callback) {
+function sendMessage({data, address, app, callback}) {
     MDS.log("Sending message to " + address);
     const formatAddress = address.includes('MAX') || address.includes('Mx') ? `to:${address}` : `publickey:${address}`;
     var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(data);

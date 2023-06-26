@@ -5,6 +5,10 @@ import { getHost } from "../database/settings";
 
 import { APPLICATION_NAME } from '../constants';
 import { createPendingTransaction } from '../database/transaction';
+import { getListingIds } from '../database/listing';
+
+
+const logs = process.env.REACT_APP_LOGS;
 
 //get server address env variable
 const SERVER_ADDRESS = process.env.REACT_APP_DMAX_SERVER_ADDRESS;
@@ -107,6 +111,26 @@ export function getMaximaContactAddress() {
         })
     })
 }
+
+/**
+ * Send message via Maxima to contat address or permanent address
+ * @param {*} message
+ * @param {*} address
+ * @param {*} app
+ * @param {*} callback
+ */
+export function sendMessage({ data, address, app, callback }) {
+    window.MDS.log("Sending message to " + address);
+    const formatAddress = address.includes('MAX') || address.includes('Mx') ? `to:${address}` : `publickey:${address}`;
+    var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(data);
+    window.MDS.log(maxcmd);
+    window.MDS.cmd(maxcmd, function (msg) {
+        window.MDS.log(JSON.stringify(msg));
+        if (callback) {
+            callback(msg);
+        }
+    });
+}
 /**
 * Fetches maxima public key
 */
@@ -137,31 +161,6 @@ export function getMiniAddress() {
         })
     })
 }
-
-/**
- * Send message via Maxima to contact address or permanent address
- * @param {*} message
- * @param {*} address
- * @param {*} callback
- */
-export function sendMessage({ data, address, app, callback }) {
-    window.MDS.log("Sending message to " + address);
-    const formatAddress = address.includes('MAX') || address.includes('Mx') ? `to:${address}` : `publickey:${address}`;
-    var maxcmd = "maxima action:send poll:true " + formatAddress + " application:" + app + " data:" + JSON.stringify(data);
-    window.MDS.log(maxcmd);
-    window.MDS.cmd(maxcmd, function (msg) {
-        window.MDS.log(JSON.stringify(msg));
-        if (callback) {
-            callback(msg);
-        }
-    });
-}
-sendMessage.propTypes = {
-    data: PropTypes.object.isRequired,
-    address: PropTypes.string.isRequired,
-    app: PropTypes.string.isRequired,
-    callback: PropTypes.func
-};
 
 
 
@@ -298,7 +297,7 @@ export async function handleDmaxClientSubmit(values, p2pIdentity, callback) {
             address: WALLET_ADDRESS,
             password: values.password,
             purchaseCode,
-            callback: function(coinId, error) {
+            callback: function (coinId, error) {
                 if (error) {
                     window.MDS.log("Error sending Minima: " + error);
                     //update frontend document with error
@@ -327,7 +326,7 @@ export async function handleDmaxClientSubmit(values, p2pIdentity, callback) {
                                 "purchase_code": purchaseCode
                             }
                         },
-                        address: SERVER_ADDRESS, 
+                        address: SERVER_ADDRESS,
                         app: "dmax", function(msg) {
                             window.MDS.log("Sent response to " + SERVER_ADDRESS);
                             if (callback) {
@@ -589,4 +588,41 @@ export function link(minidapp, callback) {
         console.log(JSON.stringify(res));
         callback(res);
     })
+}
+
+//function that loops through each seller in the subscriptions table and sends them a SUBCRIPTION_REQUEST requesting they send their listings
+export async function sendSubscriptionRequest(sellerAddress, callback) {
+    let maximaContactAddress = await getMaximaContactAddress();
+    var seller = sellerAddress.split('#')[1];
+    console.log(`Seller: ${seller}`);
+    getListingIds(seller, function (listings, err) {
+        if (err) {
+            if (logs) { window.MDS.log(`MDS.SQL ERROR: ${err}`); }
+            callback(false, err);
+        } else {
+
+            //send the seller a SUBSCRIPTION_REQUEST
+            var data = {
+                "type": "SUBSCRIPTION_REQUEST",
+                "data": {
+                    "listing_inventory": listings,
+                    "subscriber_address": maximaContactAddress
+                }
+            }
+            sendMessage({
+                data: data,
+                address: sellerAddress,
+                app: "dbay",
+                callback: function (res) {
+                    if (res.status) {
+                        if (logs) { window.MDS.log(`Successfully sent subscription request to ${sellerAddress}`); }
+                        callback(true);
+                    } else {
+                        if (logs) { window.MDS.log(`MDS.SQL ERROR, could get subscriptions ${res.error}`); }
+                        callback(false, res.error);
+                    }
+                }
+            });
+        }
+    });
 }
