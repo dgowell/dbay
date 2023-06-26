@@ -21,6 +21,7 @@ MDS.init(function (msg) {
             setup();
             break;
         case "MAXIMA":
+            MDS.log('Receieved Maxima Message' +  JSON.stringify(msg));
             processMaximaEvent(msg);
             break;
         case "NEWBALANCE":
@@ -279,6 +280,7 @@ function processMaximaEvent(msg) {
             case 'SUBSCRIPTION_REQUEST':
                 //seller must process subscription request from buyer
                 MDS.log("SUBSCRIPTION_REQUEST received:" + JSON.stringify(entity));
+                break;
             default:
                 if (logs) { MDS.log(entity); }
         }
@@ -1251,13 +1253,14 @@ function sendSubscriptionRequests() {
     getMaximaContactAddress(function (maximaContactAddress, err) {
         //get all the sellers from the subscriptions table
         MDS.sql(`SELECT "seller_permanent_address" FROM ${SUBSCRIPTIONSTABLE}`, function (res) {
-            if (res.status) {
+            MDS.log('the results from getting sellers from the subscriptions table are: ' + JSON.stringify(res));
+            if (res.status && res.rows > 0) {
                 if (logs) { MDS.log(`MDS.SQL, SELECT "seller_permanent_address" FROM ${SUBSCRIPTIONSTABLE}`); }
                 MDS.log(JSON.stringify(res));
 
                 //loop through each seller and send them a SELECT "seller_permanent_address" FROM SUBSCRIPTIONEST
-                for (var i = 0; i < res.data.length; i++) {
-                    var seller = res.data[i].seller;
+                for (var i = 0; i < res.rows.length; i++) { 
+                    var seller = res.rows[i].seller;
                     //get all the listings for the seller
                     //get the publickeuy from the full MAxima address
                     var sellerAddress = seller.split('#')[1];
