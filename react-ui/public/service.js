@@ -1,4 +1,3 @@
-
 //Load dmax.js
 MDS.load("dmax.js");
 
@@ -9,8 +8,8 @@ var TRANSACTIONSTABLE = 'TRANSACTIONS';
 var SUBSCRIPTIONSTABLE = 'SUBSCRIPTIONS';
 var APPLICATION_NAME = 'dbay';
 
-const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001'
-const SERVER_WALLET = 'MxG0800CY355Q2F0WPRAUBUTZ52CQ9MNC196PY5Z20SV6DBKEURK9P50GHY1WK2'
+const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001';
+const SERVER_WALLET = 'MxG0800CY355Q2F0WPRAUBUTZ52CQ9MNC196PY5Z20SV6DBKEURK9P50GHY1WK2';
 
 //switch on and off logs
 var logs = true;
@@ -21,7 +20,7 @@ MDS.init(function (msg) {
             setup();
             break;
         case "MAXIMA":
-            MDS.log('Receieved Maxima Message' +  JSON.stringify(msg));
+            MDS.log('Receieved Maxima Message' + JSON.stringify(msg));
             processMaximaEvent(msg);
             break;
         case "NEWBALANCE":
@@ -280,6 +279,7 @@ function processMaximaEvent(msg) {
             case 'SUBSCRIPTION_REQUEST':
                 //seller must process subscription request from buyer
                 MDS.log("SUBSCRIPTION_REQUEST received:" + JSON.stringify(entity));
+                processSubscriptionRequest(entity);
                 break;
             default:
                 if (logs) { MDS.log(entity); }
@@ -658,10 +658,77 @@ function processCancelCollection(entity) {
 }
 
 
+/*
+*   SELLER FUNCTION: process subscription request
+*/
+function processSubscriptionRequest(entity) {
+    if (logs) { MDS.log(`Message received for subscription request, updating..`); }
+    const subscriberAddress = entity.data.subscriber_address;
+    const listingInventory = entity.data.listing_inventory;
+    MDS.log(`Listing inventory: ${JSON.stringify(listingInventory)}`);
+    getMaximaInfo(function (maxima) {
+        const publickey = maxima.publickey;
+        MDS.log(`Public key: ${publickey}`);
+        getListings(publickey, function (listings) {
+            MDS.log(`All Listings: ${JSON.stringify(listings)}`);
+            //compare listings ids to the lising inventory and return only the difference
+            const filteredListings = listings.filter(function (listing) {
+                const isListingInInventory = listingInventory.some(function (inventoryItem) {
+                  return String(inventoryItem.listing_id) === String(listing.listing_id);
+                });
+                MDS.log(`Listing ${listing.listing_id} is ${isListingInInventory ? '' : 'not '}in inventory`);
+                return !isListingInInventory;
+              });
+            MDS.log(`Filtered listings: ${JSON.stringify(filteredListings)}`);
+            if (filteredListings.length > 0) {
+                //loop through each listing and send it back to the subscriber
+                filteredListings.forEach(function (listing) {
+                    MDS.log(`Sending listing: ${JSON.stringify(listing)}`);
+                    sendListingToContactAddress(subscriberAddress, listing, function (response) {
+                        MDS.log(`Response from sending listing: ${JSON.stringify(response)}`);
+                    }
+                    );
+                });
+            }
+        });
+    });
+}
 
 /*
 ***************************************************** GET FUNCTIONS *****************************************************
 */
+
+function getMaximaInfo(callback) {
+    var maxcmd = "maxima";
+    MDS.cmd(maxcmd, function (msg) {
+        MDS.log(JSON.stringify(msg));
+        if (msg.response) {
+            callback(msg.response);
+        } else {
+            callback(false);
+        }
+    });
+}
+
+/**
+* Fetches all listings listings using a particular Id
+* @param {string} pk - The id of the creator
+*/
+function getListings(pk, callback) {
+    const store = `where "created_by_pk"='${pk}'`;
+    const Q = `select * from ${LISTINGSTABLE} ${pk ? `${store}` : ''};`
+    MDS.sql(Q, (res) => {
+        if (res.status) {
+            callback(res.rows);
+        } else {
+            callback(false, Error(`MDS.SQL ERROR, could get listings ${res.error}`));
+            MDS.log(`MDS.SQL ERROR, could get listings ${res.error}`);
+        }
+    });
+
+}
+
+
 function getStatus(listingId) {
     var status = '';
     MDS.sql(`SELECT "status" FROM ${LISTINGSTABLE} WHERE "listing_id"='${listingId}';`, function (res) {
@@ -1180,44 +1247,76 @@ function addP2pIdentity(p2p, callback) {
 /*
 **************************************************** MAXIMA ****************************************************
 */
+
 function send(data, address) {
+    // Convert image to hex
+    if (data.image) {
+        var base64Regex = /[^A-Za-z0-9+/=]/g;
+        var base64String = data.image.split(',')[1].replace(base64Regex, '');
 
-    //before sending append version number of application
-
-    //Convert to a string..
-    var datastr = JSON.stringify(data);
-    MDS.log(datastr);
-    var hexstr = "";
-    const funcC = `convert from:String to:HEX data:'${String(datastr)}'`;
-    if (logs) { MDS.log(funcC); }
-    MDS.cmd(funcC, function (resp) {
-        if (logs) { MDS.log(JSON.stringify(resp)); }
-        hexstr = resp.response.conversion;
-    });
-    //And now convert to HEX
-    //const hexstr = "0x" + utf8ToHex(datastr).toUpperCase().trim();
-
-    //Create the function..
-    let fullfunc = '';
-    if (address.includes('@')) {
-        fullfunc = `maxima action:send to:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
+        var cmd = `convert from:BASE64 to:HEX data:'${base64String}'`;
+        MDS.log('Converting image to hex...');
+        MDS.cmd(cmd, function (resp) {
+            if (resp.status) {
+                var imageString = resp.response.conversion;
+                data.image = imageString; // Replace image with the hex string
+                MDS.log('Image converted to hex: ' + imageString);
+                sendHexData(data, address); // Send the updated data
+            } else {
+                MDS.log('Error converting image to hex');
+            }
+        });
     } else {
-        fullfunc = `maxima action:send publickey:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
+        sendHexData(data, address); // Send the data without converting the image
     }
 
-    //Send the message via Maxima!..
-    MDS.cmd(fullfunc, function (resp) {
-        if (resp.status === false) {
-            if (logs) { MDS.log(JSON.stringify(resp)); }
-            return false;
-        } else if (resp.response.delivered === false) {
-            if (logs) { MDS.log(JSON.stringify(resp)); }
-            return false;
-        } else if (resp.status === true) {
-            return true;
+    function sendHexData(data, address) {
+        // Convert the rest of the fields to hex
+        var datastr = JSON.stringify(data);
+        var hexstr = '';
+
+        const query = `convert from:String to:HEX data:'${String(datastr)}'`;
+
+        MDS.log('Converting data to hex...');
+        if (logs) {
+            MDS.log('Conversion query: ' + query);
         }
-    });
+        MDS.cmd(query, function (resp) {
+            if (logs) {
+                MDS.log('Conversion response: ' + JSON.stringify(resp));
+            }
+            if (resp.status) {
+                hexstr = resp.response.conversion;
+                MDS.log('Data converted to hex: ' + hexstr);
+
+                let fullfunc = '';
+                if (address.includes('@')) {
+                    fullfunc = `maxima action:send to:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
+                } else {
+                    fullfunc = `maxima action:send publickey:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
+                }
+
+                MDS.log('Sending message via Maxima: ' + fullfunc);
+                // Send the message via Maxima!..
+                MDS.cmd(fullfunc, function (resp) {
+                    if (resp.status === false) {
+                        MDS.log('Failed to send message: ' + JSON.stringify(resp));
+                        return false;
+                    } else if (resp.response.delivered === false) {
+                        MDS.log('Message not delivered: ' + JSON.stringify(resp));
+                        return false;
+                    } else if (resp.status === true) {
+                        MDS.log('Message sent successfully');
+                        return true;
+                    }
+                });
+            } else {
+                MDS.log('Error converting data to hex');
+            }
+        });
+    }
 }
+
 
 
 /**
@@ -1259,7 +1358,7 @@ function sendSubscriptionRequests() {
                 MDS.log(JSON.stringify(res));
 
                 //loop through each seller and send them a SELECT "seller_permanent_address" FROM SUBSCRIPTIONEST
-                for (var i = 0; i < res.rows.length; i++) { 
+                for (var i = 0; i < res.rows.length; i++) {
                     var seller = res.rows[i].seller;
                     //get all the listings for the seller
                     //get the publickeuy from the full MAxima address
@@ -1304,4 +1403,10 @@ function sendSubscriptionRequests() {
             }
         });
     });
+}
+
+function sendListingToContactAddress(subscriberAddress, listing, callback) {
+    listing.type = 'listing';
+    send(listing, subscriberAddress);
+    callback(true);
 }
