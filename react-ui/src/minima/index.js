@@ -374,7 +374,7 @@ export async function sendListingToContacts(listingId) {
     const name = await getMaximaContactName();
     console.log("contacts", contacts);
     listing.version = '0.1';
-    listing.type = 'listing';
+    listing.type = 'LISTING';
     listing.sent_by_name = name;
     listing.sent_by_pk = host.pk;
  
@@ -384,15 +384,15 @@ export async function sendListingToContacts(listingId) {
         }
         //send the listing to each contact
         contacts.forEach(function (contact, key, arr) {
-            send(listing, contact)
-                .then(function (result) {
+            send(listing, contact, function (result, error) {
                     if (result === true) {
                         console.log(`Successfully sent to ${contact}`);
                     }
-                })
-                .catch((e) => {
-                    reject(Error(`Couldn't send listing to a ${contact} ${e}`));
+                    if (error) {
+                        console.log(`Error sending to ${contact}: ${error}`);
+                    }
                 });
+
             //if it's the last item resolve it
             if (Object.is(arr.length - 1, key)) {
                 resolve(true);

@@ -249,7 +249,7 @@ function processMaximaEvent(msg) {
                 //buyer must process response from seller
                 processAvailabilityResponse(entity);
                 break;
-            case 'listing':
+            case 'LISTING':
                 //a contact has shared a listing with you
                 processListing(entity);
                 break;
@@ -408,7 +408,9 @@ function processAvailabilityCheck(entity) {
     //Note: if there is no status then we will return unavailable
 
     MDS.log(`sending the responose to buyer..`);
-    send(data, entity.buyer_pk);
+    send(data, entity.buyer_pk, function (response) {
+        MDS.log(`response sent: ${JSON.stringify(response)}`);
+    });
 }
 
 /*
@@ -674,11 +676,11 @@ function processSubscriptionRequest(entity) {
             //compare listings ids to the lising inventory and return only the difference
             const filteredListings = listings.filter(function (listing) {
                 const isListingInInventory = listingInventory.some(function (inventoryItem) {
-                  return String(inventoryItem.listing_id) === String(listing.listing_id);
+                    return String(inventoryItem.listing_id) === String(listing.listing_id);
                 });
                 MDS.log(`Listing ${listing.listing_id} is ${isListingInInventory ? '' : 'not '}in inventory`);
                 return !isListingInInventory;
-              });
+            });
             MDS.log(`Filtered listings: ${JSON.stringify(filteredListings)}`);
             if (filteredListings.length > 0) {
                 //loop through each listing and send it back to the subscriber
@@ -1248,20 +1250,25 @@ function addP2pIdentity(p2p, callback) {
 **************************************************** MAXIMA ****************************************************
 */
 
+/*
+
 function send(data, address) {
-    // Convert image to hex
+    // Convert to a string..
+    var datastr = JSON.stringify(data);
+    MDS.log(datastr);
+
+    var imageString = '';
     if (data.image) {
+        // Remove non-base64 characters from the image string
         var base64Regex = /[^A-Za-z0-9+/=]/g;
         var base64String = data.image.split(',')[1].replace(base64Regex, '');
-
+        
         var cmd = `convert from:BASE64 to:HEX data:'${base64String}'`;
-        MDS.log('Converting image to hex...');
         MDS.cmd(cmd, function (resp) {
             if (resp.status) {
-                var imageString = resp.response.conversion;
-                data.image = imageString; // Replace image with the hex string
-                MDS.log('Image converted to hex: ' + imageString);
-                sendHexData(data, address); // Send the updated data
+                imageString = resp.response.conversion;
+                datastr = datastr.replace(data.image, imageString);
+                MDS.log('CONVERTING IMAGE' + datastr);
             } else {
                 MDS.log('Error converting image to hex');
             }
@@ -1304,10 +1311,8 @@ function send(data, address) {
                         return false;
                     } else if (resp.response.delivered === false) {
                         MDS.log('Message not delivered: ' + JSON.stringify(resp));
-                        return false;
-                    } else if (resp.status === true) {
-                        MDS.log('Message sent successfully');
-                        return true;
+                    } else {
+                        MDS.log('Message delivered: ' + JSON.stringify(resp));
                     }
                 });
             } else {
@@ -1317,8 +1322,63 @@ function send(data, address) {
     }
 }
 
+*/
 
+function utf8ToHex(s) {
+    var rb = [];
+    for (var i = 0; i < s.length; i++) {
+        var code = s.charCodeAt(i);
+        if (code < 128) {
+            rb.push(code);
+        } else if (code < 2048) {
+            rb.push((code >> 6) | 192);
+            rb.push((code & 63) | 128);
+        } else {
+            rb.push((code >> 12) | 224);
+            rb.push(((code >> 6) & 63) | 128);
+            rb.push((code & 63) | 128);
+        }
+    }
+    var r = '';
+    for (var i = 0; i < rb.length; i++) {
+        var b = rb[i];
+        r += ('0' + b.toString(16)).slice(-2);
+    }
+    return r;
+}
 
+function send({ data, address, app, callback }) {
+    //before sending append version number of application
+
+    //Convert to a string..
+    var datastr = JSON.stringify(data);
+
+    //And now convert to HEX
+    var hexstr = "0x" + utf8ToHex(datastr).toUpperCase().trim();
+
+    //Create the function..
+    var fullfunc = '';
+    MDS.log('Heres the address we\'ll send to: ' + address);
+    if (address.indexOf('@') !== -1) {
+        fullfunc = 'maxima action:send poll:true to:' + address + ' application:' + app + ' data:' + hexstr;
+    } else {
+        fullfunc = 'maxima action:send poll:true publickey:' + address + ' application:' + app + ' data:' + hexstr;
+    }
+
+    //Send the message via Maxima!..
+    MDS.cmd(fullfunc, function (resp) {
+        if (resp.status === false) {
+            MDS.log("Status was false:" + JSON.stringify(resp));
+            callback(false, resp.error);
+        } else if (resp.response.delivered === false) {
+            MDS.log("Message was not delivered: " + JSON.stringify(resp));
+            callback(false, resp.response.error);
+        } else if (resp.status === true) {
+            MDS.log("The status is true for the maxima command: " + JSON.stringify(resp));
+            callback(true);
+        }
+    });
+}
 /**
 * Fetches maxima contact address
 */
@@ -1406,7 +1466,15 @@ function sendSubscriptionRequests() {
 }
 
 function sendListingToContactAddress(subscriberAddress, listing, callback) {
-    listing.type = 'listing';
-    send(listing, subscriberAddress);
-    callback(true);
+    var data = listing;
+    data.type = 'LISTING';
+
+    send({
+        data: data,
+        address: subscriberAddress,
+        app: "dbay",
+        callback: function (result) {
+            if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+        }
+    });
 }
