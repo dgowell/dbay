@@ -602,12 +602,11 @@ export async function sendSubscriptionRequest(sellerAddress, callback) {
             if (logs) { window.MDS.log(`MDS.SQL ERROR: ${err}`); }
             callback(false, err);
         } else {
-
-            //send the seller a SUBSCRIPTION_REQUEST
+            //send the seller a LISTINGS_REQUEST
             var data = {
-                "type": "SUBSCRIPTION_REQUEST",
+                "type": "LISTINGS_REQUEST",
                 "data": {
-                    "listing_inventory": listings,
+                    "listing_inventory": listings ? listings : [],
                     "subscriber_address": maximaContactAddress
                 }
             }

@@ -93,7 +93,7 @@ function sendSubscriptionRequests() {
             }
 
             var data = {
-                type: 'SUBSCRIPTION_REQUEST',
+                type: 'LISTINGS_REQUEST',
                 data: {
                     listing_inventory: listings,
                     subscriber_address: maximaContactAddress

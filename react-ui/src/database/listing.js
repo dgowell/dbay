@@ -436,7 +436,7 @@ export function getListingIds(seller_address, callback) {
                 callback(res.rows);
             } else {
                 if (logs) { window.MDS.log(`MDS.SQL, SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "seller_permanent_address"='${seller_address}';`); }
-                callback(false, (Error(`No listings found for seller ${seller_address}`)));
+                callback(null);
             }
         } else {
             if (logs) { window.MDS.log(`MDS.SQL ERROR, could get listing ids ${res.error}`); }

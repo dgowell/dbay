@@ -276,9 +276,9 @@ function processMaximaEvent(msg) {
                 //buyer must process item sent clicked from seller
                 processItemSentClicked(entity);
                 break;
-            case 'SUBSCRIPTION_REQUEST':
+            case 'LISTINGS_REQUEST':
                 //seller must process subscription request from buyer
-                MDS.log("SUBSCRIPTION_REQUEST received:" + JSON.stringify(entity));
+                MDS.log("LISTINGS_REQUEST received:" + JSON.stringify(entity));
                 processSubscriptionRequest(entity);
                 break;
             default:
@@ -1431,9 +1431,9 @@ function sendSubscriptionRequests() {
                         }
                         //check if the seller is a valid address
                         if (seller.includes('MAX')) {
-                            //send the seller a SUBSCRIPTION_REQUEST
+                            //send the seller a LISTINGS_REQUEST
                             var data = {
-                                "type": "SUBSCRIPTION_REQUEST",
+                                "type": "LISTINGS_REQUEST",
                                 "data": {
                                     "listing_inventory": listings,
                                     "subscriber_address": maximaContactAddress
