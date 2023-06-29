@@ -10,6 +10,8 @@ import { Button, Card, IconButton, Stack, TextField } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Alert from '@mui/material/Alert';
 import { sendSubscriptionRequest } from '../minima';
+import { sendMessage } from '../minima';
+import { getMaximaContactAddress } from '../minima';
 
 export default function Subscriptions() {
     const [subscriptions, setSubscriptions] = React.useState(null);
@@ -36,28 +38,41 @@ export default function Subscriptions() {
     }, []);
 
 
-    function handleAddSubscription(values, callback) {
-        //use the values passed in to create a new subscription
-        createSubscription({
-            permanentAddress: values.seller_address,
-            storeName: values.store_name,
-            callback: function (response, error) {
-                console.log(response);
-                console.log(error);
-                //log any errors and then set them
-                if (error) {
-                    console.log(error);
+    async function handleAddSubscription(values, callback) {
+        let maximaContactAddress = await getMaximaContactAddress();
+        //send max message to the permanent max address that was given in the form
+        const data = { "type": "SELLER_INFO_REQUEST", "data": { "subscriber_address": maximaContactAddress } };
+        const address = values.seller_address;
+        const app = 'dbay';
 
-                    callback(null, error);
-                }
-                //if no errors, then clear the form
-                else {
-                    callback(response, null);
-                    setSubscriptions([...subscriptions, { seller_store_name: values.store_name, seller_address: values.seller_address }]);
+        sendMessage({
+            data, address, app, callback: function (res) {
+                console.log('Send message: ' + res);
+                if (res.status === "true" || res.status === true) {
+                    //if the max address is valid, then add the subscription
+                    createSubscription({
+                        permanentAddress: values.seller_address, callback: function (response, error) {
+                            //log any errors and then set them
+                            if (error) {
+                                console.log(error);
+                                callback(null, error);
+                            }
+                            //if no errors, then clear the form
+                            else {
+                                console.log('Subscription Added');
+                                window.MDS.log('Subscription Added');
+                                callback(response, null);
+                            }
+                        }
+                    });
+                } else {
+                    callback(null, "Invalid Max Address");
                 }
             }
         });
     }
+
+
 
 
 
@@ -71,10 +86,6 @@ export default function Subscriptions() {
             seller_address: Yup.string()
                 .min(600, 'Must be at least 600 characters')
                 .max(650, 'Must be less than 650 characters')
-                .required('Required'),
-            store_name: Yup.string()
-                .min(1, 'Must be at least 1 characters')
-                .max(50, 'Must be less than 50 characters')
                 .required('Required'),
         }),
         onSubmit: values => {
@@ -148,17 +159,6 @@ export default function Subscriptions() {
                             onChange={formik.handleChange}
                             error={formik.touched.seller_address && Boolean(formik.errors.seller_address)}
                             helperText={formik.touched.seller_address && formik.errors.seller_address}
-                        />
-                        <TextField
-                            disabled={formik.isSubmitting}
-                            fullWidth
-                            id="store_name"
-                            name="store_name"
-                            label="Store Name"
-                            value={formik.values.store_name}
-                            onChange={formik.handleChange}
-                            error={formik.touched.store_name && Boolean(formik.errors.store_name)}
-                            helperText={formik.touched.store_name && formik.errors.store_name}
                         />
                         <Button
                             disabled={formik.isSubmitting}

@@ -281,6 +281,14 @@ function processMaximaEvent(msg) {
                 MDS.log("LISTINGS_REQUEST received:" + JSON.stringify(entity));
                 processSubscriptionRequest(entity);
                 break;
+            case 'SELLER_INFO_REQUEST':
+                //buyer must process seller info request from seller
+                processSellerInfoRequest(entity);
+                break;
+            case 'SELLER_INFO_RESPONSE':
+                //seller must process seller info response from buyer
+                processSellerInfoResponse(entity);
+                break;
             default:
                 if (logs) { MDS.log(entity); }
         }
@@ -696,9 +704,70 @@ function processSubscriptionRequest(entity) {
     });
 }
 
+
+function processSellerInfoRequest(entity) {
+    if (logs) { MDS.log(`Message received for seller info request, updating..`); }
+    const subscriberAddress = entity.data.subscriber_address;
+    //get the maxima name and return it
+    getMaximaInfo(function (maxima) {
+        const name = maxima.name;
+        MDS.log(`Name: ${name}`);
+        const data = {
+            "type": "SELLER_INFO_RESPONSE",
+            "data": {
+                "name": name,
+                "publickey": maxima.publickey
+            }
+        }
+        const app = "dbay";
+        const address = subscriberAddress;
+        sendMessage({
+            data: data, address: address, app: app, callback: function (response) {
+                MDS.log(`Response from sending seller info: ${JSON.stringify(response)}`);
+            }
+        });
+    });
+}
+
+function processSellerInfoResponse(entity) {
+    if (logs) { MDS.log(`Message received for seller info response, updating..`); }
+    const sellerInfo = entity.data;
+    const sellerName = sellerInfo.name;
+    const sellerPublicKey = sellerInfo.publickey;
+    //get all the subcriptions and update the name of the one that matches the publickey
+    getSubscriptions(function (subcriptions) {
+        MDS.log(`Subscriptions: ${JSON.stringify(subcriptions)}`);
+        if (subcriptions && subcriptions.length > 0) {
+            const subscription = subcriptions.find(function (subscription) {
+                return subscription.seller_permanent_address.includes(sellerPublicKey);
+            });
+            MDS.log(`Subscriber: ${JSON.stringify(subscription)}`);
+            if (subscription) {
+                updateSubscriber(subscription.seller_permanent_address, { "seller_store_name": sellerName });
+            }
+        }
+    });
+}
+
+
+
+
 /*
+
 ***************************************************** GET FUNCTIONS *****************************************************
 */
+
+function getSubscriptions(callback) {
+    let fullsql = `SELECT * FROM subscriptions`;
+    MDS.sql(fullsql, (res) => {
+        if (res.error) {
+            callback(false, res.error);
+        } else {
+            MDS.log(`Subscriptions: ${JSON.stringify(res.rows)}`);
+            callback(res.rows);
+        }
+    });
+}
 
 function getMaximaInfo(callback) {
     var maxcmd = "maxima";
@@ -900,6 +969,9 @@ function hasStaticMLS(callback) {
         }
     })
 }
+
+
+
 /*
 ***************************************************** DATABASE FUNCTIONS *****************************************************
 */
@@ -1228,7 +1300,34 @@ function updateTransaction(transactionId, data) {
             if (logs) { MDS.log(`MDS.SQL, UPDATE ${TRANSACTIONSTABLE} SET ${formattedData} WHERE "txn_id"='${transactionId}';`); }
             return res;
         } else {
-            if (logs) { MDS.log(`MDS.SQL ERROR, could get update listing ${res.error}`); }
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get update txn ${res.error}`); }
+            return false;
+        }
+    });
+}
+
+function updateSubscriber(id, data) {
+    var formattedData = '';
+
+    var keys = Object.keys(data);
+    var totalKeys = keys.length;
+
+    for (var i = 0; i < totalKeys; i++) {
+        var key = keys[i];
+
+        // Check if it's the last iteration
+        if (i === totalKeys - 1) {
+            formattedData += `"${key}"='${data[key]}'`;
+        } else {
+            formattedData += `"${key}"='${data[key]}',`;
+        }
+    }
+    MDS.sql(`UPDATE ${SUBSCRIPTIONSTABLE} SET ${formattedData} WHERE "seller_permanent_address"='${id}';`, function (res) {
+        if (res.status) {
+            if (logs) { MDS.log(`MDS.SQL, UPDATE ${SUBSCRIPTIONSTABLE} SET ${formattedData} WHERE "seller_permanent_address"='${id}';`); }
+            return res;
+        } else {
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get update subscriber ${res.error}`); }
             return false;
         }
     });
@@ -1250,79 +1349,6 @@ function addP2pIdentity(p2p, callback) {
 **************************************************** MAXIMA ****************************************************
 */
 
-/*
-
-function send(data, address) {
-    // Convert to a string..
-    var datastr = JSON.stringify(data);
-    MDS.log(datastr);
-
-    var imageString = '';
-    if (data.image) {
-        // Remove non-base64 characters from the image string
-        var base64Regex = /[^A-Za-z0-9+/=]/g;
-        var base64String = data.image.split(',')[1].replace(base64Regex, '');
-        
-        var cmd = `convert from:BASE64 to:HEX data:'${base64String}'`;
-        MDS.cmd(cmd, function (resp) {
-            if (resp.status) {
-                imageString = resp.response.conversion;
-                datastr = datastr.replace(data.image, imageString);
-                MDS.log('CONVERTING IMAGE' + datastr);
-            } else {
-                MDS.log('Error converting image to hex');
-            }
-        });
-    } else {
-        sendHexData(data, address); // Send the data without converting the image
-    }
-
-    function sendHexData(data, address) {
-        // Convert the rest of the fields to hex
-        var datastr = JSON.stringify(data);
-        var hexstr = '';
-
-        const query = `convert from:String to:HEX data:'${String(datastr)}'`;
-
-        MDS.log('Converting data to hex...');
-        if (logs) {
-            MDS.log('Conversion query: ' + query);
-        }
-        MDS.cmd(query, function (resp) {
-            if (logs) {
-                MDS.log('Conversion response: ' + JSON.stringify(resp));
-            }
-            if (resp.status) {
-                hexstr = resp.response.conversion;
-                MDS.log('Data converted to hex: ' + hexstr);
-
-                let fullfunc = '';
-                if (address.includes('@')) {
-                    fullfunc = `maxima action:send to:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
-                } else {
-                    fullfunc = `maxima action:send publickey:${address} poll:true application:${APPLICATION_NAME} data:${hexstr}`;
-                }
-
-                MDS.log('Sending message via Maxima: ' + fullfunc);
-                // Send the message via Maxima!..
-                MDS.cmd(fullfunc, function (resp) {
-                    if (resp.status === false) {
-                        MDS.log('Failed to send message: ' + JSON.stringify(resp));
-                        return false;
-                    } else if (resp.response.delivered === false) {
-                        MDS.log('Message not delivered: ' + JSON.stringify(resp));
-                    } else {
-                        MDS.log('Message delivered: ' + JSON.stringify(resp));
-                    }
-                });
-            } else {
-                MDS.log('Error converting data to hex');
-            }
-        });
-    }
-}
-
-*/
 
 function utf8ToHex(s) {
     var rb = [];
