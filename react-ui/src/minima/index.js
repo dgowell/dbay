@@ -384,14 +384,12 @@ export async function sendListingToContacts(listingId) {
         }
         //send the listing to each contact
         contacts.forEach(function (contact, key, arr) {
-            send(listing, contact, function (result, error) {
-                    if (result === true) {
-                        console.log(`Successfully sent to ${contact}`);
-                    }
-                    if (error) {
-                        console.log(`Error sending to ${contact}: ${error}`);
-                    }
-                });
+            send(listing, contact).then(function (response) {
+                console.log("send response", response);
+            }).catch(function (error) {
+                console.log("send error", error);
+            });
+
 
             //if it's the last item resolve it
             if (Object.is(arr.length - 1, key)) {
@@ -619,7 +617,7 @@ export async function sendSubscriptionRequest(sellerAddress, callback) {
                         if (logs) { window.MDS.log(`Successfully sent subscription request to ${sellerAddress}`); }
                         callback(true);
                     } else {
-                        if (logs) { window.MDS.log(`MDS.SQL ERROR, could get subscriptions ${res.error}`); }
+                        if (logs) { window.MDS.log(`MDS.SQL ERROR, couldn't send subscriptions ${res.error}`); }
                         callback(false, res.error);
                     }
                 }

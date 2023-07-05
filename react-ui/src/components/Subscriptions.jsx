@@ -62,6 +62,28 @@ export default function Subscriptions() {
                                 console.log('Subscription Added');
                                 window.MDS.log('Subscription Added');
                                 callback(response, null);
+                                
+                                setTimeout(function() {
+                                getSubscriptions(function (response, error) {
+                                    //log any errors and then set them
+                                    if (error) {
+                                        console.log(error);
+                        
+                                        setError(error);
+                        
+                                    }
+                                    //if no errors, then clear the form
+                                    else {
+                                        if (response.rows.length > 0) {
+                                            if (response.rows[0].seller_store_name !== null) {
+                                                setSubscriptions(response.rows);
+                                                console.log(response.rows);
+                                            }
+                                            
+                                        }
+                                    }
+                                });
+                            }, 3000);
                             }
                         }
                     });

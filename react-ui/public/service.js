@@ -7,6 +7,7 @@ var SETTINGSTABLE = 'SETTINGS';
 var TRANSACTIONSTABLE = 'TRANSACTIONS';
 var SUBSCRIPTIONSTABLE = 'SUBSCRIPTIONS';
 var APPLICATION_NAME = 'dbay';
+var NOTIFICATIONSTABLE = 'NOTIFICATIONS';
 
 const SERVER_ADDRESS = 'MAX#0x30819F300D06092A864886F70D010101050003818D0030818902818100B4D30A8C0A1D1EA48DE04CA803D0A9D75453E6E9732D6575F4A06330EEF733DF7DF496E33BA46BB195C5826ED32264FE69E4C809C544F9859CF543932CB5A6ED347052F33B50F3A2D424C1BE384CA9B5E0DD0DFFECE2286E4D0311CDF30F3B5E343369CDA8AC8E5DBB1B2EDADD7E9053B9393F4AA021224BF4AA41568403D82D0203010001#MxG18HGG6FJ038614Y8CW46US6G20810K0070CD00Z83282G60G1C0ANS2ENGJEFBYJM2SCQFR3U3KBJNP1WS9B0KG1Z2QG5T68S6N2C15B2FD7WHV5VYCKBDW943QZJ9MCZ03ESQ0TDR86PEGUFRSGEJBANN91TY2RVPQTVQSUP26TNR399UE9PPJNS75HJFTM4DG2NZRUDWP06VQHHVQSGT9ZFV0SCZBZDY0A9BK96R7M4Q483GN2T04P30GM5C10608005FHRRH4@78.141.238.36:9001';
 const SERVER_WALLET = 'MxG0800CY355Q2F0WPRAUBUTZ52CQ9MNC196PY5Z20SV6DBKEURK9P50GHY1WK2';
@@ -31,6 +32,9 @@ MDS.init(function (msg) {
         case "MINIMALOG":
             //buyer side new spent coin
             processMinimaLogEvent(msg.data);
+            break;
+        case "MDS_PENDING":
+            MDS.log('MDS Pending Event' + JSON.stringify(msg));
             break;
         default:
             break;
@@ -100,6 +104,10 @@ function setup() {
 
             createSubscriptionsTable(function (result) {
                 if (logs) { MDS.log('Subscriptions table created or exists') }
+            });
+
+            createNotificationsTable(function (result) {
+                if (logs) { MDS.log('Notifications table created or exists') }
             });
 
             //send subscription requests
@@ -416,9 +424,13 @@ function processAvailabilityCheck(entity) {
     //Note: if there is no status then we will return unavailable
 
     MDS.log(`sending the responose to buyer..`);
-    send(data, entity.buyer_pk, function (response) {
+    send({
+        data:data, 
+        address: entity.buyer_pk, 
+        app: 'dbay', 
+        callback: function (response) {
         MDS.log(`response sent: ${JSON.stringify(response)}`);
-    });
+}});
 }
 
 /*
@@ -516,7 +528,39 @@ function processPaymentReceiptRead(entity) {
                                         'buyer_name': entity.buyer_name,
                                         'buyer_pk': entity.buyer_pk,
                                     });
-
+                                if (entity.transmission_type === 'delivery') {
+                                    var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}. Navigate to  My Listings for next steps.`
+                                    MDS.sql("SHOW TABLES", function (res) {
+                                        if (res.status) {
+                                            if (res.rows.length > 0) {
+                                                MDS.log("The NOTIFICATIONS table exists.");
+                                            } else {
+                                                MDS.log("The NOTIFICATIONS table does not exist.");
+                                            }
+                                        } else {
+                                            MDS.log(`Error checking for NOTIFICATIONS table: ${res.error}`);
+                                        }
+                                    });
+                                    MDS.sql("SHOW COLUMNS FROM NOTIFICATIONS", function (res) {
+                                        if (res.status) {   
+                                            MDS.log("Columns in the NOTIFICATIONS table:");
+                                            res.rows.forEach(function (row) {
+                                                MDS.log(JSON.stringify(row.COLUMN_NAME));
+                                            });
+                                        } else {
+                                            MDS.log(`Error showing columns for NOTIFICATIONS table: ${res.error}`);
+                                        }
+                                    });
+                                    addNotification({
+                                        listing_id: entity.listing_id,
+                                        message: message,
+                                        created_at: Math.floor(Date.now() / 1000),
+                                        status: 'unread',
+                                        callback: function (response) {
+                                            MDS.log(`Notification added: ${JSON.stringify(response)}`);
+                                        }
+                                    })
+                                }
                             } else {
                                 MDS.log("coin amount does not match total cost");
                             }
@@ -565,6 +609,18 @@ function processPaymentReceiptWrite(entity) {
                                         'buyer_pk': entity.buyer_pk,
                                         'purchase_code': entity.purchase_code,
                                     });
+                                    if (entity.transmission_type === 'delivery') {
+                                        var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}. Navigate to  My Listings for next steps.`
+                                        addNotification({
+                                            listing_id: entity.listing_id,
+                                            message: message,
+                                            created_at: Math.floor(Date.now() / 1000),
+                                            status: 'unread',
+                                            callback: function (response) {
+                                                MDS.log(`Notification added: ${JSON.stringify(response)}`);
+                                            }
+                                        })
+                                    }
                             } else {
                                 MDS.log("coin amount does not match total cost");
                             }
@@ -608,10 +664,10 @@ function confirmCoin(purchaseCode, transactions, callback) {
     if (logs) { MDS.log(`Confirming coin for purchase code: ${purchaseCode}`); }
     var response = null;
     transactions.forEach(function (transaction) {
-        //if (logs) { MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state)}`); }
+        if (logs) { MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state)}`); }
         if (transaction.body.txn.state[0]) {
             if (transaction.body.txn.state[0].data) {
-                //MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state[0].data)}`);
+                MDS.log(`Transaction: ${JSON.stringify(transaction.body.txn.state[0].data)}`);
 
                 if (transaction.body.txn.state[0].data === "[" + purchaseCode + "]") {
                     if (logs) { MDS.log(`Coin confirmed: ${JSON.stringify(transaction.body.txn.outputs[0].coinid)}`); }
@@ -1059,7 +1115,6 @@ function createSubscriptionsTable(callback) {
 }
 
 
-
 function createHost(pk, permAddress, callback) {
     let fullsql = `insert into ${SETTINGSTABLE}("pk", "perm_address") values('${pk}', '${permAddress}');`;
     if (permAddress === '') {
@@ -1474,7 +1529,7 @@ function sendSubscriptionRequests() {
                                         if (logs) { MDS.log(`Successfully sent subscription request to ${seller}`); }
                                         return true;
                                     } else {
-                                        if (logs) { MDS.log(`MDS.SQL ERROR, could get subscriptions ${res.error}`); }
+                                        if (logs) { MDS.log(`MDS.SQL ERROR, couldn't send subscriptions ${res.error}`); }
                                         return false;
                                     }
                                 }
@@ -1484,7 +1539,7 @@ function sendSubscriptionRequests() {
                 }
 
             } else {
-                if (logs) { MDS.log(`MDS.SQL ERROR, could get subscriptions ${res.error}`); }
+                if (logs) { MDS.log(`There are no sellers in the subscriptions table`); }
                 return false;
             }
         });
@@ -1501,6 +1556,189 @@ function sendListingToContactAddress(subscriberAddress, listing, callback) {
         app: "dbay",
         callback: function (result) {
             if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+        }
+    });
+}
+
+
+
+
+//create a Notifications table
+function createNotificationsTable(callback) {
+    const Q = `create table if not exists ${NOTIFICATIONSTABLE} (
+            "notification_id" INT AUTO_INCREMENT PRIMARY KEY,
+            "listing" varchar(666) not null,
+            "message" varchar(1000),
+            "created_at" int not null,
+            "status" char(40) not null default 'unread'
+            )`;
+
+    MDS.sql(Q, function (res) {
+        if (logs) { MDS.log(`MDS.SQL, ${Q}`); }
+        MDS.log(`The response from Creating notifications table ${res}`);
+        if (res.status && callback) {
+            callback(true);
+        } else {
+            return Error(`${res.error}`);
+        }
+    })
+}
+
+/**
+ * Add notification to the notifications table
+ * @param {*} notification_id
+ * @param {*} message
+ * @param {*} created_at
+ * @param {*} status
+ * @param {*} callback
+ */
+
+function addNotification({ listing_id, message, created_at, status, callback }) {
+    MDS.log(`Adding notification ${listing_id}, ${message}, ${created_at}, ${status}`);
+    const Q = `insert into ${NOTIFICATIONSTABLE} ("listing","message","created_at","status") values('${listing_id}','${message}','${created_at}','${status}');`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+        MDS.log(`Response from adding notification: ${JSON.stringify(res)}`);
+        MDS.log(`Adding notification ${res.status}`);
+
+        if (res.status && callback) {
+            callback(true);
+        } else {
+            throw new Error(`Adding notification ${res.error}`);
+        }
+    });
+}
+
+/**
+ * Get all notifications from the notifications table
+ * @param {*} callback
+ * @returns
+ */
+
+function getNotifications(callback) {
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE}`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+
+        if (res.status && callback) {
+            callback(res.result);
+        } else {
+            throw new Error(`Getting notifications ${res.error}`);
+        }
+    });
+}
+
+/**
+ * Get notification by notification_id
+ * @param {*} notification_id
+ * @param {*} callback
+ * @returns
+ */
+
+function getNotification({ notification_id, callback }) {
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE notification_id='${notification_id}'`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+
+        if (res.status && callback) {
+            callback(res.rows);
+        } else {
+            throw new Error(`Getting notification ${res.error}`);
+        }
+    });
+}
+
+/**
+ * Get notification by listing_id
+ * @param {*} listing_id
+ * @param {*} callback
+ * @returns
+ */
+
+function getNotificationByListingId({ listing_id, callback }) {
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE listing_id='${listing_id}'`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+
+        if (res.status && callback) {
+            callback(res.rows);
+        } else {
+            throw new Error(`Getting notification ${res.error}`);
+        }
+    });
+}
+
+/**
+ * Get notification by status
+ * @param {*} status
+ * @param {*} callback
+ * @returns
+ */
+
+function getNotificationByStatus({ status, callback }) {
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE status='${status}'`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+
+        if (res.status && callback) {
+            callback(res.rows);
+        } else {
+            throw new Error(`Getting notification ${res.error}`);
+        }
+    });
+}
+
+/**
+ * Update notification by notification_id
+ * @param {*} notification_id
+ * @param {*} status
+ * @param {*} callback
+ * @returns
+ */
+
+function updateNotification({ notification_id, status, callback }) {
+    const Q = `UPDATE ${NOTIFICATIONSTABLE} SET status='${status}' WHERE notification_id='${notification_id}'`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+
+        if (res.status && callback) {
+            callback(true);
+        } else {
+            throw new Error(`Updating notification ${res.error}`);
+        }
+    });
+}
+
+/**
+ * Delete notification by notification_id
+ * @param {*} notification_id
+ * @param {*} callback
+ * @returns
+ */
+
+function deleteNotification({ notification_id, callback }) {
+    const Q = `DELETE FROM ${NOTIFICATIONSTABLE} WHERE notification_id='${notification_id}'`;
+    MDS.sql(Q, function (res) {
+        if (logs) {
+            MDS.log(`MDS.SQL, ${Q}`);
+        }
+
+        if (res.status && callback) {
+            callback(true);
+        } else {
+            throw new Error(`Deleting notification ${res.error}`);
         }
     });
 }

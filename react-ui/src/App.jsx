@@ -26,6 +26,7 @@ import ArrangeCollection from "./components/ArrangeCollection";
 import InstructionPage from "./components/InstructionPage";
 //import DmaxClient from "./components/DmaxClient";
 import Subscriptions from "./components/Subscriptions";
+import Notifications from "./components/Notifications";
 
 import "@fontsource/roboto";
 
@@ -109,6 +110,7 @@ function App() {
             <Route path="instruction/" element={<InstructionPage />} />
             <Route path="subscriptions/" element={<Subscriptions />} />
             {/*<Route path="dmax/" element={<DmaxClient />} />*/}
+            <Route path="notifications/" element={<Notifications />} />
             <Route path="*" element={<NoMatch />} />
           </Routes>
           <BottomNavBar />
