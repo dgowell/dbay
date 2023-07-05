@@ -529,7 +529,7 @@ function processPaymentReceiptRead(entity) {
                                         'buyer_pk': entity.buyer_pk,
                                     });
                                 if (entity.transmission_type === 'delivery') {
-                                    var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}. Navigate to  My Listings for next steps.`
+                                    var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
                                     addNotification({
                                         listing_id: entity.listing_id,
                                         message: message,
@@ -589,7 +589,7 @@ function processPaymentReceiptWrite(entity) {
                                         'purchase_code': entity.purchase_code,
                                     });
                                     if (entity.transmission_type === 'delivery') {
-                                        var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}. Navigate to  My Listings for next steps.`
+                                        var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
                                         addNotification({
                                             listing_id: entity.listing_id,
                                             message: message,
