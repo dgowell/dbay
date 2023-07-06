@@ -10,7 +10,8 @@ var logs = process.env.REACT_APP_LOGS;
  */
 
 export function getNotifications(callback) {
-    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE}`;
+    //select everything from notifications table and order it by created_at in descending order max of 20 rows
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} ORDER BY created_at DESC LIMIT 20`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);
@@ -69,14 +70,13 @@ export function getNotificationByListingId({ listing_id, callback }) {
 }
 
 /**
- * Get notification by status
- * @param {*} status
+ * Get unread notifications
  * @param {*} callback
  * @returns
  */
 
-export function getNotificationByStatus({ status, callback }) {
-    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE status='${status}'`;
+export function getUnreadNotifications(callback) {
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE unread='true'`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);
@@ -91,15 +91,14 @@ export function getNotificationByStatus({ status, callback }) {
 }
 
 /**
- * Update notification by notification_id
+ * Update notification by notification_id as read
  * @param {*} notification_id
- * @param {*} status
  * @param {*} callback
  * @returns
  */
 
-export function updateNotification({ notification_id, status, callback }) {
-    const Q = `UPDATE ${NOTIFICATIONSTABLE} SET status='${status}' WHERE notification_id='${notification_id}'`;
+export function markNotificationAsRead({ notificationId, callback }) {
+    const Q = `UPDATE ${NOTIFICATIONSTABLE} SET "unread"=false WHERE "notification_id"='${notificationId}'`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);

@@ -6,10 +6,10 @@ var logs = true;
 function createNotificationsTable(callback) {
     const Q = `create table if not exists ${NOTIFICATIONSTABLE} (
             "notification_id" INT AUTO_INCREMENT PRIMARY KEY,
-            "listing" varchar(666) not null,
+            "listing_id" varchar(666),
             "message" varchar(1000),
             "created_at" int not null,
-            "status" char(40) not null default 'unread'
+            "unread" boolean default true
             )`;
 
     MDS.sql(Q, function (res) {
@@ -20,7 +20,7 @@ function createNotificationsTable(callback) {
         } else {
             return Error(`${res.error}`);
         }
-    })
+    });
 }
 
 /**
@@ -28,13 +28,17 @@ function createNotificationsTable(callback) {
  * @param {*} notification_id
  * @param {*} message
  * @param {*} created_at
- * @param {*} status
  * @param {*} callback
  */
 
-function addNotification({ listing_id, message, created_at, status, callback }) {
-    MDS.log(`Adding notification ${listing_id}, ${message}, ${created_at}, ${status}`);
-    const Q = `insert into ${NOTIFICATIONSTABLE} ("listing","message","created_at","status") values('${listing_id}','${message}','${created_at}','${status}');`;
+function addNotification({ listing_id, message, created_at, callback }) {
+    MDS.log(`Adding notification ${listing_id}, ${message}, ${created_at}`);
+    //if listing_id is null, then the notification is not associated with a listing
+    const Q = `insert into ${NOTIFICATIONSTABLE} ("listing_id","message","created_at") values('${listing_id}','${message}','${created_at}');`;
+    if (listing_id === null || listing_id === undefined || listing_id === '') {
+        Q = `insert into ${NOTIFICATIONSTABLE} ("message","created_at") values('${message}','${created_at}');`;
+    }
+    
     MDS.sql(Q, function (res) {
         if (logs) {
             MDS.log(`MDS.SQL, ${Q}`);
@@ -115,50 +119,6 @@ function getNotificationByListingId({ listing_id, callback }) {
     });
 }
 
-/**
- * Get notification by status
- * @param {*} status
- * @param {*} callback
- * @returns
- */
-
-function getNotificationByStatus({ status, callback }) {
-    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE status='${status}'`;
-    MDS.sql(Q, function (res) {
-        if (logs) {
-            MDS.log(`MDS.SQL, ${Q}`);
-        }
-
-        if (res.status && callback) {
-            callback(res.rows);
-        } else {
-            throw new Error(`Getting notification ${res.error}`);
-        }
-    });
-}
-
-/**
- * Update notification by notification_id
- * @param {*} notification_id
- * @param {*} status
- * @param {*} callback
- * @returns
- */
-
-function updateNotification({ notification_id, status, callback }) {
-    const Q = `UPDATE ${NOTIFICATIONSTABLE} SET status='${status}' WHERE notification_id='${notification_id}'`;
-    MDS.sql(Q, function (res) {
-        if (logs) {
-            MDS.log(`MDS.SQL, ${Q}`);
-        }
-
-        if (res.status && callback) {
-            callback(true);
-        } else {
-            throw new Error(`Updating notification ${res.error}`);
-        }
-    });
-}
 
 /**
  * Delete notification by notification_id

@@ -425,12 +425,13 @@ function processAvailabilityCheck(entity) {
 
     MDS.log(`sending the responose to buyer..`);
     send({
-        data:data, 
-        address: entity.buyer_pk, 
-        app: 'dbay', 
+        data: data,
+        address: entity.buyer_pk,
+        app: 'dbay',
         callback: function (response) {
-        MDS.log(`response sent: ${JSON.stringify(response)}`);
-}});
+            MDS.log(`response sent: ${JSON.stringify(response)}`);
+        }
+    });
 }
 
 /*
@@ -442,7 +443,6 @@ function processNewBalanceEvent() {
     getHistoryTransactions(function (transactions) {
         if (transactions.length > 0) {
 
-            //TODO: update this function to use the status field instead of the boolean
             getListingsWithUnconfirmedPayments(function (listings) {
                 if (logs) {
                     MDS.log(`Found ${JSON.stringify(listings.count)} listings with unconfirmed payments`);
@@ -467,6 +467,17 @@ function processNewBalanceEvent() {
                                     MDS.log("Coin amount matches listing amount");
                                     updateListing(listing.listing_id, { 'status': 'paid', 'notification': true });
                                     MDS.log("Listing updated to paid");
+                                    if (entity.transmission_type === 'collection') {
+                                        var message = `You have received payment from @${listing.buyer_name} for your item: ${listing.title}`;
+                                        addNotification({
+                                            listing_id: listing.listing_id,
+                                            message: message,
+                                            created_at: Math.floor(Date.now() / 1000),
+                                            callback: function (response) {
+                                                MDS.log(`Notification added: ${JSON.stringify(response)}`);
+                                            }
+                                        })
+                                    }
                                 } else {
                                     MDS.log("Coin amount does not match listing amount");
                                 }
@@ -528,18 +539,19 @@ function processPaymentReceiptRead(entity) {
                                         'buyer_name': entity.buyer_name,
                                         'buyer_pk': entity.buyer_pk,
                                     });
+                                var message = `You have received payment from @${entity.buyer_name} for your item: ${listing.title}.`;
                                 if (entity.transmission_type === 'delivery') {
-                                    var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
-                                    addNotification({
-                                        listing_id: entity.listing_id,
-                                        message: message,
-                                        created_at: Math.floor(Date.now() / 1000),
-                                        status: 'unread',
-                                        callback: function (response) {
-                                            MDS.log(`Notification added: ${JSON.stringify(response)}`);
-                                        }
-                                    })
+                                    message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
                                 }
+                                addNotification({
+                                    listing_id: entity.listing_id,
+                                    message: message,
+                                    created_at: Math.floor(Date.now() / 1000),
+                                    callback: function (response) {
+                                        MDS.log(`Notification added: ${JSON.stringify(response)}`);
+                                    }
+                                })
+
                             } else {
                                 MDS.log("coin amount does not match total cost");
                             }
@@ -588,18 +600,18 @@ function processPaymentReceiptWrite(entity) {
                                         'buyer_pk': entity.buyer_pk,
                                         'purchase_code': entity.purchase_code,
                                     });
-                                    if (entity.transmission_type === 'delivery') {
-                                        var message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
-                                        addNotification({
-                                            listing_id: entity.listing_id,
-                                            message: message,
-                                            created_at: Math.floor(Date.now() / 1000),
-                                            status: 'unread',
-                                            callback: function (response) {
-                                                MDS.log(`Notification added: ${JSON.stringify(response)}`);
-                                            }
-                                        })
+                                var message = `You have received payment from @${entity.buyer_name} for your item: ${listing.title}.`;
+                                if (entity.transmission_type === 'delivery') {
+                                    message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
+                                }
+                                addNotification({
+                                    listing_id: entity.listing_id,
+                                    message: message,
+                                    created_at: Math.floor(Date.now() / 1000),
+                                    callback: function (response) {
+                                        MDS.log(`Notification added: ${JSON.stringify(response)}`);
                                     }
+                                })
                             } else {
                                 MDS.log("coin amount does not match total cost");
                             }
@@ -628,8 +640,17 @@ function processItemSentClicked(entity) {
     const id = entity.data.listing_id;
     updateListing(id, { "status": "completed", 'notification': true });
     getListingById(id, function (listing) {
-        MDS.log(`Listing found: ${JSON.stringify(listing)}`);
-        notification(`${listing.title} has been sent!`);
+        //MDS.log(`Listing found: ${JSON.stringify(listing)}`);
+        notification(`Your purchase ${listing.title} has been sent by @${listing.created_by_name} and is now in transit.`);
+        var message = `Your purchase ${listing.title} has been sent by @${listing.created_by_name} and is now in transit.`
+        addNotification({
+            listing_id: listing.listing_id,
+            message: message,
+            created_at: Math.floor(Date.now() / 1000),
+            callback: function (response) {
+                MDS.log(`Notification added: ${JSON.stringify(response)}`);
+            }
+        })
     });
 }
 
@@ -671,13 +692,26 @@ function processAvailabilityResponse(entity) {
 */
 function processCollectionRequest(entity) {
     if (logs) { MDS.log(`Message received for collection of listing, updating..`); }
-    updateListing(entity.listing_id, {
+    const buyerName = entity.buyer_name;
+    const id = entity.listing_id;
+    updateListing(id, {
         'buyer_message': entity.message,
         'status': 'ongoing',
         'notification': true,
         'transmission_type': entity.transmission_type,
-        'buyer_name': entity.buyer_name,
+        'buyer_name': buyerName,
         'buyer_pk': entity.buyer_pk,
+    });
+    getListingById(id, function (listing) {
+        var message = `@${buyerName} would like to arrange to collect ${listing.title}.`
+        addNotification({
+            listing_id: listing.listing_id,
+            message: message,
+            created_at: Math.floor(Date.now() / 1000),
+            callback: function (response) {
+                MDS.log(`Notification added: ${JSON.stringify(response)}`);
+            }
+        })
     });
 }
 
@@ -759,6 +793,14 @@ function processSellerInfoRequest(entity) {
         sendMessage({
             data: data, address: address, app: app, callback: function (response) {
                 MDS.log(`Response from sending seller info: ${JSON.stringify(response)}`);
+            }
+        });
+        var message = `You have a new subscriber!`;
+        addNotification({
+            message: message,
+            created_at: Math.floor(Date.now() / 1000),
+            callback: function (response) {
+                MDS.log(`Notification added: ${JSON.stringify(response)}`);
             }
         });
     });

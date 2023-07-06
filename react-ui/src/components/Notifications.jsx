@@ -1,7 +1,7 @@
 //functional comonent to return the notifications
 
 import { useEffect, useState } from "react";
-import { getNotifications } from "../database/notifications";
+import { getNotifications, markNotificationAsRead } from "../database/notifications";
 import Stack from '@mui/material/Stack';
 import { useNavigate } from "react-router-dom";
 import Card from '@mui/material/Card';
@@ -10,13 +10,41 @@ import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import Badge from '@mui/material/Badge';
 
 
 export default function Notifications() {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
+
     function handleGoToListing(listing_id) {
         navigate(`/seller/listing/delivery/${listing_id}`);
+    }
+
+    function handleMarkAsRead(id) {
+        console.log(id);
+        markNotificationAsRead({
+            notificationId: id,
+            callback: function (data, error) {
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+                else {
+                    console.log(`results:`, data);
+                    getNotifications(function (data, error) {
+                        if (error) {
+                            console.log(error);
+                            return;
+                        }
+                        else {
+                            console.log(`results:`, data);
+                            setNotifications(data);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     //show timestamp in 14 JUN format
@@ -28,7 +56,7 @@ export default function Notifications() {
         return `${da} ${mo}`;
     }
 
-    
+
     useEffect(() => {
         getNotifications(function (data, error) {
             if (error) {
@@ -51,7 +79,11 @@ export default function Notifications() {
                 ? <p>There are no notifications</p>
                 : <Stack spacing={2}>
                     {notifications.map((notification) => (
-                        <Card sx={{ minWidth: 275 }}>
+                        <Card sx={{ 
+                            minWidth: 275, 
+                            borderColor: notification.unread === "true" ? "rgb(111, 131, 255)" : "rgba(0, 0, 0, 0.12)", 
+                            borderWidth: notification.unread === "true" ? "2px" : "1px",
+                        }} key={notification.notification_id} variant="outlined">
                             <CardContent>
                                 <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                                     {formatDate(notification.created_at)}
@@ -61,9 +93,12 @@ export default function Notifications() {
                                 </Typography>
                             </CardContent>
                             <CardActions>
-                                <Button onClick={() => handleGoToListing(notification.listing)} size="small" color="secondary" endIcon={<ArrowForwardIcon />}>Go to listing</Button>
+                                {notification.listing && <Button onClick={() => handleGoToListing(notification.listing)} size="small" color="secondary" endIcon={<ArrowForwardIcon />}>Go to listing</Button>}
+                                {notification.unread === "true" && <Button onClick={() => handleMarkAsRead(notification.notification_id)} size="small" color="secondary">Mark as Read</Button>}
                             </CardActions>
+
                         </Card>
+
                     ))}
                 </Stack>
             }
