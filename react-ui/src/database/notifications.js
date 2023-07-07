@@ -11,7 +11,7 @@ var logs = process.env.REACT_APP_LOGS;
 
 export function getNotifications(callback) {
     //select everything from notifications table and order it by created_at in descending order max of 20 rows
-    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} ORDER BY created_at DESC LIMIT 20`;
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} ORDER BY "created_at" DESC LIMIT 20`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);
@@ -33,7 +33,7 @@ export function getNotifications(callback) {
  */
 
 export function getNotification({ notification_id, callback }) {
-    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE notification_id='${notification_id}'`;
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE "notification_id"='${notification_id}'`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);
@@ -55,7 +55,7 @@ export function getNotification({ notification_id, callback }) {
  */
 
 export function getNotificationByListingId({ listing_id, callback }) {
-    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE listing_id='${listing_id}'`;
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE "listing_id"='${listing_id}'`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);
@@ -76,7 +76,7 @@ export function getNotificationByListingId({ listing_id, callback }) {
  */
 
 export function getUnreadNotifications(callback) {
-    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE unread='true'`;
+    const Q = `SELECT * FROM ${NOTIFICATIONSTABLE} WHERE "unread"=true`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);
@@ -84,6 +84,27 @@ export function getUnreadNotifications(callback) {
 
         if (res.status && callback) {
             callback(res.rows);
+        } else {
+            throw new Error(`Getting notification ${res.error}`);
+        }
+    });
+}
+
+/*
+* Get unread notifications count
+* @param {*} callback
+* @returns
+*/
+
+export function getUnreadNotificationCount(callback) {
+    const Q = `SELECT COUNT(*) FROM ${NOTIFICATIONSTABLE} WHERE "unread"=true`;
+    window.MDS.sql(Q, function (res) {
+        if (logs) {
+            window.MDS.log(`window.MDS.SQL, ${Q}`);
+        }
+
+        if (res.status && callback) {
+            callback(res.rows[0]['COUNT(*)']);
         } else {
             throw new Error(`Getting notification ${res.error}`);
         }
@@ -112,6 +133,8 @@ export function markNotificationAsRead({ notificationId, callback }) {
     });
 }
 
+
+
 /**
  * Delete notification by notification_id
  * @param {*} notification_id
@@ -120,12 +143,11 @@ export function markNotificationAsRead({ notificationId, callback }) {
  */
 
 export function deleteNotification({ notification_id, callback }) {
-    const Q = `DELETE FROM ${NOTIFICATIONSTABLE} WHERE notification_id='${notification_id}'`;
+    const Q = `DELETE FROM ${NOTIFICATIONSTABLE} WHERE "notification_id"='${notification_id}'`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);
         }
-
         if (res.status && callback) {
             callback(true);
         } else {

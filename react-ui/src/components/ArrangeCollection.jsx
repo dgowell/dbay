@@ -20,7 +20,7 @@ export default function InfoPage() {
   const params = useParams();
   const navigate = useNavigate();
   const [listing, setListing] = useState();
-  const [seller, setSeller] = useState();
+  const [sellerAddress, setSellerAddress] = useState();
   const [msg, setMsg] = useState();
   const [status, setStatus] = useState();
   const [isFriend, setIsFriend] = useState(false);
@@ -29,9 +29,7 @@ export default function InfoPage() {
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
-      const seller = result.created_by_pk;
-      setSeller(seller);
-      isContact(seller).then((res) => {
+      isContact(result.created_by_pk).then((res) => {
         if (res !== false) {
           setIsFriend(true);
         }
@@ -41,7 +39,11 @@ export default function InfoPage() {
 
   function handleMaxSoloLink() {
     if (!isFriend) {
-      handleAdd();
+      if (listing.seller_has_perm_address === 'true') {
+        handleAdd(listing.seller_perm_address);
+      } else {
+        setMaxsoloError(`Seller doesn't have a permanent maxima address set`);
+      }
     }
     link('maxsolo', function (res) {
       if (res.status === false) {
@@ -59,8 +61,8 @@ export default function InfoPage() {
     });
   }
 
-  async function handleAdd() {
-    const { msg, status } = await addContact(seller);
+  async function handleAdd(address) {
+    const { msg, status } = await addContact(address);
     console.log(msg, status);
     setStatus(status);
     setMsg(msg);

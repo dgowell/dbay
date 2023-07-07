@@ -74,6 +74,7 @@ export function getMaximaContactName() {
 
 /**
 * Checks maxcontacts against contact name and returns contact address if found
+* @param {*} pk publickey of contact
 */
 export function isContact(pk) {
     return new Promise(function (resolve, reject) {
