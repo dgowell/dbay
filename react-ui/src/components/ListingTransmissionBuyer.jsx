@@ -28,6 +28,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
+import useIsVaultLocked from '../hooks/useIsVaultLocked';
 
 function ListingCollectionBuyer(props) {
     const [open, setOpen] = useState(false);
@@ -40,6 +41,9 @@ function ListingCollectionBuyer(props) {
     const navigate = useNavigate();
     const [isFriend, setIsFriend] = useState(false);
     const [status, setStatus] = useState();
+    const vaultLocked = useIsVaultLocked();
+
+
     const [msg, setMsg] = useState();
     const [seller, setSeller] = useState();
     const [passwordError, setPasswordError] = useState(false);
@@ -241,29 +245,32 @@ function ListingCollectionBuyer(props) {
                         {listing.transmission_type === 'collection' && listing.status === "in_progress" &&
                             <Stack direction="column" spacing={2} width={"100%"}>
                                 <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
-                                <FormControl variant="outlined">
-                                    <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
-                                    <OutlinedInput
-                                        id="outlined-adornment-password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={handlePassword}
-                                        error={passwordError}
-                                        required={true}
-                                        helperText="Must enter vault password if you have one"
-                                        endAdornment={
-                                            <InputAdornment position="end">
-                                                <IconButton
-                                                    aria-label="toggle password visibility"
-                                                    onClick={handleClickShowPassword}
-                                                    edge="end"
-                                                >
-                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                </IconButton>
-                                            </InputAdornment>
-                                        }
-                                        label="Vault Password"
-                                    /></FormControl>
+                                {vaultLocked &&
+                                    <FormControl variant="outlined">
+                                        <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
+                                        <OutlinedInput
+                                            id="outlined-adornment-password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={handlePassword}
+                                            error={passwordError}
+                                            required={vaultLocked}
+                                            helperText="Must enter vault password if you have one"
+                                            endAdornment={
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                                        aria-label="toggle password visibility"
+                                                        onClick={handleClickShowPassword}
+                                                        edge="end"
+                                                    >
+                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            }
+                                            label="Vault Password"
+                                        />
+                                    </FormControl>
+                                }
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleOpen} variant="contained">
                                     PAY NOW
                                 </LoadingButton>

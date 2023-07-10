@@ -37,6 +37,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
+import useIsVaultLocked from '../hooks/useIsVaultLocked';
 
 function DeliveryConfirmation({
   total,
@@ -49,6 +50,7 @@ function DeliveryConfirmation({
   const [psdError, setPsdError] = useState(false);
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const vaultLocked = useIsVaultLocked();
 
   const navigate = useNavigate();
 
@@ -161,29 +163,32 @@ function DeliveryConfirmation({
           </Table>
         </TableContainer>
         <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
-        <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
-          <OutlinedInput
-            id="outlined-adornment-password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={handlePassword}
-            error={psdError}
-            required={true}
-            helperText="Must enter vault password"
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            }
-            label="Vault Password"
-          /></FormControl>
+        {vaultLocked &&
+          <FormControl variant="outlined">
+            <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePassword}
+              error={psdError}
+              required={vaultLocked}
+              helperText="Must enter vault password"
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              }
+              label="Vault Password"
+            />
+          </FormControl>
+        }
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>
@@ -342,8 +347,8 @@ function ListingPurchase(props) {
                       <Button variant="outlined" color="secondary" className={"custom-loading"} href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">See location</Button>
                       <List>
                         {listing.status === 'collection_rejected' && <>
-                        <Alert severity="error">Collection request was rejected</Alert>
-                          <Button variant="outlined" color="secondary" onClick={() => {deleteListing(listing.listing_id)}}>Remove listing</Button>
+                          <Alert severity="error">Collection request was rejected</Alert>
+                          <Button variant="outlined" color="secondary" onClick={() => { deleteListing(listing.listing_id) }}>Remove listing</Button>
                         </>
                         }
                         <ListItem >
