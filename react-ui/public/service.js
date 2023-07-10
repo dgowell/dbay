@@ -1,3 +1,5 @@
+
+
 //Load dmax.js
 MDS.load("dmax.js");
 MDS.load("notifications.js");
@@ -467,17 +469,17 @@ function processNewBalanceEvent() {
                                     MDS.log("Coin amount matches listing amount");
                                     updateListing(listing.listing_id, { 'status': 'paid', 'notification': true });
                                     MDS.log("Listing updated to paid");
-                                    if (entity.transmission_type === 'collection') {
-                                        var message = `You have received payment from @${listing.buyer_name} for your item: ${listing.title}`;
-                                        addNotification({
-                                            listing_id: listing.listing_id,
-                                            message: message,
-                                            created_at: Math.floor(Date.now() / 1000),
-                                            callback: function (response) {
-                                                MDS.log(`Notification added: ${JSON.stringify(response)}`);
-                                            }
-                                        })
-                                    }
+
+                                    var message = `You have received payment from @${listing.buyer_name} for your item: ${listing.title}`;
+                                    addNotification({
+                                        listing_id: listing.listing_id,
+                                        message: message,
+                                        created_at: Math.floor(Date.now() / 1000),
+                                        callback: function (response) {
+                                            MDS.log(`Notification added: ${JSON.stringify(response)}`);
+                                        }
+                                    })
+
                                 } else {
                                     MDS.log("Coin amount does not match listing amount");
                                 }
@@ -599,6 +601,7 @@ function processPaymentReceiptWrite(entity) {
                                         'buyer_name': entity.buyer_name,
                                         'buyer_pk': entity.buyer_pk,
                                         'purchase_code': entity.purchase_code,
+                                        'transmission_type': entity.transmission_type,
                                     });
                                 var message = `You have received payment from @${entity.buyer_name} for your item: ${listing.title}.`;
                                 if (entity.transmission_type === 'delivery') {
@@ -623,6 +626,7 @@ function processPaymentReceiptWrite(entity) {
                                 'buyer_name': entity.buyer_name,
                                 'buyer_pk': entity.buyer_pk,
                                 'purchase_code': entity.purchase_code,
+                                'transmission_type': entity.transmission_type,
                             });
                             //check for coin when rew balance comes in
                         }
@@ -1570,13 +1574,21 @@ function sendSubscriptionRequests() {
 function sendListingToContactAddress(subscriberAddress, listing, callback) {
     var data = listing;
     data.type = 'LISTING';
-
-    send({
-        data: data,
-        address: subscriberAddress,
-        app: "dbay",
-        callback: function (result) {
-            if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+    getMaximaInfo(function (maxima, err) {
+        if (err) {
+            if (logs) { MDS.log(`MDS.SQL ERROR, could get maxima info ${err}`); }
+            return false;
         }
+        listing.sent_by_name = maxima.name;
+        listing.sent_by_pk = maxima.publickey;
+
+        send({
+            data: data,
+            address: subscriberAddress,
+            app: "dbay",
+            callback: function (result) {
+                if (logs) { MDS.log('Message sent to seller: ' + JSON.stringify(result)) }
+            }
+        });
     });
 }

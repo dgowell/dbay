@@ -97,7 +97,7 @@ export function purchaseListing({ seller, message, listingId, walletAddress, amo
                     getMaximaInfo(async function (res) {
                         getListingById(listingId).then(async (listing) => {
                             let sellerAddress = listing.created_by_pk;
-                            if (listing.seller_has_perm_address === true) {
+                            if (listing.seller_has_perm_address === 'true') {
                                 sellerAddress = listing.seller_perm_address;
                             }
 
