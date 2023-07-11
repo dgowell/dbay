@@ -214,7 +214,7 @@ function ListingCollectionBuyer(props) {
                         <ListItem>
                             <Stack direction="column" spacing={2}>
                                 <Typography>Seller: <span style={{ color: "#888787" }}>@{listing.created_by_name}</span></Typography>
-                                <Button onClick={handleMaxSoloLink} color="secondary" variant="contained">CHAT NOW</Button>
+                                <Button onClick={handleMaxSoloLink} color="secondary" variant="contained">Open MaxSolo</Button>
                                 {maxsoloError && <Alert sx={{ width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
                             </Stack>
                         </ListItem>

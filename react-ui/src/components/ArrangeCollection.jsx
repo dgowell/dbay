@@ -83,7 +83,7 @@ export default function InfoPage() {
               variant="body2"
               color="text.secondary"
             >
-              <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Chat Now</Button>
+              <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Open MaxSolo</Button>
               {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
             </TimelineOppositeContent>
             <TimelineSeparator>
