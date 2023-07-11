@@ -10,8 +10,8 @@ const SETTINGSTABLE = 'SETTINGS';
 export function getHost() {
     return new Promise(function (resolve, reject) {
         window.MDS.sql(`select "pk", "perm_address" FROM SETTINGS;`, function (res) {
-            console.log("res_Host",res);
-            if (res.status && res.count === 1) {
+            console.log("res_Host", res);
+            if (res.status && res.rows.length > 0) {
                 resolve(res.rows[0]);
             } else if (res.error) {
                 console.log(res.error);
@@ -22,6 +22,15 @@ export function getHost() {
         });
     });
 }
+
+export function getName(callback) {
+    const Q = `SELECT "name" FROM ${SETTINGSTABLE};`;
+    window.MDS.sql(Q, function (res) {
+        window.MDS.log(`Get Name response, ${Q}`);
+        debugger;
+        callback(res.rows[0].name);
+    });
+};
 
 export function checkTableExists(tableName) {
     const Q = `SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo'

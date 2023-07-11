@@ -114,10 +114,23 @@ function setup() {
 
             //send subscription requests
             sendSubscriptionRequests();
+
+            getMaximaContactName(function (name) {
+                if (name === '') {
+                    MDS.log('No maxima name found');
+                } else {
+                    MDS.log('Store name found: ' + name);
+                    updateName(name, function (result) {
+                        if (logs) { MDS.log('Store name updated: ' + result) }
+                    });
+                }
+            });
         });
     });
 }
+        
 
+        
 
 /*
 ************************************************* PROCESS EVENTS *************************************************
@@ -1106,6 +1119,7 @@ function createSettingsTable(callback) {
             "pk" varchar(640),
             "perm_address" varchar(80),
             "dmax_server_p2p_identity" varchar(640) default null,
+            "name" varchar(50) default 'Anonymous',
             CONSTRAINT AK_name UNIQUE("perm_address"),
             CONSTRAINT AK_pk UNIQUE("pk")
             )`;
@@ -1145,6 +1159,17 @@ function createHost(pk, permAddress, callback) {
     if (permAddress === '') {
         fullsql = `insert into ${SETTINGSTABLE}("pk") values('${pk}');`;
     }
+    MDS.sql(fullsql, (res) => {
+        if (res.status) {
+            callback(true);
+        } else {
+            callback(Error(res.error));
+        }
+    });
+}
+
+function updateName(name, callback) {
+    let fullsql = `update ${SETTINGSTABLE} set "name"='${name}';`;
     MDS.sql(fullsql, (res) => {
         if (res.status) {
             callback(true);
