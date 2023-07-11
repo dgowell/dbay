@@ -86,7 +86,7 @@ function Purchases() {
         <TabPanel value={value} index={0}>
           {!listings
             ? <ListingListSkeleton />
-            : <ListingList link={`/listing/transmission`} listings={filter(listings, o => o.status === 'in_progress' || o.status === 'collection_rejected' || o.status === 'pending_confirmation')} />
+            : <ListingList link={`/listing/transmission`} listings={filter(listings, o => o.status === 'in_progress' || o.status === 'pending_confirmation')} />
           }
         </TabPanel>
         <TabPanel value={value} index={1}>

@@ -11,7 +11,6 @@ import Badge from '@mui/material/Badge';
 import Stack from '@mui/material/Stack';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
-import Alert from "@mui/material/Alert";
 
 function Listing(props) {
   const navigate = useNavigate();
@@ -40,7 +39,6 @@ function Listing(props) {
             </Badge>
           )}
         </ListItemAvatar>
-              {listing.status === 'collection_rejected' && <Alert>The seller has rejected your collection reuqest.</Alert>}
         <ListItemText
           primary={listing.title}
           secondary={listing.price ? `$M${listing.price}` : null}
@@ -53,7 +51,7 @@ function Listing(props) {
           {listing.delivery==='true' && (listing.status === 'available' || listing.status === 'unchecked')
             ? <LocalShippingOutlinedIcon/>
             : null}
-          {listing.transmission_type === "collection" && (listing.status === 'completed' || listing.status === 'in_progress' || listing.status === 'collection_rejected')
+          {listing.transmission_type === "collection" && (listing.status === 'completed' || listing.status === 'in_progress')
             ? <LocationOnOutlinedIcon/>
             : null}
           {listing.transmission_type === "delivery" && (listing.status === 'completed' || listing.status === 'in_progress')

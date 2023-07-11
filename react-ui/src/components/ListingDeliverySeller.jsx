@@ -51,13 +51,16 @@ function ListingDeliverySeller() {
         setLoading(true);
         updateListing(listing.listing_id, { "status": "collection_confirmed" })
             .then(() => {
-
                 const data = { "type": "COLLECTION_CONFIRMED", "data": { "listing_id": listing.listing_id } };
                 const address = listing.buyer_pk;
                 const app = 'dbay';
 
                 sendMessage({
-                    data, address, app, function(res) {
+                    data:data, 
+                    address:address, 
+                    app:app, 
+                    callback: function(res) {
+                        console.log(res);
                         setLoading(false);
                         navigate('/seller/listings');
                     }
@@ -75,12 +78,16 @@ function ListingDeliverySeller() {
                 const app = 'dbay';
 
                 sendMessage({
-                    data, address, app, function(res) {
+                    data:data, 
+                    address:address, 
+                    app:app, 
+                    callback: function(res) {
                         console.log(res);
                         setLoading(false);
                         navigate('/seller/listings');
                     }
                 });
+
             })
             .catch((e) => console.error(`Could not update listing as available: ${e}`));
     }
@@ -140,14 +147,13 @@ function ListingDeliverySeller() {
                             subheader={`${listing.title} $M${listing.price}`}
                         />
                         <CardContent>
-                            <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Chat Now</Button>
                             {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
                             <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'space-between', justifyContent: 'space-between', boxShadow: "none" }}>
                                 {listing.transmission_type === "collection" &&
                                     <>
                                         <Typography>@{listing.buyer_name} would like to collect your item, arrange collection with them below.</Typography>
                                         <Stack direction="column" spacing={2}>
-                                            <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Chat Now</Button>
+                                            <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Open MaxSolo</Button>
                                             {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
                                             {listing.status === "ongoing" &&
                                                 <>
@@ -166,6 +172,7 @@ function ListingDeliverySeller() {
                                     <>
                                         {listing.buyer_message
                                             ? <>
+                                                <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Open MaxSolo</Button>
                                                 <Typography gutterBottom variant="h6" component="div">Please send the item to:</Typography>
                                                 <Typography gutterBottom sx={{ textAlign: "left" }} component="p">{listing.buyer_message.split("\n").map((i, key) => {
                                                     return <p key={key}>{i}</p>;

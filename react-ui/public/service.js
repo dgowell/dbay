@@ -724,7 +724,7 @@ function processCollectionRequest(entity) {
 */
 function processCollectionRejected(entity) {
     if (logs) { MDS.log(`Message received for collection rejected, updating..`); }
-    updateListing(entity.listing_id, { 'status': 'collection_rejected' });
+    updateListing(entity.data.listing_id, { 'status': 'collection_rejected' });
 }
 
 /*
@@ -732,9 +732,9 @@ function processCollectionRejected(entity) {
 */
 function processCancelCollection(entity) {
     if (logs) { MDS.log(`Message received for cancelling collection`); }
-    const listing = getListingById(entity.listing_id);
+    const listing = getListingById(entity.data.listing_id);
     if (listing.buyer_name === entity.buyer_name) {
-        updateListing(entity.listing_id, { 'status': 'available' })
+        updateListing(listing.listing_id, { 'status': 'available' })
     } else {
         if (logs) { MDS.log("buyer name not the same as on listing so cancel averted!"); }
     }
