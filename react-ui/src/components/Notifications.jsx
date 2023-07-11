@@ -11,11 +11,12 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import Badge from '@mui/material/Badge';
-
+import Skeleton from '@mui/material/Skeleton';
 
 export default function Notifications() {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
+    const [fetchingNotifications, setFetchingNotifications] = useState(true);
 
     function handleGoToListing(listing_id) {
         navigate(`/seller/listing/delivery/${listing_id}`);
@@ -40,6 +41,7 @@ export default function Notifications() {
                         else {
                             console.log(`results:`, data);
                             setNotifications(data);
+                            setFetchingNotifications(false);
                         }
                     });
                 }
@@ -66,6 +68,7 @@ export default function Notifications() {
             else {
                 console.log(`results:`, data);
                 setNotifications(data);
+                setFetchingNotifications(false);
             }
         });
 
@@ -75,13 +78,19 @@ export default function Notifications() {
     return (
         <div>
             <h1>Notifications</h1>
-            {notifications.length === 0
-                ? <p>There are no notifications</p>
-                : <Stack spacing={2}>
+            {notifications.length === 0 && fetchingNotifications
+                ? <Stack mt={4} spacing={1}>
+                    <Skeleton variant="rounded" width='100%' height={60} />
+                    <Skeleton variant="rounded" width='100%' height={60} />
+                    <Skeleton variant="rounded" width='100%' height={60} />
+                </Stack>
+                : notifications.length === 0 
+                    ? <p>There are no notifications</p>
+                    : <Stack spacing={2}>
                     {notifications.map((notification) => (
-                        <Card sx={{ 
-                            minWidth: 275, 
-                            borderColor: notification.unread === "true" ? "rgb(111, 131, 255)" : "rgba(0, 0, 0, 0.12)", 
+                        <Card sx={{
+                            minWidth: 275,
+                            borderColor: notification.unread === "true" ? "rgb(111, 131, 255)" : "rgba(0, 0, 0, 0.12)",
                             borderWidth: notification.unread === "true" ? "2px" : "1px",
                         }} key={notification.notification_id} variant="outlined">
                             <CardContent>
