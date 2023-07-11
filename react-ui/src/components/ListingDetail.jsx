@@ -9,7 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
 import Tooltip from "@mui/material/Tooltip";
-import { sendListingToContacts, getMaximaContactAddress, getMaximaContactName, isContact } from "../minima";
+import { sendListingToContacts, getMaximaContactAddress, getMaximaContactName, addContact, isContact, link } from "../minima";
 import { checkAvailability, hasSufficientFunds } from '../minima/buyer-processes';
 import { useNavigate } from "react-router";
 import { Stack } from "@mui/system";
@@ -19,7 +19,6 @@ import Box from "@mui/material/Box";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
 import Carousel from 'react-material-ui-carousel';
-import haversine from 'haversine-distance';
 import PersonPinCircleOutlinedIcon from '@mui/icons-material/PersonPinCircleOutlined';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -30,6 +29,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import ImageIcon from '@mui/icons-material/Image';
+import ForumIcon from '@mui/icons-material/Forum';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -61,14 +61,12 @@ function ListingDetail() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
-  const [distance, setDistance] = useState(0);
+
   const [sent, setSent] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
   const navigate = useNavigate();
   const params = useParams();
-  const [coordinates, setCoordinates] = useState({
-    latitude: '',
-    longitude: ''
-  })
+  const [maxsoloError, setMaxsoloError] = useState('');
   const [navButtonsVisible, setNavButtonsVisible] = useState(false);
 
   const handleClose = (event, reason) => {
@@ -86,41 +84,20 @@ function ListingDetail() {
       }).catch((e) => console.error(e));
   }
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-    }
-
-    function showPosition(position) {
-      setCoordinates({
-        latitude: (position.coords.latitude.toFixed(3)),
-        longitude: (position.coords.longitude.toFixed(3))
-      });
-    };
-  }, []);
-
-
-  useEffect(() => {
-    // check there is a value for the location
-    if ((coordinates.latitude !== '') && listing && listing.location) {
-      const location = JSON.parse(listing.location);
-      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`);
-      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`);
-      var dist = (haversine(coordinates, location) / 1000).toFixed(1);
-      setDistance(isNaN(dist) ? 0 : dist);
-    }
-  }, [coordinates, listing])
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
-      console.log(result.description);
+
       setImages(result.image.split("(+_+)"))
       if (result.image.split("(+_+)").length > 1) {
         setNavButtonsVisible(true)
       }
+      isContact(result.created_by_pk).then((res) => {
+        if (res !== false) {
+          setIsFriend(true);
+        }
+      }).catch((e) => console.error(e));
     }).catch((e) => console.error(e));
   }, [params.id]);
 
@@ -138,6 +115,37 @@ function ListingDetail() {
       }).catch((e) => console.error(e));
     }
   }, [listing]);
+
+  async function handleAdd(address) {
+    const { msg, status } = await addContact(address);
+    if (status === "success") {
+      setIsFriend(true);
+    }
+  }
+
+  function handleMaxSoloLink() {
+    if (!isFriend) {
+      if (listing.seller_has_perm_address === 'true') {
+        handleAdd(listing.seller_perm_address);
+      } else {
+        setMaxsoloError(`Seller doesn't have a permanent maxima address set`);
+      }
+    }
+    link('maxsolo', function (res) {
+      if (res.status === false) {
+        if (res.error.includes('permission escalation')) {
+          setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+        } else if (res.error.includes('not found')) {
+          setMaxsoloError('MaxSolo is not installed on your device.');
+        } else {
+          setMaxsoloError(res.error);
+        }
+      } else if (res.status === true) {
+        setMaxsoloError('');
+        window.open(res.base, '_blank');
+      }
+    });
+  }
 
   async function handleBuy() {
     //ensure user knows it's doing something
@@ -164,7 +172,7 @@ function ListingDetail() {
       if (sellerIsContact) {
         sellerAddress = listing.created_by_pk;
       } else if (listing.seller_has_perm_address) {
-       sellerAddress = listing.seller_perm_address;
+        sellerAddress = listing.seller_perm_address;
       }
       if (sellerAddress) {
         await checkAvailability({
@@ -198,11 +206,11 @@ function ListingDetail() {
             setCheckingAvailability(false);
             setLoading(false);
           });
-      }  else {
-      setCheckingAvailability(false);
-      setLoading(false);
-      setError(`Insufficient Funds`);
-    }
+      } else {
+        setCheckingAvailability(false);
+        setLoading(false);
+        setError(`Insufficient Funds`);
+      }
     }
   }
 
@@ -269,10 +277,7 @@ function ListingDetail() {
                     </ListItemIcon>
                     <ListItemText
                       primary="Collection"
-                      secondary={distance
-                        ? `${distance}km away ${listing.location_description ? ', ' + listing.location_description : ''}`
-                        : listing.location_description ? listing.location_description : ''
-                      }
+                      secondary={listing.location_description ? listing.location_description : ''}
                     />
                   </ListItem>
                   : null}
@@ -290,6 +295,15 @@ function ListingDetail() {
                     <StorefrontOutlinedIcon color="secondary" />
                   </ListItemIcon>
                   <ListItemText primary="Seller" secondary={`@${listing.created_by_name}`} />
+                  <Tooltip title="Open MaxSolo" placement="top">
+                    <IconButton
+                      onClick={() => handleMaxSoloLink()}
+                      aria-label="open maxsolo"
+                    >
+                      <ForumIcon />
+                      {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
+                    </IconButton>
+                  </Tooltip>
                 </ListItem>
                 {listing.created_by_name !== listing.sent_by_name &&
                   <ListItem disablePadding>
@@ -303,11 +317,11 @@ function ListingDetail() {
 
 
             </Card>
-              <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-                <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
-                  Item shared with contacts
-                </Alert>
-              </Snackbar>
+            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+              <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
+                Item shared with contacts
+              </Alert>
+            </Snackbar>
             {(listing.status === "collection_rejected") && <Alert onClose={handleClose} color="warning" variant="filled" sx={{ width: '100%' }}>
               Collection rejected
             </Alert>}

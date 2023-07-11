@@ -200,32 +200,11 @@ function ListingPurchase(props) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [distance, setDistance] = useState(0);
   const [total, setTotal] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [transmissionType, setTransmissionType] = useState('');
   const params = useParams();
   const navigate = useNavigate();
-  const [coordinates, setCoordinates] = useState({
-    latitude: '',
-    longitude: ''
-  })
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-    }
-
-    function showPosition(position) {
-      setCoordinates({
-        latitude: (position.coords.latitude.toFixed(3)),
-        longitude: (position.coords.longitude.toFixed(3))
-      });
-      console.log(JSON.stringify(coordinates));
-    };
-  }, []);
 
   useEffect(() => {
     if (listing) {
@@ -254,15 +233,6 @@ function ListingPurchase(props) {
       setListing(result);
     });
   }, [params.id]);
-
-  useEffect(() => {
-    if ((coordinates.latitude !== '') && listing) {
-      const location = JSON.parse(listing.location);
-      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`)
-      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`)
-      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
-    }
-  }, [coordinates, listing])
 
   function handleCollection() {
     setLoading(true);
@@ -293,8 +263,6 @@ function ListingPurchase(props) {
   };
 
   if (listing) {
-
-    const { latitude, longitude } = JSON.parse(listing.location);
 
     if (!error) {
       if (showConfirmation) {
@@ -339,28 +307,6 @@ function ListingPurchase(props) {
                 value={transmissionType}
                 onChange={handleChange}
               >
-                {listing.collection === "true" && <>
-                  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
-                  <Typography variant="caption" color="grey" mt='-12px'>{isNaN(distance) ? null : `${distance}km`}</Typography>
-                  {transmissionType === 'collection' && latitude.includes('.')
-                    ? <Box p={2} >
-                      <Button variant="outlined" color="secondary" className={"custom-loading"} href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">See location</Button>
-                      <List>
-                        {listing.status === 'collection_rejected' && <>
-                          <Alert severity="error">Collection request was rejected</Alert>
-                          <Button variant="outlined" color="secondary" onClick={() => { deleteListing(listing.listing_id) }}>Remove listing</Button>
-                        </>
-                        }
-                        <ListItem >
-                          <ListItemIcon sx={{ fontSize: "16px", minWidth: "45px" }}>
-                            <InfoIcon />
-                          </ListItemIcon>
-                          <ListItemText primaryTypographyProps={{ fontSize: 13 }} primary="This is an approximation. Seller will provide exact location privately. " />
-                        </ListItem>
-                      </List>
-                    </Box>
-                    : null}
-                </>}
                 {listing.delivery === "true" &&
                   <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="delivery" control={<Radio />} label={`Delivery`} />
                     <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
