@@ -9,8 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Card from "@mui/material/Card";
 import Tooltip from "@mui/material/Tooltip";
-import { getHost } from "../database/settings";
-import { sendListingToContacts, getMaximaContactAddress } from "../minima";
+import { sendListingToContacts, getMaximaContactAddress, getMaximaContactName, addContact, isContact, link } from "../minima";
 import { checkAvailability, hasSufficientFunds } from '../minima/buyer-processes';
 import { useNavigate } from "react-router";
 import { Stack } from "@mui/system";
@@ -20,7 +19,6 @@ import Box from "@mui/material/Box";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import PaymentError from "./PaymentError";
 import Carousel from 'react-material-ui-carousel';
-import haversine from 'haversine-distance';
 import PersonPinCircleOutlinedIcon from '@mui/icons-material/PersonPinCircleOutlined';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -30,7 +28,8 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import LoadingButton from "@mui/lab/LoadingButton";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import ImageIcon from '@mui/icons-material/Image';
+import ForumIcon from '@mui/icons-material/Forum';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -61,23 +60,19 @@ function ListingDetail() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState(false);
   const [images, setImages] = useState([]);
-  const [distance, setDistance] = useState(0);
+
   const [sent, setSent] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
   const navigate = useNavigate();
   const params = useParams();
-  const [coordinates, setCoordinates] = useState({
-    latitude: '',
-    longitude: ''
-  })
+  const [maxsoloError, setMaxsoloError] = useState('');
   const [navButtonsVisible, setNavButtonsVisible] = useState(false);
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
       return;
     }
-
     setSent(false);
   };
 
@@ -89,41 +84,20 @@ function ListingDetail() {
       }).catch((e) => console.error(e));
   }
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-    }
-
-    function showPosition(position) {
-      setCoordinates({
-        latitude: (position.coords.latitude.toFixed(3)),
-        longitude: (position.coords.longitude.toFixed(3))
-      });
-      console.log(JSON.stringify(coordinates));
-    };
-  }, []);
-
-
-  useEffect(() => {
-    // check there is a value for the location
-    if ((coordinates.latitude !== '') && listing && listing.location) {
-      const location = JSON.parse(listing.location);
-      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`);
-      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`);
-      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
-    }
-  }, [coordinates, listing])
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
-      console.log(result.description);
+
       setImages(result.image.split("(+_+)"))
       if (result.image.split("(+_+)").length > 1) {
         setNavButtonsVisible(true)
       }
+      isContact(result.created_by_pk).then((res) => {
+        if (res !== false) {
+          setIsFriend(true);
+        }
+      }).catch((e) => console.error(e));
     }).catch((e) => console.error(e));
   }, [params.id]);
 
@@ -136,11 +110,42 @@ function ListingDetail() {
   //get the host name and pk
   useEffect(() => {
     if (listing) {
-      getHost().then((host) => {
-        setBuyerName(host.name);
+      getMaximaContactName().then((name) => {
+        setBuyerName(name);
       }).catch((e) => console.error(e));
     }
   }, [listing]);
+
+  async function handleAdd(address) {
+    const { msg, status } = await addContact(address);
+    if (status === "success") {
+      setIsFriend(true);
+    }
+  }
+
+  function handleMaxSoloLink() {
+    if (!isFriend) {
+      if (listing.seller_has_perm_address === 'true') {
+        handleAdd(listing.seller_perm_address);
+      } else {
+        setMaxsoloError(`Seller doesn't have a permanent maxima address set`);
+      }
+    }
+    link('maxsolo', function (res) {
+      if (res.status === false) {
+        if (res.error.includes('permission escalation')) {
+          setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+        } else if (res.error.includes('not found')) {
+          setMaxsoloError('MaxSolo is not installed on your device.');
+        } else {
+          setMaxsoloError(res.error);
+        }
+      } else if (res.status === true) {
+        setMaxsoloError('');
+        window.open(res.base, '_blank');
+      }
+    });
+  }
 
   async function handleBuy() {
     //ensure user knows it's doing something
@@ -148,43 +153,65 @@ function ListingDetail() {
     setLoading(true);
 
     //reset listing in order to check the availability
-    updateListing(listing.listing_id, "status", "unchecked")
+    updateListing(listing.listing_id, { "status": "unchecked" })
       .catch((e) => console.error(`Error resetting listing status to unchecked: ${e}`));
 
 
     //check there is money to pay for the item first
     const hasFunds = await hasSufficientFunds(listing.price).catch(error => {
-      if (process.env.REACT_APP_MODE !== "testvalue") {
-        navigate(`/info`, { state: { action: "error", main: "Insufficient Funds!", sub: "It looks like you don't have enough $M to purchase this item" } });
-        // setError('Insufficient Funds');
-        setLoading(false);
-      }
-      console.log(`Insufficient funds: ${error}`);
-      return false;
+      navigate(`/info`, { state: { action: "error", main: "Insufficient Funds!", sub: "It looks like you don't have enough $M to purchase this item" } });
+      setLoading(false);
     });
-    console.log("hasFunds",hasFunds);
+    console.log(`hasFunds: ${hasFunds}`);
 
-    if (hasFunds || (process.env.REACT_APP_MODE === "testvalue")) {
-      const isAvailable = await checkAvailability({
-        seller: listing.created_by_pk,
-        buyerPk: buyerAddress,
-        listingId: listing.listing_id,
-      }).catch(error => {
-        console.log(`Item is not available ${error}`);
-        navigate(`/info`, { state: { action: "error", main: (error ? "Not available" : "Seller not available"), sub: (error ? "It looks like someone has recently bought this item or the seller has removed it from sale" : `Seller is not a contact. Try contacting @${listing.sent_by_name} to see if they can put you in touch.`) } });
-        setError(`Not available`);
-        setLoading(false);
+    if (hasFunds) {
+      let sellerIsContact = await isContact(listing.created_by_pk).catch(error => {
+        console.log(`Error checking if seller is a contact: ${error}`);
       });
-
-      if (isAvailable) {
-        //take the user to pay for the item
-        navigate(`/listing/${listing.listing_id}/purchase`)
+      let sellerAddress = '';
+      if (sellerIsContact) {
+        sellerAddress = listing.created_by_pk;
+      } else if (listing.seller_has_perm_address) {
+        sellerAddress = listing.seller_perm_address;
       }
-    }//close if
-  }
-
-  function handleContact() {
-    console.log('contact seller clicked!');
+      if (sellerAddress) {
+        await checkAvailability({
+          seller: sellerAddress,
+          buyerPk: buyerAddress,
+          listingId: listing.listing_id,
+        }).then(
+          result => {
+            if (result === true) {
+              navigate(`/listing/${listing.listing_id}/purchase`)
+            } else {
+              setError(result);
+              navigate(`/info`, { state: { action: "error", main: '', sub: result } });
+              console.log(`${result}`);
+            }
+          }
+        )
+          .catch(
+            error => {
+              if (error.message.includes('connect timed out')) {
+                console.log(`Problem checking item availability ${error}`);
+                navigate(`/info`, { state: { action: "error", main: 'Network timeout', sub: "couldnt reach seller, check your maxima connection and try again in a few minutes" } });
+                setError(`Network timeout`);
+              } else {
+                console.log(`Problem checking item availability ${error}`);
+                navigate(`/info`, { state: { action: "error", main: "There was a problem", sub: (error.message ? error.message : `There was a problem, please try again later.`) } });
+                setError(`There was a problem`);
+              }
+            })
+          .finally(() => {
+            setCheckingAvailability(false);
+            setLoading(false);
+          });
+      } else {
+        setCheckingAvailability(false);
+        setLoading(false);
+        setError(`Insufficient Funds`);
+      }
+    }
   }
 
   checkingAvailability && <AvailabilityCheckScreen />
@@ -197,8 +224,12 @@ function ListingDetail() {
           <div>
             <Card sx={{ maxWidth: '100%', marginTop: 2, border: "none", boxShadow: "none" }}>
               <Carousel indicators={false} height="350px" animation="slide" navButtonsAlwaysVisible={navButtonsVisible}>
-                {
-                  images.map((image, i) => (
+                {images.map((image, i) => (
+                  image === "" ? (
+                    <Box sx={{ backgroundColor: '#c6c6c6', borderRadius: '5px', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'column', flexWrap: 'wrap', height: '100%' }}>
+                      <ImageIcon />
+                    </Box>
+                  ) : (
                     <CardMedia
                       component="img"
                       width="100%"
@@ -209,8 +240,9 @@ function ListingDetail() {
                       position="center"
                       image={image}
                       alt="Test Image"
-                    />))
-                }
+                    />
+                  )
+                ))}
               </Carousel>
               <CardContent sx={{ marginTop: 2, padding: 0 }} >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb="1rem">
@@ -245,11 +277,7 @@ function ListingDetail() {
                     </ListItemIcon>
                     <ListItemText
                       primary="Collection"
-                      secondary={
-                        distance
-                          ? `${distance} km away${listing.location_description ? `, ${listing.location_description}` : ''}`
-                          : null
-                      }
+                      secondary={listing.location_description ? listing.location_description : ''}
                     />
                   </ListItem>
                   : null}
@@ -267,24 +295,38 @@ function ListingDetail() {
                     <StorefrontOutlinedIcon color="secondary" />
                   </ListItemIcon>
                   <ListItemText primary="Seller" secondary={`@${listing.created_by_name}`} />
+                  <Tooltip title="Open MaxSolo" placement="top">
+                    <IconButton
+                      onClick={() => handleMaxSoloLink()}
+                      aria-label="open maxsolo"
+                    >
+                      <ForumIcon />
+                      {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
+                    </IconButton>
+                  </Tooltip>
                 </ListItem>
-                <ListItem disablePadding>
-                  <ListItemIcon>
-                    <ForwardOutlinedIcon color="secondary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Shared by" secondary={`@${listing.sent_by_name}`} />
-                </ListItem>
+                {listing.created_by_name !== listing.sent_by_name &&
+                  <ListItem disablePadding>
+                    <ListItemIcon>
+                      <ForwardOutlinedIcon color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Shared by" secondary={`@${listing.sent_by_name}`} />
+                  </ListItem>
+                }
               </List>
 
 
             </Card>
-            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
+            <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
               <Alert onClose={handleClose} color="secondary" variant="filled" sx={{ width: '100%' }}>
                 Item shared with contacts
               </Alert>
             </Snackbar>
+            {(listing.status === "collection_rejected") && <Alert onClose={handleClose} color="warning" variant="filled" sx={{ width: '100%' }}>
+              Collection rejected
+            </Alert>}
             <Stack spacing={2} mt={4}>
-              {listing.status === "purchased"
+              {listing.status === "completed"
                 ? null
                 : <LoadingButton
                   className={"custom-loading"}

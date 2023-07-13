@@ -3,66 +3,7 @@ import { getHost } from "./settings";
 import { getPublicKey } from "../minima";
 
 const LISTINGSTABLE = 'LISTING';
-
-export function addLocationDescriptionColumn() {
-    const Q = `alter table ${LISTINGSTABLE} add column if not exists "location_description" varchar(150);`;
-
-    return new Promise((resolve, reject) => {
-        window.MDS.sql(Q, function (res) {
-            window.MDS.log(`MDS.SQL, ${Q}`);
-            console.log(res);
-            if (res.status) {
-                resolve(true)
-            } else {
-                reject(Error(`Adding location_description column to listing table ${res.error}`));
-            }
-        })
-    })
-}
-
-export function createListingTable() {
-    const Q = `create table if not exists ${LISTINGSTABLE} (
-        "listing_id" varchar(343) primary key,
-        "title" varchar(50) NOT NULL,
-        "price" INT NOT NULL,
-        "created_by_pk" varchar(640) NOT NULL,
-        "created_by_name" char(50),
-        "sent_by_pk" varchar(640),
-        "sent_by_name" char(50),
-        "created_at" int not null,
-        "wallet_address" varchar(80) not null,
-        "status" char(12) not null default 'available',
-        "buyer_message" varchar(1000),
-        "buyer_name" char(50),
-        "buyer_pk" varchar(330),
-        "purchase_code" varchar(30),
-        "coin_id" varchar(80),
-        "notification" boolean default false,
-        "collection" boolean default false,
-        "delivery" boolean default false,
-        "image"  varchar(max),
-        "description" varchar(1500),
-        "location" varchar(50),
-        "location_description" varchar(1500),
-        "shipping_cost" int,
-        "shipping_countries" varchar(150),
-        "transmission_type" varchar(10),
-        constraint UQ_listing_id unique("listing_id")
-        )`;
-
-    return new Promise((resolve, reject) => {
-        window.MDS.sql(Q, function (res) {
-            window.MDS.log(`MDS.SQL, ${Q}`);
-            console.log(res);
-            if (res.status) {
-                resolve(true)
-            } else {
-                reject(Error(`Creating listing tables ${res.error}`));
-            }
-        })
-    })
-}
-
+const logs = process.env.REACT_APP_LOGS;
 
 /* adds a listing to the database */
 
@@ -71,6 +12,8 @@ export async function createListing({
     price,
     createdByPk,
     createdByName,
+    sellerHasPermAddress,
+    sellerPermAddress,
     listingId,
     sentByName,
     sentByPk,
@@ -83,7 +26,6 @@ export async function createListing({
     location,
     locationDescription,
     shippingCost,
-    shippingCountries
 }) {
     let id = '';
     if (!listingId) {
@@ -103,6 +45,8 @@ export async function createListing({
             "delivery",
             "created_by_pk",
             "created_by_name",
+            "seller_has_perm_address",
+            ${sellerHasPermAddress ? '"seller_perm_address",' : ''}
             ${sentByName ? '"sent_by_name",' : ''}
             ${sentByPk ? '"sent_by_pk",' : ''}
             "wallet_address",
@@ -111,8 +55,7 @@ export async function createListing({
             "description",
             ${location ? '"location",' : ''}
             ${locationDescription ? '"location_description",' : ''}
-            ${shippingCost ? '"shipping_cost",' : ''}
-            ${shippingCountries ? '"shipping_countries",' : ''}
+            ${(typeof shippingCost === 'number') ? '"shipping_cost",' : ''}
             "created_at"
         )
 
@@ -124,6 +67,8 @@ export async function createListing({
             '${delivery}',
             '${createdByPk}',
             '${createdByName}',
+            '${sellerHasPermAddress}',
+            ${sellerHasPermAddress ? `'${sellerPermAddress}',` : ''}
             ${sentByName ? `'${sentByName}',` : ''}
             ${sentByPk ? `'${sentByPk}',` : ''}
             '${walletAddress}',
@@ -131,9 +76,8 @@ export async function createListing({
             '${image}',
             '${description}',
             ${location ? `'${location}',` : ''}
-            ${locationDescription ? `'${locationDescription}',` : ''} 
-            ${shippingCost ? `'${shippingCost}',` : ''}
-            ${shippingCountries ? `'${shippingCountries}',` : ''}
+            ${locationDescription ? `'${locationDescription}',` : ''}
+            ${(typeof shippingCost === 'number') ? `'${shippingCost}',` : ''}
             ${createdAt ? `'${createdAt}'` : `'${timestamp}'`}
         );`;
 
@@ -155,6 +99,8 @@ createListing.propTypes = {
     price: PropTypes.number.isRequired,
     createdByPk: PropTypes.string.isRequired,
     createdByName: PropTypes.string.isRequired,
+    sellerHasPermAddress: PropTypes.bool,
+    sellerPermAddress: PropTypes.string,
     listingId: PropTypes.string,
     sentByName: PropTypes.string,
     sentByPk: PropTypes.string,
@@ -171,11 +117,34 @@ createListing.propTypes = {
 
 /**
 * Fetches all listings listings using a particular Id
-* @param {string} storeId - The Id of the store/creator
+* @param {string} pk - The id of the creator
 */
-export function getListings(storeId) {
-    const store = `where "created_by_pk"='${storeId}'`;
-    const Q = `select * from ${LISTINGSTABLE} ${storeId ? `${store}` : ''};`
+export function getListings(pk) {
+    //order them by latest at the top
+    const store = `where "created_by_pk"='${pk}' order by "created_at" desc`;
+    const Q = `select * from ${LISTINGSTABLE} ${pk ? `${store}` : ''};`
+    return new Promise(function (resolve, reject) {
+        window.MDS.sql(Q, (res) => {
+            if (res.status) {
+                resolve(res.rows);
+            } else {
+                reject(Error(`MDS.SQL ERROR, could get listings ${res.error}`));
+                window.MDS.log(`MDS.SQL ERROR, could get listings ${res.error}`);
+            }
+        });
+    });
+}
+getListings.propTypes = {
+    storeId: PropTypes.string,
+}
+
+/**
+* Fetches all listings listings using a particular Id
+* @param {string} pk - The id of the creator
+*/
+export function getAvailableListings(pk) {
+    const store = `where "created_by_pk"='${pk}' and "status"='unchecked' or "status"='available'`;
+    const Q = `select * from ${LISTINGSTABLE} ${pk ? `${store}` : ''};`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
@@ -194,9 +163,11 @@ getListings.propTypes = {
 /**
 * Fetches all listings that are the user has purchased
 */
-export function getMyPurchases() {
-    const Q = `select * from ${LISTINGSTABLE} where "status"='purchased' or "status"='in progress';`
-    return new Promise(function (resolve, reject) {
+export function getMyPurchases(pk) {
+    //order by most recent first
+    const Q = `SELECT * FROM ${LISTINGSTABLE} WHERE "created_by_pk" <> '${pk}' AND ("status" = 'completed' OR "status" = 'in_progress' OR "status" = 'pending_confirmation' OR "status" = 'collection_rejected') ORDER BY "created_at" DESC;`;
+
+    return new Promise((resolve, reject) => {
         window.MDS.sql(Q, (res) => {
             if (res.status) {
                 resolve(res.rows);
@@ -206,7 +177,6 @@ export function getMyPurchases() {
         });
     });
 }
-
 
 /**
 * Fetches a listing with a particular Id
@@ -284,9 +254,26 @@ getListingByPurchaseCode.propTypes = {
 * @param {string} key - The key in the database
 * @param {string} value - The value that's being updated
 */
-export function updateListing(listingId, key, value) {
+
+export function updateListing(listingId, data) {
     return new Promise(function (resolve, reject) {
-        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET "${key}"='${value}' WHERE "listing_id"='${listingId}';`, function (res) {
+        //loop through data object and return all values in one long string
+        var formattedData = '';
+
+        var keys = Object.keys(data);
+        var totalKeys = keys.length;
+
+        for (var i = 0; i < totalKeys; i++) {
+            var key = keys[i];
+
+            // Check if it's the last iteration
+            if (i === totalKeys - 1) {
+                formattedData += `"${key}"='${data[key]}'`;
+            } else {
+                formattedData += `"${key}"='${data[key]}',`;
+            }
+        }
+        window.MDS.sql(`UPDATE ${LISTINGSTABLE} SET ${formattedData} WHERE "listing_id"='${listingId}';`, function (res) {
             if (res.status) {
                 resolve(res);
             } else {
@@ -411,6 +398,9 @@ export async function processListing(entity) {
         console.log(`Listing ${entity.title} added!`);
     }).catch((e) => console.error(`Could not create listing: ${e}`));
 }
+processListing.PropTypes = {
+    entity: PropTypes.object.isRequired
+}
 
 /**
 * Returns the status of notification on a a listing
@@ -437,4 +427,22 @@ export function getNotificationStatus(listingId) {
 }
 getNotificationStatus.proptypes = {
     listingId: PropTypes.string.isRequired
+}
+
+
+export function getListingIds(seller_address, callback) {
+    window.MDS.sql(`SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "created_by_pk"='${seller_address}';`, function (res) {
+        if (res.status) {
+            if (res.rows.length > 0) {
+                if (logs) { window.MDS.log(`MDS.SQL, SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "seller_permanent_address"='${seller_address}';`); }
+                callback(res.rows);
+            } else {
+                if (logs) { window.MDS.log(`MDS.SQL, SELECT "listing_id" FROM ${LISTINGSTABLE} WHERE "seller_permanent_address"='${seller_address}';`); }
+                callback(null);
+            }
+        } else {
+            if (logs) { window.MDS.log(`MDS.SQL ERROR, could get listing ids ${res.error}`); }
+            callback(false, (Error(`Couldn't fetch listing ids ${res.error}`)));
+        }
+    });
 }

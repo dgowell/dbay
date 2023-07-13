@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Stack from "@mui/material/Stack"
 import Typography from '@mui/material/Typography';
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Alert from '@mui/material/Alert';
 import { getListingById } from "../database/listing";
-import { getContacts, addContact, isContact } from "../minima";
+import { addContact, isContact, link } from "../minima";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import Box from "@mui/material/Box";
 import Timeline from '@mui/lab/Timeline';
@@ -15,24 +14,22 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
 import TimelineDot from '@mui/lab/TimelineDot';
+import { Button } from "@mui/material";
 
 export default function InfoPage() {
   const params = useParams();
   const navigate = useNavigate();
   const [listing, setListing] = useState();
-  const [seller, setSeller] = useState();
+  const [sellerAddress, setSellerAddress] = useState();
   const [msg, setMsg] = useState();
   const [status, setStatus] = useState();
   const [isFriend, setIsFriend] = useState(false);
+  const [maxsoloError, setMaxsoloError] = useState('');
 
   useEffect(() => {
     getListingById(params.id).then(function (result) {
       setListing(result);
-      const contacts = getContacts();
-      const slr = result.created_by_pk;
-      setSeller(slr);
-      const pk = slr.split("#")[1];
-      isContact(pk).then((res) => {
+      isContact(result.created_by_pk).then((res) => {
         if (res !== false) {
           setIsFriend(true);
         }
@@ -40,8 +37,32 @@ export default function InfoPage() {
     }).catch((e) => console.error(e));
   }, [params.id]);
 
-  async function handleAdd() {
-    const { msg, status } = await addContact(seller);
+  function handleMaxSoloLink() {
+    if (!isFriend) {
+      if (listing.seller_has_perm_address === 'true') {
+        handleAdd(listing.seller_perm_address);
+      } else {
+        setMaxsoloError(`Seller doesn't have a permanent maxima address set`);
+      }
+    }
+    link('maxsolo', function (res) {
+      if (res.status === false) {
+        if (res.error.includes('permission escalation')) {
+          setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+        } else if (res.error.includes('not found')) {
+          setMaxsoloError('MaxSolo is not installed on your device.');
+        } else {
+          setMaxsoloError(res.error);
+        }
+      } else if (res.status === true) {
+        setMaxsoloError('');
+        window.open(res.base, '_blank');
+      }
+    });
+  }
+
+  async function handleAdd(address) {
+    const { msg, status } = await addContact(address);
     console.log(msg, status);
     setStatus(status);
     setMsg(msg);
@@ -51,12 +72,9 @@ export default function InfoPage() {
   }
   if (listing) {
     return (
-      <Box sx={{textAlign: 'center'}} mt={3}>
+      <Box sx={{ textAlign: 'center' }} mt={3}>
         <Typography sx={{ fontSize: "24px", textAlign: "center" }} variant="h1">Arrange Collection</Typography>
         <Typography mt={3} mb={3} variant="h3">What are my next steps?</Typography>
-        {!isFriend && <LoadingButton className={"custom-loading"} color="secondary" variant="contained" onClick={() => handleAdd()}>Add Contact</LoadingButton>}
-        {msg && <Alert mt={1} sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-        {!isFriend && <Typography sx={{ textAlign: 'center', marginTop: '15px' }} variant="caption">The seller is expecting you to get in touch.</Typography>}
         <Timeline position="alternate">
           <TimelineItem>
             <TimelineOppositeContent
@@ -65,7 +83,8 @@ export default function InfoPage() {
               variant="body2"
               color="text.secondary"
             >
-              @{listing.created_by_name}
+              <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Open MaxSolo</Button>
+              {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
             </TimelineOppositeContent>
             <TimelineSeparator>
               <TimelineConnector sx={{ bgcolor: 'secondary.main' }} />
@@ -74,10 +93,12 @@ export default function InfoPage() {
               <TimelineConnector />
             </TimelineSeparator>
             <TimelineContent sx={{ py: '12px', px: 2 }}>
-              <Typography variant="h6" component="span">
+              <Typography variant="h6">
                 Contact Seller
               </Typography>
-              <Typography>communicate using MaxSolo</Typography>
+              <Typography variant="h5">
+                @{listing.created_by_name}
+              </Typography>
             </TimelineContent>
           </TimelineItem>
           <TimelineItem>
@@ -116,7 +137,7 @@ export default function InfoPage() {
           </TimelineItem>
           <TimelineItem>
             <TimelineSeparator>
-              <TimelineConnector  />
+              <TimelineConnector />
               <TimelineDot>
               </TimelineDot>
               <TimelineConnector />

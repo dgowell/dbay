@@ -14,6 +14,9 @@ var MDS_MAIN_CALLBACK = null;
  */
 var MDS = {
 	
+	//Main File host
+	filehost : "",
+	
 	//RPC Host for Minima
 	mainhost : "",
 	
@@ -60,12 +63,7 @@ var MDS = {
 		if(MDS.minidappuid == null){
 			MDS.minidappuid = MDS.DEBUG_MINIDAPPID;
 		}
-		// env overrides
-		if (window.DEBUG) {
-			host = window.DEBUG_HOST;
-			port = Math.floor(window.DEBUG_PORT);
-			MDS.minidappuid = window.DEBUG_UID;
-		}
+		
 		//Is one specified..
 		if(MDS.minidappuid == "0x00"){
 			MDS.log("No MiniDAPP UID specified.. using test value");
@@ -74,7 +72,8 @@ var MDS = {
 		//The ports..
 		var mainport 	= port+1;
 		
-		MDS.log("MDS FILEHOST  : https://"+host+":"+port+"/");
+		MDS.filehost = "https://"+host+":"+port+"/";
+		MDS.log("MDS FILEHOST  : "+MDS.filehost);
 		
 		MDS.mainhost 	= "https://"+host+":"+mainport+"/";
 		MDS.log("MDS MAINHOST : "+MDS.mainhost);
@@ -126,6 +125,30 @@ var MDS = {
 	sql : function(command, callback){
 		//Send via POST
 		httpPostAsync(MDS.mainhost+"sql?"+"uid="+MDS.minidappuid, command, callback);
+	},
+	
+	/**
+	 * Get a link to a different Dapp. READ dapps can only get READ DAPPS. WRITE can get all dapps.
+	 */
+	dapplink : function(dappname, callback){
+		//Send via POST
+		httpPostAsync(MDS.mainhost+"dapplink?"+"uid="+MDS.minidappuid, dappname, function(result){
+			
+			var linkdata 	= {};
+			linkdata.status = result.status;
+			 
+			//Create the link..
+			if(result.status){
+				linkdata.uid 		= result.response.uid;
+				linkdata.sessionid 	= result.response.sessionid;
+				linkdata.base 		= MDS.filehost+linkdata.uid+"/index.html?uid="+result.response.sessionid;
+			}else{
+				//Not found..
+				linkdata.error = result.error;
+			}
+			
+			callback(linkdata);
+		});
 	},
 	
 	/**	
@@ -308,6 +331,30 @@ var MDS = {
 			
 			//Send via POST
 			httpPostAsync(MDS.mainhost+"file?"+"uid="+MDS.minidappuid, commsline, callback);
+		},
+		
+		/**
+		 * Download a File from the InterWeb - Will be put in Downloads folder
+		 */
+		download : function(url, callback){
+			
+			//Create the single line
+			var commsline = "download&"+url;
+			
+			//Send via POST
+			httpPostAsync(MDS.mainhost+"file?"+"uid="+MDS.minidappuid, commsline, callback);	
+		},
+		
+		/**
+		 * Copy a file to your web folder
+		 */
+		copytoweb : function(file, webfile, callback){
+			
+			//Create the single line
+			var commsline = "copytoweb&"+file+"&"+webfile;
+			
+			//Send via POST
+			httpPostAsync(MDS.mainhost+"file?"+"uid="+MDS.minidappuid, commsline, callback);	
 		}
 		
 	}, 
@@ -435,6 +482,24 @@ function PollListener(){
 	});
 }
 
+function postMDSFail(command, params, status){
+	//Some error..
+	if(MDS.logging){
+		MDS.log("** An error occurred during an MDS command!");
+	}
+	
+	//Create the message
+	var errormsg = {};
+	errormsg.event = "MDSFAIL";
+	errormsg.data = {};
+	errormsg.data.command 	= command;
+	errormsg.data.params 	= params;
+	errormsg.data.error 	= status;
+				
+	//Post it to the stack			
+	MDSPostMessage(errormsg);
+}
+
 /**
  * Utility function for GET request
  * 
@@ -451,55 +516,38 @@ function httpPostAsync(theUrl, params, callback){
 
 	var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-			//Do we log it..
-        	if(MDS.logging){
-        		MDS.log("RESPONSE:"+xmlHttp.responseText);
-        	}
-
-        	//Send it to the callback function..
-        	if(callback){
-        		callback(JSON.parse(xmlHttp.responseText));
-        	}
-        }
+        
+		var status = xmlHttp.status;
+		if (xmlHttp.readyState == XMLHttpRequest.DONE){
+			if (status === 0 || (status >= 200 && status < 400)) {
+			
+				//Do we log it..
+	        	if(MDS.logging){
+	        		MDS.log("RESPONSE:"+xmlHttp.responseText);
+	        	}
+	
+	        	//Send it to the callback function..
+	        	if(callback){
+	        		callback(JSON.parse(xmlHttp.responseText));
+	        	}
+	        
+			}else{
+				//Some error..
+				postMDSFail(theUrl,params,xmlHttp.status);
+			}
+		}
     }
     xmlHttp.open("POST", theUrl, true); // true for asynchronous 
 	xmlHttp.overrideMimeType('text/plain; charset=UTF-8');
-    //xmlHttp.setRequestHeader('Content-Type', 'application/json');    
-	xmlHttp.send(encodeURIComponent(params));
-	//xmlHttp.send(params);
+    xmlHttp.send(encodeURIComponent(params));
+	//xmlHttp.onerror = function () {
+	//  console.log("** An error occurred during the transaction");
+	//};
 }
 
 /**
- * Utility function for GET request (UNUSED for now..)
- * 
- * @param theUrl
- * @param callback
- * @returns
+ * POLLING Call
  */
-/*function httpGetAsync(theUrl, callback)
-{	
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-        	if(MDS.logging){
-				console.log("RPC      : "+theUrl);
-				console.log("RESPONSE : "+xmlHttp.responseText);
-			}
-
-			//Always a JSON ..
-        	var rpcjson = JSON.parse(xmlHttp.responseText);
-        	
-        	//Send it to the callback function..
-        	if(callback){
-        		callback(rpcjson);
-        	}
-        }
-    }
-	xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-    xmlHttp.send(null);
-}*/
-
 function httpPostAsyncPoll(theUrl, params, callback){
 	//Do we log it..
 	if(MDS.logging){
@@ -508,17 +556,25 @@ function httpPostAsyncPoll(theUrl, params, callback){
 
 	var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-			//Do we log it..
-        	if(MDS.logging){
-        		MDS.log("RESPONSE:"+xmlHttp.responseText);
-        	}
-
-        	//Send it to the callback function..
-        	if(callback){
-        		callback(JSON.parse(xmlHttp.responseText));
-        	}
-        }
+        var status = xmlHttp.status;
+		if (xmlHttp.readyState == XMLHttpRequest.DONE){
+			if (status === 0 || (status >= 200 && status < 400)) {
+			
+				//Do we log it..
+	        	if(MDS.logging){
+	        		MDS.log("RESPONSE:"+xmlHttp.responseText);
+	        	}
+	
+	        	//Send it to the callback function..
+	        	if(callback){
+	        		callback(JSON.parse(xmlHttp.responseText));
+	        	}
+	        
+			}else{
+				//Some error..
+				postMDSFail(theUrl,params,xmlHttp.status);
+			}
+		}
     }
     xmlHttp.addEventListener('error', function(ev){
 		MDS.log("Error Polling - reconnect in 10s");

@@ -14,3 +14,4 @@ docker-compose.yml
 minidapp/*
 
 dbay.code-workspace
+.DS_Store

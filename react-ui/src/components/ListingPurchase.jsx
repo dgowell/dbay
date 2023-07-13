@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import LoadingButton from '@mui/lab/LoadingButton';
-import { getListingById } from '../database/listing';
+import { getListingById, deleteListing } from '../database/listing';
 import { useNavigate } from "react-router";
 import { purchaseListing, collectListing } from '../minima/buyer-processes';
 import List from '@mui/material/List';
@@ -20,8 +20,6 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import Button from '@mui/material/Button';
 import 'react-phone-number-input/style.css';
-import { updateListing } from '../database/listing';
-import { sendPurchaseReceipt } from '../minima/buyer-processes';
 import Alert from '@mui/material/Alert';
 import InfoIcon from '@mui/icons-material/Info';
 import { Divider } from '@mui/material';
@@ -33,13 +31,13 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableRow from '@mui/material/TableRow';
-import { checkVault } from '../minima';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
+import useIsVaultLocked from '../hooks/useIsVaultLocked';
 
 function DeliveryConfirmation({
   total,
@@ -49,10 +47,10 @@ function DeliveryConfirmation({
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isLocked,setIsLocked] = useState(false);
-  const [psdError,setPsdError] = useState(false);
-  const [password,setPassword] = useState("");
-  const [msg,setMsg] = useState("");
+  const [psdError, setPsdError] = useState(false);
+  const [password, setPassword] = useState("");
+  const [msg, setMsg] = useState("");
+  const vaultLocked = useIsVaultLocked();
 
   const navigate = useNavigate();
 
@@ -60,72 +58,43 @@ function DeliveryConfirmation({
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  useEffect(()=>{
-  checkVault().then(res=>setIsLocked(res))
-  },[])
-
-  function handlePassword(e){
-      setPassword(e.target.value);
+  function handlePassword(e) {
+    setPassword(e.target.value);
   }
 
   async function handlePay() {
     setLoading(true);
     setError(false);
     setMsg("");
-  
-    if (isLocked && password === "") {
-      setPsdError(true);
-      setLoading(false);
-      setError(false);
-      return null;
-    } else {
-      setPsdError(false);
-    }
-  
-    if (process.env.REACT_APP_MODE === "testvalue") {
-      // Update local db
-      updateListing(listing.listing_id, 'status', 'in progress').catch((e) => console.error(e));
-      updateListing(listing.listing_id, 'transmission_type', transmissionType).catch((e) => console.error(e));
-  
-      // Update the seller
-      sendPurchaseReceipt({
-        message: message,
-        listingId: listing.listing_id,
-        coinId: "0x1asd234",
-        seller: listing.created_by_pk,
-        transmissionType: transmissionType,
-      });
-  
-      // Navigate user to confirmation page
-      navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } });
-    } else {
-      purchaseListing({
-        listingId: listing.listing_id,
-        seller: listing.created_by_pk,
-        walletAddress: listing.wallet_address,
-        purchaseCode: listing.purchase_code,
-        message: message,
-        amount: parseInt(listing.price) + parseInt(listing.shipping_cost),
-        transmissionType: transmissionType,
-        password: password, // Pass the password here
-      })
-        .then(
-          () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
-          error => {
-            if (error.message.includes("Incorrect password")) {
-              setMsg("Incorrect password");
-              setPsdError(true);
-              setLoading(false);
-              setError(false);
-            } else {
-              navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: error.message } })
-            }
+
+    purchaseListing({
+      listingId: listing.listing_id,
+      seller: listing.created_by_pk,
+      walletAddress: listing.wallet_address,
+      message: message,
+      amount: parseInt(listing.price) + parseInt(listing.shipping_cost),
+      transmissionType: transmissionType,
+      password: password, // Pass the password here
+    })
+      .then(
+        () => navigate('/info', { state: { main: "Payment Successfull!", sub: `@${listing.created_by_name} has received your order and will post your item to the address provided. ` } }),
+        error => {
+          if (error.message.includes("Incorrect password")) {
+            setMsg("Incorrect password");
+            setPsdError(true);
+            setLoading(false);
+            setError(false);
+          } else {
+            setError(error.message);
+            setLoading(false);
+            setMsg(error.message);
           }
-        )
-        .catch((e) => {
-          console.log("error", e);
-        });
-    }
+        }
+      )
+      .catch((e) => {
+        console.log("error", e);
+      });
+
   }
 
   return (
@@ -164,7 +133,7 @@ function DeliveryConfirmation({
         <Divider />
         <Typography variant="h6">Delivery address</Typography>
         <Typography gutterBottom sx={{ textAlign: "left" }} component="address">{message.split("\n").map((i, key) => {
-          return <span style={{display: 'block'}} key={key}>{i}</span>;
+          return <span style={{ display: 'block' }} key={key}>{i}</span>;
         })}</Typography>
       </Box>
 
@@ -178,10 +147,10 @@ function DeliveryConfirmation({
         <TableContainer >
           <Table sx={{}} size="small" aria-label="a dense table">
             <TableBody>
-                <TableRow key="1" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <TableCell component="th" scope="row">Item</TableCell>
-                  <TableCell align="right">M${listing.price}</TableCell>
-                </TableRow>
+              <TableRow key="1" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                <TableCell component="th" scope="row">Item</TableCell>
+                <TableCell align="right">M${listing.price}</TableCell>
+              </TableRow>
               <TableRow key="2" sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell component="th" scope="row">Delivery</TableCell>
                 <TableCell align="right">M${listing.shipping_cost}</TableCell>
@@ -193,31 +162,33 @@ function DeliveryConfirmation({
             </TableBody>
           </Table>
         </TableContainer>
-        {isLocked &&<>
-          <span style={{color:"red",padding:0,margin:0}} >{msg}</span>
+        <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
+        {vaultLocked &&
           <FormControl variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
-         <OutlinedInput
-            id="outlined-adornment-password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={handlePassword}
-            error={psdError}
-            required={true}
-            helperText="Must enter vault password"
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            }
-            label="Vault Password"
-            /></FormControl></>}
+            <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePassword}
+              error={psdError}
+              required={vaultLocked}
+              helperText="Must enter vault password"
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              }
+              label="Vault Password"
+            />
+          </FormControl>
+        }
         <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handlePay} variant="contained">Pay Now</LoadingButton>
       </Box>
     </Box>
@@ -229,32 +200,11 @@ function ListingPurchase(props) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [distance, setDistance] = useState(0);
   const [total, setTotal] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [transmissionType, setTransmissionType] = useState('');
   const params = useParams();
   const navigate = useNavigate();
-  const [coordinates, setCoordinates] = useState({
-    latitude: '',
-    longitude: ''
-  })
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-    }
-
-    function showPosition(position) {
-      setCoordinates({
-        latitude: (position.coords.latitude.toFixed(3)),
-        longitude: (position.coords.longitude.toFixed(3))
-      });
-      console.log(JSON.stringify(coordinates));
-    };
-  }, []);
 
   useEffect(() => {
     if (listing) {
@@ -284,22 +234,12 @@ function ListingPurchase(props) {
     });
   }, [params.id]);
 
-  useEffect(() => {
-    if ((coordinates.latitude !== '') && listing) {
-      const location = JSON.parse(listing.location);
-      console.log(`Listing Location: ${location}, My location: ${coordinates}, havsine distance: ${haversine(coordinates, location)}`)
-      window.MDS.log(`Listing Location: ${JSON.stringify(location)}, My location: ${JSON.stringify(coordinates)}, havsine distance: ${haversine(coordinates, location)}`)
-      setDistance((haversine(coordinates, location) / 1000).toFixed(1));
-    }
-  }, [coordinates, listing])
-
   function handleCollection() {
     setLoading(true);
     setError(false);
 
     collectListing({
       listingId: listing.listing_id,
-      seller: listing.created_by_pk,
       message: message,
       transmissionType: transmissionType,
     }).then(
@@ -323,8 +263,6 @@ function ListingPurchase(props) {
   };
 
   if (listing) {
-
-    const { latitude, longitude } = JSON.parse(listing.location);
 
     if (!error) {
       if (showConfirmation) {
@@ -369,22 +307,7 @@ function ListingPurchase(props) {
                 value={transmissionType}
                 onChange={handleChange}
               >
-                {listing.collection === "true" && <>  <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />
-                  <Typography variant="caption" color="grey" mt='-12px'>{isNaN(distance) ? null : `${distance}km`}</Typography>
-                  {transmissionType === 'collection'
-                    ? <Box p={2} >
-                      <Button variant="outlined" color="secondary" className={"custom-loading"} href={`https://www.google.com/maps/@${latitude},${longitude},17z`} target="_blank">See location</Button>
-                      <List>
-                        <ListItem >
-                          <ListItemIcon sx={{ fontSize: "16px", minWidth: "45px" }}>
-                            <InfoIcon />
-                          </ListItemIcon>
-                          <ListItemText primaryTypographyProps={{ fontSize: 13 }} primary="This is an approximation. Seller will provide exact location privately. " />
-                        </ListItem>
-                      </List>
-                    </Box>
-                    : null}</>}
-                <Divider />
+                {listing.collection === "true" && <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />}
                 {listing.delivery === "true" &&
                   <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="delivery" control={<Radio />} label={`Delivery`} />
                     <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
@@ -421,17 +344,15 @@ function ListingPurchase(props) {
             alignItems="center"
           >
             {transmissionType === 'delivery' &&
-              <>
-                <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleDelivery} variant="contained">
-                  Continue
-                </LoadingButton>
-              </>}
+              <LoadingButton className={"custom-loading"} disabled={error} color="secondary" loading={loading} onClick={handleDelivery} variant="contained">
+                Continue
+              </LoadingButton>
+            }
             {transmissionType === 'collection' &&
-              <>
-                <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleCollection} variant="contained">
-                  Confirm Collection
-                </LoadingButton>
-              </>}
+              <LoadingButton xs={{ flex: 1 }} className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleCollection} variant="contained">
+                Confirm Collection
+              </LoadingButton>
+            }
           </Box>
         </Box>
       );

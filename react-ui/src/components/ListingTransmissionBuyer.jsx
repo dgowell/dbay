@@ -5,14 +5,13 @@ import Box from "@mui/material/Box";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { getListingById } from '../database/listing';
 import { useNavigate } from "react-router";
-import { purchaseListing, cancelCollection } from '../minima/buyer-processes';
+import { purchaseListing } from '../minima/buyer-processes';
+import { link } from '../minima';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Stack from '@mui/material/Stack';
 import FormControl from '@mui/material/FormControl';
-
 import ListItemText from "@mui/material/ListItemText";
-
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
@@ -20,23 +19,16 @@ import PaymentError from './PaymentError';
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import Badge from '@mui/material/Badge';
 import { hasSufficientFunds } from '../minima/buyer-processes';
-import { updateListing } from '../database/listing';
-import { sendPurchaseReceipt } from '../minima/buyer-processes';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { checkVault } from '../minima';
-import Divider from "@mui/material/Divider";
 import Modal from '@mui/material/Modal';
 import Alert from '@mui/material/Alert';
-import { isContact,addContact } from '../minima';
+import { isContact, addContact } from '../minima';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
+import useIsVaultLocked from '../hooks/useIsVaultLocked';
 
 function ListingCollectionBuyer(props) {
     const [open, setOpen] = useState(false);
@@ -47,31 +39,37 @@ function ListingCollectionBuyer(props) {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const navigate = useNavigate();
-    const [intro, setIntro] = useState('');
-    const [isFriend,setIsFriend]=useState(false);
+    const [isFriend, setIsFriend] = useState(false);
     const [status, setStatus] = useState();
+    const vaultLocked = useIsVaultLocked();
+
+
     const [msg, setMsg] = useState();
     const [seller, setSeller] = useState();
     const [passwordError, setPasswordError] = useState(false);
     const [password, setPassword] = useState("");
-    const [isLocked, setIsLocked] = useState(false);
+    const [maxsoloError, setMaxsoloError] = useState('');
 
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
-    
-    useEffect(() => {
-        checkVault().then(res => setIsLocked(res))
-    }, [])
 
     function handlePassword(e) {
         setPassword(e.target.value);
     }
 
-    async function handleAdd() {
-        const { msg, status } = await addContact(seller);
-        setStatus(status);
-        setMsg(msg);
-      }
+    function handleAdd() {
+        addContact(seller).then(
+            ({ status, msg }) => {
+                setStatus(status);
+                setMsg(msg);
+            },
+            ({ status, msg }) => {
+                setStatus(status);
+                setMsg(msg);
+                console.error("Error adding contact: " + msg);
+            }
+        )
+    }
 
     const style = {
         position: 'absolute',
@@ -84,15 +82,9 @@ function ListingCollectionBuyer(props) {
         boxShadow: 'none',
         backgroundColor: '#FFFFFF',
         p: 4,
-        justifyContent:'center',
-        textAlign:'center'
-      };
-
-    useEffect(() => {
-        if (listing) {
-            setIntro(encodeURI(`Hi ${listing.created_by_name} this is ${listing.buyer_name} from dbay - when can I come and collect the ${listing.title}?`));
-        }
-    }, [listing]);
+        justifyContent: 'center',
+        textAlign: 'center'
+    };
 
 
     useEffect(() => {
@@ -101,13 +93,31 @@ function ListingCollectionBuyer(props) {
             const slr = result.created_by_pk;
             setSeller(slr);
             const pk = slr.split("#")[1];
-            isContact(pk).then((res)=>{
-                if(res!==false){
+            isContact(pk).then((res) => {
+                if (res !== false) {
                     setIsFriend(true);
                 }
             })
         });
     }, [params.id]);
+
+    function handleMaxSoloLink() {
+        if (!isFriend) {
+            handleAdd();
+        }
+        link('maxsolo', function (res) {
+            if (res.status === false) {
+                if (res.error.includes('permission escalation')) {
+                    setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+                } else {
+                    setMaxsoloError(res.error);
+                }
+            } else if (res.status === true) {
+                setMaxsoloError('');
+                window.open(res.base, '_blank');
+            }
+        });
+    }
 
     async function handleSend() {
         setLoading(true);
@@ -120,50 +130,37 @@ function ListingCollectionBuyer(props) {
             console.log(`Insufficient funds: ${error}`);
         });
 
-        if (isLocked && password === "") {
-            setPasswordError(true);
-            setLoading(false);
-            setError(false);
-            return null;
-        } else {
-            setPasswordError(false);
+        if (hasFunds) {
+            purchaseListing({
+                listingId: listing.listing_id,
+                seller: listing.created_by_pk,
+                walletAddress: listing.wallet_address,
+                amount: listing.price,
+                transmissionType: listing.transmission_type,
+                password: password
+            }).then(
+                () => navigate('/info', { state: { main: "Success", sub: `You’ve successfully paid @${listing.created_by_name} $M${listing.price}` } }),
+                error => {
+                    if (error.message.includes("Incorrect password")) {
+                        setMsg("Incorrect password");
+                        setPasswordError(true);
+                        setLoading(false);
+                        setError(false);
+                        setOpen(false);
+                    } else if (error.message.includes("pending")) {
+                        setMsg("Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App");
+                        setLoading(false);
+                        setError('Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App');
+                        setOpen(false);
+                    } else {
+                        setMsg(error);
+                        setLoading(false);
+                        setError(true);
+                        setOpen(false);
+                    }
+                }
+            )
         }
-
-        if (hasFunds|| (process.env.REACT_APP_MODE==="testvalue")) {
-            if (process.env.REACT_APP_MODE ==="testvalue"){
-                updateListing(listing.listing_id, 'status', 'purchased').catch((e) => console.error(e));
-                updateListing(listing.listing_id, 'transmission_type',  listing.transmission_type).catch((e)=>console.error(e));
-                sendPurchaseReceipt({
-                    listingId: listing.listing_id,
-                    coinId:"0x1asd234", seller: listing.created_by_pk,
-                    transmissionType: listing.transmission_type })
-               // navigate('/payment-success');
-               setTimeout(navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}), 1000);
-              }else{
-                    purchaseListing({
-                        listingId: listing.listing_id,
-                        seller: listing.created_by_pk,
-                        walletAddress: listing.wallet_address,
-                        purchaseCode: listing.purchase_code,
-                        amount: listing.price,
-                        transmissionType: listing.transmission_type,
-                        password: password
-                    }).then(
-                        () =>navigate('/info',{state:{main:"Success",sub:`You’ve successfully paid @${listing.created_by_name} $M${listing.price}`}}),
-                        error => {
-                            if (error.message.includes("Incorrect password")) {
-                                setMsg("Incorrect password");
-                                setPasswordError(true);
-                                setLoading(false);
-                                setError(false);
-                                setOpen(false);
-                            } else {
-                                navigate('/info', { state: { action: "error", main: "Payment Failed!", sub: error.message } })
-                            }
-                        }
-                    )
-                 }
-         }
     }
 
     if (listing) {
@@ -176,106 +173,66 @@ function ListingCollectionBuyer(props) {
                     display: 'flex',
                     flexDirection: 'column',
                 }}>
-    <Accordion sx={{boxShadow:"none"}}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
-          <Typography sx={{fontWeight:700,fontSize:"20px"}}>View Listing</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-        <List>
-            <ListItem>
-                <ListItemAvatar>
-                    {listing.image ? (
-                        <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
-                    ) : (
-                        <Badge anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
-                            <Avatar>
-                                <BungalowIcon />
-                            </Avatar>
-                        </Badge>
-                    )}
-                </ListItemAvatar>
-                <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
-            </ListItem>
-           {listing.delivery ==="true" && <><ListItem>
-            </ListItem>
-            <ListItem>
-            {listing.buyer_message
-            ?<><Typography gutterBottom sx={{textAlign:"left"}} component="p">
-                {listing.buyer_message.split("\n").map((i, key) => {
-                return <p key={key}>{i}</p>;
-                })}
-                </Typography></> : ""}
-            </ListItem></>}
-        </List>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion expanded={true} sx={{boxShadow:"none"}}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
-          <Typography sx={{fontWeight:700,fontSize:"20px"}}>Contact Seller</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-        <Box sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        p: 2,
-                        gap: 3,
-                    }}>
-                        {listing.transmission_type === 'collection' &&
-                            // <Box>
-                            //     <Typography mb={3} gutterBottom component="div">Please wait for the seller to arrange collection on Whatsapp.</Typography>
-                            //     <Typography gutterBottom component="div">When you have collected the item and are happy with it, you can complete the purchase by paying the seller using the button below</Typography>
-                            // </Box>
-                            <List>
-                                <ListItem>
-                                    <ListItemText primaryTypographyProps={{fontSize: 16,fontWeight:700}} primary={(!isFriend ?  `Add @${listing.created_by_name}.` : `@${listing.created_by_name} is already a contact. `) +`Chat over MaxSolo, meet and pay when you are with the seller.`}/>                    
-                                </ListItem>
-                                <ListItem>
-                                    {!isFriend && <><LoadingButton className={"custom-loading"} sx={{width:"100%"}} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
-                                    {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-                                    </>}
-                                </ListItem>
-                                <Divider/>
-                                <ListItem>
-                                    <ListItemText primary="When you are with the seller in person and you are happy with the item, click below to initiate your payment. " />
-                                </ListItem>
-                            </List>
-                        }
-                        {listing.transmission_type === 'delivery' &&
-                        <List>
-                            <ListItem>
-                                <ListItemText primaryTypographyProps={{fontSize: 16,fontWeight:700}} primary={(!isFriend ?  `Add @${listing.created_by_name}. ` : `@${listing.created_by_name} is already a contact. `) +`Chat over MaxSolo, meet and pay when you are with the seller.`}/>                    
-                            </ListItem>
-                            <ListItem>
-                                {!isFriend && <><LoadingButton className={"custom-loading"} sx={{width:"100%"}} color="primary" variant="contained" onClick={() => handleAdd()}>add Contact</LoadingButton>
-                                {msg && <Alert sx={{ width: "100%" }} severity={status ? 'success' : 'error'} variant="outlined">{msg}</Alert>}
-                                </>}
-                            </ListItem>
-                            <Divider/>
-                            <ListItem>
-                                <ListItemText primary="When you have received your item click below to confirm " />
-                            </ListItem>
-                        </List>
-                        }
-                    </Box>
 
-        </AccordionDetails>
-      </Accordion>
-      <List>
-        <ListItem sx={{mb:2}}>
-            <span style={{fontWeight: 700,fontSize: "20px",color:"#2C2C2C"}}>Total</span> <span style={{marginLeft:"60%",color:"#888787",fontSize:"20px"}}>{`$M${listing.price}`}</span>
-        </ListItem>
-      </List>
+
+                    <Typography variant="h3">{listing.transmission_type === 'collection'
+                        ? "You have arranged to collect this item"
+                        : "You have arranged to have this item delivered"}</Typography>
+
+                    <List>
+                        <ListItem>
+                            <ListItemAvatar>
+                                {listing.image ? (
+                                    <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
+                                ) : (
+                                    <Badge anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
+                                        <Avatar>
+                                            <BungalowIcon />
+                                        </Avatar>
+                                    </Badge>
+                                )}
+                            </ListItemAvatar>
+                            <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />
+                        </ListItem>
+                        {listing.delivery === "true" && <><ListItem>
+                        </ListItem>
+                            <ListItem>
+                                {listing.buyer_message
+                                    ? <><Typography gutterBottom sx={{ textAlign: "left" }} component="p">
+                                        {listing.buyer_message.split("\n").map((i, key) => {
+                                            return <p key={key}>{i}</p>;
+                                        })}
+                                    </Typography></> : ""}
+                            </ListItem></>}
+                    </List>
+
+
+                    <List>
+                        <ListItem>
+                            <Stack direction="column" spacing={2}>
+                                <Typography>Seller: <span style={{ color: "#888787" }}>@{listing.created_by_name}</span></Typography>
+                                <Button onClick={handleMaxSoloLink} color="secondary" variant="contained">Open MaxSolo</Button>
+                                {maxsoloError && <Alert sx={{ width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
+                            </Stack>
+                        </ListItem>
+                        {listing.status !== 'pending_confirmation' &&
+                            <ListItem>
+                                <ListItemText primary={listing.transmission_type === 'collection'
+                                    ? "When you are with the seller in person and you are happy with the item, click below to initiate your payment. "
+                                    : "When you have received your item click below to confirm"} />
+                            </ListItem>
+                        }
+                    </List>
+
+
+                    <List>
+                        <ListItem sx={{ mb: 2 }}>
+                            <Typography variant="h5">Total: <span style={{ color: "#888787" }}>{`$M${listing.price}`}</span></Typography>
+                        </ListItem>
+                    </List>
 
                     <Box
                         m={1}
@@ -285,10 +242,10 @@ function ListingCollectionBuyer(props) {
                         justifyContent="center"
                         alignItems="center"
                     >
-                        {listing.transmission_type === 'collection' &&
-                            <Stack mt={15} direction="column" spacing={2} width={"100%"}>
-                                {isLocked && <>
-                                    <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
+                        {listing.transmission_type === 'collection' && listing.status === "in_progress" &&
+                            <Stack direction="column" spacing={2} width={"100%"}>
+                                <span style={{ color: "red", padding: 0, margin: 0 }} >{msg}</span>
+                                {vaultLocked &&
                                     <FormControl variant="outlined">
                                         <InputLabel htmlFor="outlined-adornment-password">Vault Password</InputLabel>
                                         <OutlinedInput
@@ -297,8 +254,8 @@ function ListingCollectionBuyer(props) {
                                             value={password}
                                             onChange={handlePassword}
                                             error={passwordError}
-                                            required={true}
-                                            helperText="Must enter vault password"
+                                            required={vaultLocked}
+                                            helperText="Must enter vault password if you have one"
                                             endAdornment={
                                                 <InputAdornment position="end">
                                                     <IconButton
@@ -311,44 +268,38 @@ function ListingCollectionBuyer(props) {
                                                 </InputAdornment>
                                             }
                                             label="Vault Password"
-                                        /></FormControl></>}
+                                        />
+                                    </FormControl>
+                                }
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleOpen} variant="contained">
-                                     PAY NOW
+                                    PAY NOW
                                 </LoadingButton>
-                                {/* <Button variant="outlined" onClick={handleCancel}>Cancel</Button> */}
+                                {msg && <Alert severity="warning">{msg}</Alert>}
                             </Stack>
                         }
-                            {listing.transmission_type === 'delivery' && <></>
-                            // <Stack mt={15} direction="row" spacing={2} width={"100%"}>
-                            //     <Stack spacing={2} sx={{paddingLeft: 2, paddingRight: 2}}>
-                            //     <LoadingButton className={"custom-loading"} color={"secondary"}  loading={loading} onClick={handleReceived} variant="contained">
-                            //          Item Received
-                            //     </LoadingButton>
-                            //     <Typography sx={{ textAlign: 'center', marginTop: '15px', flex: 1 }} variant="caption">Once seller confirms the delivery kindly  acknowledge</Typography>
-                            //     </Stack>
-                            //     {/* <Button variant="outlined" onClick={handleCancel}>Cancel</Button> */}
-                            // </Stack>
+                        {listing.status === "pending_confirmation" &&
+                            <Alert severity="warning">You must confirm the transaction in the MDS menu in 'Pending Actions' to complete the order. Once accepted please check the confirmation message if the password is wrong you will have to contact the seller to complete the transaction outside of dbay.</Alert>
                         }
                     </Box>
                     <Modal
-                          open={open}
-                          onClose={handleClose}
-                          aria-labelledby="modal-modal-title"
-                          aria-describedby="modal-modal-description"
-                        >
-                          <Box sx={style}>
+                        open={open}
+                        onClose={handleClose}
+                        aria-labelledby="modal-modal-title"
+                        aria-describedby="modal-modal-description"
+                    >
+                        <Box sx={style}>
                             <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                            {`Pay $M${listing.price} from your Minima wallet?`}
+                                {`Pay $M${listing.price} from your Minima wallet?`}
                             </Typography>
-                            <Stack mt={15} direction="column" spacing={2} width={"100%"} sx={{justifyContent:"center",textAlign:"center"}} >
+                            <Stack direction="column" spacing={2} width={"100%"} sx={{ justifyContent: "center", textAlign: "center" }} >
                                 <LoadingButton className={"custom-loading"} color="secondary" disabled={error} loading={loading} onClick={handleSend} variant="contained">
-                                     PAY
+                                    PAY
                                 </LoadingButton>
-                                <Button sx={{borderRadius:"510px"}} variant="outlined" onClick={handleClose}>Cancel</Button>
+                                <Button sx={{ borderRadius: "510px" }} variant="outlined" onClick={handleClose}>Cancel</Button>
                             </Stack>
-                          </Box>
-                        </Modal>
-                </Box>
+                        </Box>
+                    </Modal>
+                </Box >
             );
         } else {
             return (

@@ -1,90 +1,73 @@
 import PropTypes from 'prop-types';
-import { getSellersAddress, send, sendMoney, isContact } from './index';
-import { updateListing, getStatus, removeListing, resetListingState, getCreatedByNameById } from '../database/listing';
+import { send, sendMoney, getMaximaInfo } from './index';
+import { updateListing, getStatus, removeListing, resetListingState, getListingById } from '../database/listing';
 import { buyerConstants } from '../constants';
 import { Decimal } from 'decimal.js';
-import { getHost } from '../database/settings';
 
-async function getSellerAddress(address) {
-    //get name of node that create item
-    const e = address.split('#');
-    const pk = e[1];
-    var currentAddress ="";
-    return new Promise(async function (resolve, reject) {
-        //find out if they're a contact
-         currentAddress = await isContact(pk);
-         console.log("iscontact",currentAddress);
-        if (currentAddress && currentAddress.includes('@')) {
-            resolve(currentAddress);
-        } else {
-             currentAddress = await getSellersAddress(address).catch(e=>console.log("inside",e));
-            console.log("here",currentAddress);
-            if(currentAddress){
-            resolve(currentAddress);
-            }else{
-                reject(currentAddress);
-            }
+async function sendCollectionRequest({ message, listingId, transmissionType }) {
+    getMaximaInfo(async function (res) {
+        const data = {
+            "type": "COLLECTION_REQUEST",
+            "message": message,
+            "listing_id": listingId,
+            "transmission_type": transmissionType,
+            "buyer_name": res.name,
+            "buyer_pk": res.publickey
         }
+        getListingById(listingId).then(async (listing) => {
+
+            let sellerAddress = listing.created_by_pk;
+            if (listing.seller_has_perm_address) {
+                sellerAddress = listing.seller_perm_address;
+            }
+
+            return new Promise(function (resolve, reject) {
+                send(data, sellerAddress).then(
+                    () => {
+                        console.log(`sent customer message to seller: ${message}`);
+                        return resolve(true);
+                    }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
+            });
+        });
     });
 }
 
-export async function sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType }) {
-    const host = await getHost();
-    const data = {
-        "type": "purchase_receipt",
-        "buyer_message": message,
-        "listing_id": listingId,
-        "coin_id": coinId,
-        "transmission_type": transmissionType,
-        "buyer_name": host.name
+async function sendCancellationNotification({ listingId }) {
+    getMaximaInfo(async function (res) {
+        const data = {
+            "type": "CANCEL_COLLECTION",
+            "listing_id": listingId,
+            "buyer_name": res.name,
+            "buyer_pk": res.publickey
+        }
+        getListingById(listingId).then(async (listing) => {
+            let sellerAddress = listing.created_by_pk;
+            if (listing.seller_has_perm_address) {
+                sellerAddress = listing.seller_perm_address;
+            }
+            return new Promise(function (resolve, reject) {
+                send(data, sellerAddress).then(
+                    () => {
+                        console.log(`sent cancellation to seller.`);
+                        resolve(true);
+                    }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
+            });
+        });
+    });
+}
+
+function generateCode(length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
     }
-    const sellerAddress = await getSellerAddress(seller);
-
-    return new Promise(function (resolve, reject) {
-        send(data, sellerAddress).then(
-            () => {
-                console.log(`sent customer message to seller: ${message}`);
-                resolve(true);
-            }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
-    });
+    return result;
 }
 
-async function sendCollectionConfirmation({ message, listingId, seller, transmissionType }) {
-    const host = await getHost();
-    const data = {
-        "type": "collection_confirmation",
-        "message": message,
-        "listing_id": listingId,
-        "transmission_type": transmissionType,
-        "buyer_name": host.name
-    }
-    const sellerAddress = await getSellerAddress(seller);
-
-    return new Promise(function (resolve, reject) {
-        send(data, sellerAddress).then(
-            () => {
-                console.log(`sent customer message to seller: ${message}`);
-                return resolve(true);
-            }).catch((e) => reject(Error(`Could not send collection confirmation to seller ${e}`)));
-    });
-}
-
-async function sendCancellationNotification({ listingId, seller }) {
-    const host = await getHost();
-    const data = {
-        "type": "cancel_collection",
-        "listing_id": listingId,
-        "buyer_name": host.name
-    }
-    const sellerAddress = await getSellerAddress(seller);
-    return new Promise(function (resolve, reject) {
-        send(data, sellerAddress).then(
-            () => {
-                console.log(`sent cancellation to seller.`);
-                resolve(true);
-            }).catch((e) => reject(Error(`Could not send customer message to seller ${e}`)));
-    });
-}
 
 /**
 * Send's buyers delivery address to seller
@@ -95,37 +78,74 @@ async function sendCancellationNotification({ listingId, seller }) {
 * @param {int} amount - cost of purchase
 * @param {string} transmissionType - collection or delivery
 */
-export function purchaseListing({ seller, message, listingId, walletAddress, purchaseCode, amount, transmissionType, password }) {
+export function purchaseListing({ seller, message, listingId, walletAddress, amount, transmissionType, password }) {
+    const purchaseCode = generateCode(10);
+    console.log(`purchase coee is ${purchaseCode}`);
     return new Promise(function (resolve, reject) {
-        sendMoney({ walletAddress, amount, purchaseCode, password })
-            .then((coinId) => {
+        sendMoney({ walletAddress, amount, purchaseCode, password }, async function (res) {
+            console.log("Response from sendMoney function:", res);
+
+            //if the payemnt was successful
+            if (res.status === true) {
+                console.log(`sent ${amount} to ${walletAddress} with state code ${listingId} succesfully!`);
+                const coinId = res.response.body.txn.outputs[0].coinid;
+
                 if (coinId.includes('0x')) {
-                    updateListing(listingId, 'status', 'purchased').catch((e) => console.error(e));
-                    updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
+                    updateListing(listingId, { 'status': 'completed', 'transmission_type': transmissionType, 'purchase_code': purchaseCode }).catch((e) => console.error(e));
                     console.log(`Money sent, coin id: ${coinId}`);
-                    console.log(`Sending purchase receipt to seller..`);
-                    sendPurchaseReceipt({ message, listingId, coinId, seller, transmissionType })
-                        .then(()=>resolve(true))
-                        .catch(Error(`Couldn't send purchase receipt`));
+
+                    getMaximaInfo(async function (res) {
+                        getListingById(listingId).then(async (listing) => {
+                            let sellerAddress = listing.created_by_pk;
+                            if (listing.seller_has_perm_address === 'true') {
+                                sellerAddress = listing.seller_perm_address;
+                            }
+
+                            const data = {
+                                "type": "PAYMENT_RECEIPT_WRITE",
+                                "buyer_message": message,
+                                "listing_id": listingId,
+                                "coin_id": coinId,
+                                "transmission_type": transmissionType,
+                                "purchase_code": purchaseCode,
+                                "buyer_name": res.name,
+                                "buyer_pk": res.publickey,
+                            }
+
+                            console.log(`Sending payment receipt to seller. seller address: ${sellerAddress}`);
+                            send(data, sellerAddress).then(
+                                (message) => {
+                                    console.log(`sent customer message to seller: ${message}`);
+                                    resolve(true);
+                                }).catch((e) => reject(Error(`Could not send purchase recipt to seller ${e}`)));
+                        });
+                    });
                 } else {
                     console.error(`Error sending money ${JSON.stringify(coinId)}`);
                     resetListingState(listingId);
                     reject(Error(`There was a problem with the payment`));
                 }
-            }).catch((error) => {
-                if (error.message.includes('Insufficient funds')) {
-                    resetListingState(listingId)
-                        .then(() => console.log('listing state reset because of error'))
-                        .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
-                    reject(Error(`Insufficient funds`));
-                } else {
-                    resetListingState(listingId)
-                        .then(() => console.log('listing state reset because of error'))
-                        .catch((e) => console.error(`Couldn't reset listing state: ${e}`));
-                    console.error(error);
-                    reject(error);
-                }
-            });//.then(resolve(true));
+
+                //if the payement is pending and needs accepting
+            } else if (res.pending === true) {
+                const pendinguid = res.pendinguid;
+                getMaximaInfo(async function (maxima) {
+                    console.log(`Transaction pending. saving uid: ${pendinguid}`);
+                    updateListing(listingId, {
+                        'status': 'pending_confirmation',
+                        'purchase_code': purchaseCode,
+                        'pendinguid': pendinguid,
+                        'transmission_type': transmissionType,
+                        'buyer_message': message,
+                        'buyer_name': maxima.name,
+                        'buyer_pk': maxima.publickey,
+                    }).catch((e) => console.error(e));
+                });
+                reject(Error(`Transaction is pending. You can accept/deny pending transactions on the homepage in the Minima App.`));
+            } else {
+                reject(Error(res.error));
+            }
+        }); //end of sendMoney
     })
 }
 purchaseListing.proptypes = {
@@ -133,7 +153,6 @@ purchaseListing.proptypes = {
     message: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired,
     walletAddress: PropTypes.string.isRequired,
-    purchaseCode: PropTypes.string.isRequired,
     amount: PropTypes.number.isRequired,
     transmissionType: PropTypes.string.isRequired,
 }
@@ -144,19 +163,18 @@ purchaseListing.proptypes = {
 * @param {string} address - Buyers physical address to send item to
 * @param {string} listingId - The id of the listing that is being purchased
 */
-export function collectListing({ seller, message, listingId, transmissionType }) {
+export function collectListing({ message, listingId, transmissionType }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, 'status', 'in progress').catch((e) => console.error(e));
-        updateListing(listingId, 'transmission_type', transmissionType).catch((e) => console.error(e));
-        console.log(`Sending collection confirmation and phone numeber to seller.. ${message}`);
-        sendCollectionConfirmation({ message, listingId, seller, transmissionType })
+        updateListing(listingId, { 'status': 'in_progress', 'transmission_type': transmissionType }).catch((e) => console.error(e));
+
+        console.log(`Sending collection confirmation to seller..`);
+        sendCollectionRequest({ message, listingId, transmissionType })
             .then(() => resolve(true))
             .catch(Error(`Couldn't send collection confirmation`)
             );
     });
 }
 collectListing.proptypes = {
-    seller: PropTypes.string.isRequired,
     address: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired,
     walletAddress: PropTypes.string.isRequired,
@@ -168,18 +186,16 @@ collectListing.proptypes = {
 * @param {object} entity - Sellers hex address
 */
 export function processAvailabilityResponse(entity) {
-    console.log("processing availability response...");
-    updateListing(entity.listing_id, "status", entity.status)
-        .catch((e) => console.error(`Couldn't update listing status ${e}`))
-    updateListing(entity.listing_id, "purchase_code", entity.purchase_code)
-        .catch((e) => console.error(`Couldn't update listing purchase code ${e}`))
+    console.log("processing availability response..." + JSON.stringify(entity));
+    updateListing(entity.listing_id, { "status": entity.status, "purchase_code": entity.purchase_code })
+        .catch((e) => console.error(e));
 }
 processAvailabilityResponse.proptypes = {
     entity: PropTypes.object.isRequired
 }
 
 /**
-* Sends availablity check to the seller node then checks the databse for an updated response
+* Sends availablity check to the seller node then checks the database for an updated response
 * @param {string} seller - Sellers hex address
 * @param {string} buyerPk - Buyers primary key to identify the buyer
 * @param {string} listingId - The id of the listing that is being purchased
@@ -197,11 +213,9 @@ export function checkAvailability({
     console.log(`checking availability`);
 
     return new Promise(async function (resolve, reject) {
-        //get sellers address from permanent address
-        let sellerAddress = await getSellerAddress(seller).catch(e => {reject(e); Error(console.error(e))});
 
         //send request to seller
-        send(data, sellerAddress)
+        send(data, seller)
             .then(() => console.log(`successfully sent check request to seller`))
             .catch(error => reject(Error(error)));
 
@@ -216,7 +230,7 @@ export function checkAvailability({
                     console.log(listing);
                     switch (listing.status) {
                         case "unchecked":
-                            console.log("Still waiting for response from seller...");
+                            console.log("Waiting for response from seller...");
                             break;
                         case "available":
                             clearInterval(interval);
@@ -227,15 +241,9 @@ export function checkAvailability({
                             removeListing(listingId)
                                 .then(() => console.log('Sucessfully removed listing'))
                                 .catch((e) => console.error(e));
-                            resolve('This item is unavailable');
+                            resolve('This item is unavailable and has been removed from the marketplace');
                             break;
-                        case "pending":
-                            clearInterval(interval);
-                            updateListing(listingId, 'status', 'unchecked')
-                                .catch((e) => console.error(`Couldn't update listing status to unchecked ${e}`))
-                            resolve('Item not currently available, please try again later')
-                            break;
-                        case "sold":
+                        case "completed":
                             clearInterval(interval);
                             removeListing(listingId)
                                 .then(() => console.log('Sucessfully removed listing'))
@@ -302,15 +310,14 @@ hasSufficientFunds.PropTypes = {
 * @param {string} seller - Sellers hex address
 * @param {string} listingId - The id of the listing that is being cancelled
 */
-export function cancelCollection({ seller, listingId }) {
+export function cancelCollection({ listingId }) {
     return new Promise(function (resolve, reject) {
-        updateListing(listingId, 'status', 'unchecked').catch((e) => console.error(e));
+        updateListing(listingId, { 'status': 'unchecked' }).catch((e) => console.error(e));
         console.log(`Sending cancel notification to seller..`);
-        sendCancellationNotification({ listingId, seller })
+        sendCancellationNotification({ listingId })
     })
 }
 cancelCollection.proptypes = {
-    seller: PropTypes.string.isRequired,
     listingId: PropTypes.string.isRequired,
     walletAddress: PropTypes.string.isRequired,
     purchaseListing: PropTypes.string.isRequired,

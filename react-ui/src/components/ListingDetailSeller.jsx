@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Typography from "@mui/material/Typography";
-import { getListingById, deleteListing } from "../database/listing";
+import { getListingById, deleteListing, updateListing } from "../database/listing";
 import CardContent from "@mui/material/CardContent";
 import Button from '@mui/material/Button';
 import CardMedia from "@mui/material/CardMedia";
 import Card from "@mui/material/Card";
-import { sendListingToContacts } from "../minima";
+import { sendListingToContacts, addContact, link, sendMessage } from "../minima";
 import ListingDetailSkeleton from './ListingDetailSkeleton';
 import Carousel from 'react-material-ui-carousel'
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -21,6 +21,10 @@ import PersonPinCircleOutlinedIcon from '@mui/icons-material/PersonPinCircleOutl
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import { Stack } from "@mui/system";
 import Snackbar from '@mui/material/Snackbar';
+import Divider from "@mui/material/Divider";
+import LoadingButton from "@mui/lab/LoadingButton";
+
+
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -35,6 +39,10 @@ function ListingDetailSeller() {
     const params = useParams();
     const navigate = useNavigate();
     const [navButtonsVisible, setNavButtonsVisible] = useState(false);
+    const [isFriend, setIsFriend] = useState(false);
+    const [maxsoloError, setMaxsoloError] = useState('');
+    const [loading, setLoading] = useState(false);
+
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -52,6 +60,32 @@ function ListingDetailSeller() {
             }
         });
     }, [params.id]);
+
+    async function handleAdd() {
+        const { msg, status } = await addContact(listing.buyer_address);
+        console.log(msg, status);
+        if (status === "success") {
+            setIsFriend(true);
+        }
+    }
+
+    function handleMaxSoloLink() {
+        if (!isFriend) {
+            handleAdd();
+        }
+        link('maxsolo', function (res) {
+            if (res.status === false) {
+                if (res.error.includes('permission escalation')) {
+                    setMaxsoloError('Linking to MaxSolo requires that you have WRITE permissions set on dbay.');
+                } else {
+                    setMaxsoloError(res.error);
+                }
+            } else if (res.status === true) {
+                setMaxsoloError('');
+                window.open(res.base, '_blank');
+            }
+        });
+    }
 
     function handleShare() {
         sendListingToContacts(listing.listing_id)
@@ -76,7 +110,26 @@ function ListingDetailSeller() {
             <Alert mt={8} severity="info">Item has been deleted</Alert>
         )
     }
-
+    function handleItemSent() {
+        setLoading(true);
+        updateListing(listing.listing_id, { "status": "completed" })
+            .then(() => {
+                setLoading(false);
+                const data = {
+                    "type": "ITEM_SENT_CLICKED",
+                    "data": {
+                        "listing_id": listing.listing_id
+                    }
+                }
+                sendMessage({
+                    data, address: listing.buyer_pk, app: 'dbay', function(res) {
+                        console.log(res);
+                        navigate('/seller/listings')
+                    }
+                });
+            })
+            .catch((e) => console.error(`Could not update listing as completed: ${e}`));
+    }
     return (
         <div>
             {listing ? (
@@ -150,14 +203,32 @@ function ListingDetailSeller() {
                                 : null}
                         </List>
                         <Stack mt={3} direction="column" spacing={2}>
-                            <Button xs={{ width: '100%' }} aria-label="share" onClick={() => handleShare()} variant="contained" color="secondary">
-                                {error && <Alert severity="error">{error}</Alert>}
-                                Republish
-                            </Button>
-                            <Button xs={{width:'100%'}} aria-label="delete listing" onClick={() => handleDelete()} startIcon={<DeleteIcon />} variant="outlined" color="error">
+                            {listing.status === "available" &&
+                                <Button xs={{ width: '100%' }} aria-label="share" onClick={() => handleShare()} variant="contained" color="secondary">
+                                    {error && <Alert severity="error">{error}</Alert>}
+                                    Reshare Listing
+                                </Button>
+                            }
+                            <Button xs={{ width: '100%' }} aria-label="delete listing" onClick={() => handleDelete()} startIcon={<DeleteIcon />} variant="outlined" color="error">
                                 {error && <Alert severity="error">{error}</Alert>}
                                 Delete Listing
                             </Button>
+                            {listing.transmission_type === "delivery" &&
+                                <>
+                                    {listing.buyer_message
+                                        ? <>
+                                            <Typography gutterBottom variant="h6" component="div">Please send the item to:</Typography>
+                                            <Typography gutterBottom sx={{ textAlign: "left" }} component="p">{listing.buyer_message.split("\n").map((i, key) => {
+                                                return <p key={key}>{i}</p>;
+                                            })}</Typography>
+                                        </>
+                                        : "Buyer has missed the delivery details , you can contact buyer via maxSolo for missing details"
+                                    }
+                                    <Divider />
+                                    <Typography>Notify the buyer that you have sent the item so they can expect it.</Typography>
+                                    <LoadingButton disabled={listing.status === 'completed'} className={"custom-loading"} sx={{ marginTop: "60%" }} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Confirm Item Sent</LoadingButton>
+                                </>
+                            }
                         </Stack>
                     </Card>
                 </div>

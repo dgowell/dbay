@@ -30,18 +30,26 @@ export default function InfoPage() {
       }} gutterBottom>
         {main ?? 'Successfull'}
       </Typography>
-      {(!action || action === 'success') ? <CheckCircleIcon sx={{ alignSelf: 'center', fontSize: '4.5rem' }} color="success" />
-        :
-        <CancelIcon sx={{ alignSelf: 'center', fontSize: "4.5rem" }} color="error" />
-      }
-      {sub ?
-        <Typography sx={{
-          padding: '20px',
-          textAlign: 'center',
-        }} gutterBottom>
-          {sub ?? ''}
-        </Typography>
-        : null}
+      <Box mt={3} sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignContent: 'center',
+        flexWrap: 'wrap',
+      }}>
+        {(!action || action === 'success') ? <CheckCircleIcon sx={{ alignSelf: 'center', fontSize: '4.5rem' }} color="success" />
+          :
+          <CancelIcon sx={{ alignSelf: 'center', fontSize: "4.5rem" }} color="error" />
+        }
+        {sub ?
+          <Typography sx={{
+            padding: '20px',
+            textAlign: 'center',
+          }} gutterBottom>
+            {sub ?? ''}
+          </Typography>
+          : null}
+      </Box>
       <LoadingButton className={"custom-loading"}
         fullWidth
         variant="outlined"
