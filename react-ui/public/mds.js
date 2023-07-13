@@ -63,6 +63,13 @@ var MDS = {
 		if(MDS.minidappuid == null){
 			MDS.minidappuid = MDS.DEBUG_MINIDAPPID;
 		}
+
+		// env overrides
+		if (window.DEBUG) {
+		    host = window.DEBUG_HOST;
+		    port = Math.floor(window.DEBUG_PORT);
+		    MDS.minidappuid = window.DEBUG_UID;
+		}
 		
 		//Is one specified..
 		if(MDS.minidappuid == "0x00"){
