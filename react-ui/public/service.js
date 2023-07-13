@@ -141,7 +141,7 @@ function setup() {
 function processMinimaLogEvent(data) {
     //if we have a new spent coin
     if (data.message.includes("NEW Spent Coin")) {
-
+        MDS.log('Minima Log Event: ' + JSON.stringify(data));
 
         //DBAY LISTINGS
 
@@ -165,7 +165,7 @@ function processMinimaLogEvent(data) {
                                 "buyer_pk": listing.buyer_pk,
                             }
                             MDS.log('SUPER LISTING: ' + JSON.stringify(listing));
-                            let sellerAddress = listing.seller_has_perm_address ? listing.seller_perm_address : listing.created_by_pk;
+                            let sellerAddress = listing.seller_has_perm_address === "true" ? listing.seller_perm_address : listing.created_by_pk;
                             sendMessage({
                                 data: data,
                                 address: sellerAddress,
