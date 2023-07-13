@@ -550,7 +550,6 @@ function processPaymentReceiptRead(entity) {
                                     {
                                         'buyer_message': entity.buyer_message,
                                         'status': entity.transmission_type === 'collection' ? 'completed' : 'paid',
-                                        'notification': true,
                                         'buyer_name': entity.buyer_name,
                                         'buyer_pk': entity.buyer_pk,
                                     });
@@ -610,7 +609,6 @@ function processPaymentReceiptWrite(entity) {
                                     {
                                         'buyer_message': entity.buyer_message,
                                         'status': 'completed',
-                                        'notification': true,
                                         'buyer_name': entity.buyer_name,
                                         'buyer_pk': entity.buyer_pk,
                                         'purchase_code': entity.purchase_code,
@@ -714,7 +712,6 @@ function processCollectionRequest(entity) {
     updateListing(id, {
         'buyer_message': entity.message,
         'status': 'ongoing',
-        'notification': true,
         'transmission_type': entity.transmission_type,
         'buyer_name': buyerName,
         'buyer_pk': entity.buyer_pk,
@@ -1090,7 +1087,6 @@ function createListingTable(callback) {
             "purchase_code" varchar(30),
             "pendinguid" varchar(34) default null,
             "coin_id" varchar(80),
-            "notification" boolean default false,
             "collection" boolean default false,
             "delivery" boolean default false,
             "image"  varchar(max),

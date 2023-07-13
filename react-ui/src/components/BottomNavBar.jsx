@@ -8,11 +8,16 @@ import Paper from "@mui/material/Paper";
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import Badge from '@mui/material/Badge';
+import { useNotification } from "../hooks/useNotification";
 
 
 
 function BottomNavBar() {
     const [activePage, setActivePage] = useState(0);
+    const { notificationCount } = useNotification();
+
+    //add a notification badge to the notifications icon
 
     return (
         <Paper
@@ -44,14 +49,17 @@ function BottomNavBar() {
                 <BottomNavigationAction
                     component={Link}
                     to="/notifications"
-                    icon={<NotificationsIcon color="grey" />}
+                    icon={
+                        <Badge badgeContent={notificationCount} color="secondary">
+                            <NotificationsIcon color="grey" />
+                        </Badge>}
                 />
                 <BottomNavigationAction
                     component={Link}
                     to="/profile"
                     icon={<PersonIcon color="grey" />}
                 />
-                
+
 
             </BottomNavigation>
         </Paper>
