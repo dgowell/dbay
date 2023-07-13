@@ -120,7 +120,8 @@ createListing.propTypes = {
 * @param {string} pk - The id of the creator
 */
 export function getListings(pk) {
-    const store = `where "created_by_pk"='${pk}'`;
+    //order them by latest at the top
+    const store = `where "created_by_pk"='${pk}' order by "created_at" desc`;
     const Q = `select * from ${LISTINGSTABLE} ${pk ? `${store}` : ''};`
     return new Promise(function (resolve, reject) {
         window.MDS.sql(Q, (res) => {
@@ -163,7 +164,8 @@ getListings.propTypes = {
 * Fetches all listings that are the user has purchased
 */
 export function getMyPurchases(pk) {
-    const Q = `SELECT * FROM ${LISTINGSTABLE} WHERE "created_by_pk" <> '${pk}' AND ("status" = 'completed' OR "status" = 'in_progress' OR "status" = 'pending_confirmation' OR "status" = 'collection_rejected');`
+    //order by most recent first
+    const Q = `SELECT * FROM ${LISTINGSTABLE} WHERE "created_by_pk" <> '${pk}' AND ("status" = 'completed' OR "status" = 'in_progress' OR "status" = 'pending_confirmation' OR "status" = 'collection_rejected') ORDER BY "created_at" DESC;`;
 
     return new Promise((resolve, reject) => {
         window.MDS.sql(Q, (res) => {

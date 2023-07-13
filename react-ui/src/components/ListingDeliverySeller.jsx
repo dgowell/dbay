@@ -56,10 +56,10 @@ function ListingDeliverySeller() {
                 const app = 'dbay';
 
                 sendMessage({
-                    data:data, 
-                    address:address, 
-                    app:app, 
-                    callback: function(res) {
+                    data: data,
+                    address: address,
+                    app: app,
+                    callback: function (res) {
                         console.log(res);
                         setLoading(false);
                         navigate('/seller/listings');
@@ -78,10 +78,10 @@ function ListingDeliverySeller() {
                 const app = 'dbay';
 
                 sendMessage({
-                    data:data, 
-                    address:address, 
-                    app:app, 
-                    callback: function(res) {
+                    data: data,
+                    address: address,
+                    app: app,
+                    callback: function (res) {
                         console.log(res);
                         setLoading(false);
                         navigate('/seller/listings');
@@ -115,17 +115,22 @@ function ListingDeliverySeller() {
         setLoading(true);
         updateListing(listing.listing_id, { "status": "completed" })
             .then(() => {
-                setLoading(false);
                 const data = {
                     "type": "ITEM_SENT_CLICKED",
                     "data": {
                         "listing_id": listing.listing_id
                     }
                 }
-                sendMessage({data, address:listing.buyer_pk, app:'dbay', function (res) {
-                    console.log(res);
-                    navigate('/seller/listings')
-            }});
+                sendMessage({
+                    data: data,
+                    address: listing.buyer_pk,
+                    app: 'dbay',
+                    callback: function (res) {
+                        console.log(res);
+                        navigate('/seller/listings')
+                        setLoading(false);
+                    }
+                });
             })
             .catch((e) => console.error(`Could not update listing as completed: ${e}`));
     }

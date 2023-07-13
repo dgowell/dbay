@@ -307,6 +307,7 @@ function ListingPurchase(props) {
                 value={transmissionType}
                 onChange={handleChange}
               >
+                {listing.collection === "true" && <FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="collection" control={<Radio />} label="Collection" />}
                 {listing.delivery === "true" &&
                   <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="delivery" control={<Radio />} label={`Delivery`} />
                     <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
