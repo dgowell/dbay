@@ -32,6 +32,7 @@ function createNotificationsTable(callback) {
  */
 
 function addNotification({ listing_id, message, created_at, callback }) {
+    MDS.notify(message);
     MDS.log(`Adding notification ${listing_id}, ${message}, ${created_at}`);
     //if listing_id is null, then the notification is not associated with a listing
     const Q = `insert into ${NOTIFICATIONSTABLE} ("listing_id","message","created_at") values('${listing_id}','${message}','${created_at}');`;
