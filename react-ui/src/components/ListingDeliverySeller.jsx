@@ -152,14 +152,16 @@ function ListingDeliverySeller() {
                             subheader={`${listing.title} $M${listing.price}`}
                         />
                         <CardContent>
-                            {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
+
                             <Box sx={{ my: 3, mx: 2, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'space-between', justifyContent: 'space-between', boxShadow: "none" }}>
+
                                 {listing.transmission_type === "collection" &&
                                     <>
                                         <Typography>@{listing.buyer_name} would like to collect your item, arrange collection with them below.</Typography>
+                                        <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="outlined">Open MaxSolo</Button>
+                                        {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
                                         <Stack direction="column" spacing={2}>
-                                            <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Open MaxSolo</Button>
-                                            {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
+
                                             {listing.status === "ongoing" &&
                                                 <>
                                                     <Typography>Once collection has been arranged, take it off the market to stop others seeing it by clicking below.</Typography>
@@ -176,18 +178,21 @@ function ListingDeliverySeller() {
                                 {listing.transmission_type === "delivery" &&
                                     <>
                                         {listing.buyer_message
-                                            ? <>
-                                                <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="contained">Open MaxSolo</Button>
+                                            ?
+                                            <Box>
                                                 <Typography gutterBottom variant="h6" component="div">Please send the item to:</Typography>
-                                                <Typography gutterBottom sx={{ textAlign: "left" }} component="p">{listing.buyer_message.split("\n").map((i, key) => {
+                                                <Typography gutterBottom sx={{ textAlign: "left", wordBreak: "break-all" }} component="p">{listing.buyer_message.split("\n").map((i, key) => {
                                                     return <p key={key}>{i}</p>;
                                                 })}</Typography>
-                                            </>
-                                            : "Buyer has missed the delivery details , you can contact buyer via maxSolo for missing details"
+                                            </Box>
+
+                                            : <Typography>Buyer has not provided any delivery details, contact them to arrange delivery.</Typography>
                                         }
+                                        <Button className={"custom-loading"} onClick={handleMaxSoloLink} color="secondary" variant="outlined">Open MaxSolo</Button>
+                                        {maxsoloError && <Alert severity="error">{maxsoloError}</Alert>}
                                         <Divider />
                                         <Typography>Notify the buyer that you have sent the item so they can expect it.</Typography>
-                                        <LoadingButton disabled={listing.status === 'completed'} className={"custom-loading"} sx={{ marginTop: "60%" }} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Confirm Item Sent</LoadingButton>
+                                        <LoadingButton disabled={listing.status === 'completed'} className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Confirm Item Sent</LoadingButton>
                                     </>
                                 }
                             </Box>

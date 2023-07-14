@@ -132,7 +132,7 @@ function DeliveryConfirmation({
         </ListItem >
         <Divider />
         <Typography variant="h6">Delivery address</Typography>
-        <Typography gutterBottom sx={{ textAlign: "left" }} component="address">{message.split("\n").map((i, key) => {
+        <Typography gutterBottom sx={{ textAlign: "left", wordBreak: "break-all" }} component="address">{message.split("\n").map((i, key) => {
           return <span style={{ display: 'block' }} key={key}>{i}</span>;
         })}</Typography>
       </Box>

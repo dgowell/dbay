@@ -226,7 +226,7 @@ function ListingDetailSeller() {
                                     }
                                     <Divider />
                                     <Typography>Notify the buyer that you have sent the item so they can expect it.</Typography>
-                                    <LoadingButton disabled={listing.status === 'completed'} className={"custom-loading"} sx={{ marginTop: "60%" }} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Confirm Item Sent</LoadingButton>
+                                    <LoadingButton disabled={listing.status === 'completed'} className={"custom-loading"} loading={loading} fullWidth variant="contained" color={"secondary"} onClick={handleItemSent}>Confirm Item Sent</LoadingButton>
                                 </>
                             }
                         </Stack>

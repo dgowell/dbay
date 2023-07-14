@@ -27,7 +27,6 @@ export function getName(callback) {
     const Q = `SELECT "name" FROM ${SETTINGSTABLE};`;
     window.MDS.sql(Q, function (res) {
         window.MDS.log(`Get Name response, ${Q}`);
-        debugger;
         callback(res.rows[0].name);
     });
 };
