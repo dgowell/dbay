@@ -7,7 +7,6 @@ import Avatar from "@mui/material/Avatar";
 import BungalowIcon from "@mui/icons-material/Bungalow";
 import { ListItemButton, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Badge from '@mui/material/Badge';
 import Stack from '@mui/material/Stack';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
@@ -27,16 +26,11 @@ function Listing(props) {
       >
         <ListItemAvatar>
           {listing?.image ? (
-            <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{borderRadius:"5px"}} />
+            <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
           ) : (
-            <Badge anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-              }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
-              <Avatar>
-                <BungalowIcon />
-              </Avatar>
-            </Badge>
+            <Avatar>
+              <BungalowIcon />
+            </Avatar>
           )}
         </ListItemAvatar>
         <ListItemText
@@ -44,22 +38,22 @@ function Listing(props) {
           secondary={listing.price ? `$M${listing.price}` : null}
         />
         <Stack direction="row" spacing={1}>
-        <ListItem sx={{color:"rgba(0, 0, 0, 0.54)"}}>
-          {listing.collection==='true' && (listing.status === 'available' || listing.status === 'unchecked')
-            ? <LocationOnOutlinedIcon/>
-            : null}
-          {listing.delivery==='true' && (listing.status === 'available' || listing.status === 'unchecked')
-            ? <LocalShippingOutlinedIcon/>
-            : null}
-          {listing.transmission_type === "collection" && (listing.status === 'completed' || listing.status === 'in_progress')
-            ? <LocationOnOutlinedIcon/>
-            : null}
-          {listing.transmission_type === "delivery" && (listing.status === 'completed' || listing.status === 'in_progress')
-            ?  <LocalShippingOutlinedIcon/>
-            : null}
-            </ListItem>
+          <ListItem sx={{ color: "rgba(0, 0, 0, 0.54)" }}>
+            {listing.collection === 'true' && (listing.status === 'available' || listing.status === 'unchecked')
+              ? <LocationOnOutlinedIcon />
+              : null}
+            {listing.delivery === 'true' && (listing.status === 'available' || listing.status === 'unchecked')
+              ? <LocalShippingOutlinedIcon />
+              : null}
+            {listing.transmission_type === "collection" && (listing.status === 'completed' || listing.status === 'in_progress')
+              ? <LocationOnOutlinedIcon />
+              : null}
+            {listing.transmission_type === "delivery" && (listing.status === 'completed' || listing.status === 'in_progress')
+              ? <LocalShippingOutlinedIcon />
+              : null}
+          </ListItem>
 
-          </Stack>
+        </Stack>
       </ListItemButton>
 
     </ListItem >
@@ -68,7 +62,7 @@ function Listing(props) {
 
 export default function ListingList(props) {
   // This method will map out the listings on the table
-  const {link, listings} = props;
+  const { link, listings } = props;
   function listingList(props) {
     if (listings.length > 0) {
       return listings.map((listing) => {

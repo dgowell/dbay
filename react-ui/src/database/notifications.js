@@ -142,8 +142,8 @@ export function markNotificationAsRead({ notificationId, callback }) {
  * @returns
  */
 
-export function deleteNotification({ notification_id, callback }) {
-    const Q = `DELETE FROM ${NOTIFICATIONSTABLE} WHERE "notification_id"='${notification_id}'`;
+export function deleteNotification({ notificationId, callback }) {
+    const Q = `DELETE FROM ${NOTIFICATIONSTABLE} WHERE "notification_id"='${notificationId}'`;
     window.MDS.sql(Q, function (res) {
         if (logs) {
             window.MDS.log(`window.MDS.SQL, ${Q}`);

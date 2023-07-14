@@ -17,7 +17,6 @@ import Avatar from '@mui/material/Avatar';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import PaymentError from './PaymentError';
 import BungalowIcon from "@mui/icons-material/Bungalow";
-import Badge from '@mui/material/Badge';
 import { hasSufficientFunds } from '../minima/buyer-processes';
 import Modal from '@mui/material/Modal';
 import Alert from '@mui/material/Alert';
@@ -185,14 +184,9 @@ function ListingCollectionBuyer(props) {
                                 {listing.image ? (
                                     <Avatar alt={listing.title} src={listing.image.split("(+_+)")[0]} style={{ borderRadius: "5px" }} />
                                 ) : (
-                                    <Badge anchorOrigin={{
-                                        vertical: 'top',
-                                        horizontal: 'right',
-                                    }} color="secondary" variant="dot" invisible={!(listing.notification === 'true')}>
-                                        <Avatar>
-                                            <BungalowIcon />
-                                        </Avatar>
-                                    </Badge>
+                                    <Avatar>
+                                        <BungalowIcon />
+                                    </Avatar>
                                 )}
                             </ListItemAvatar>
                             <ListItemText primary={`M$${listing.price}`} secondary={listing.title} />

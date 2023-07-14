@@ -1,7 +1,7 @@
 //functional comonent to return the notifications
 
 import { useEffect, useState } from "react";
-import { getNotifications, markNotificationAsRead } from "../database/notifications";
+import { getNotifications, markNotificationAsRead, deleteNotification } from "../database/notifications";
 import Stack from '@mui/material/Stack';
 import { useNavigate } from "react-router-dom";
 import Card from '@mui/material/Card';
@@ -10,7 +10,6 @@ import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import Badge from '@mui/material/Badge';
 import Skeleton from '@mui/material/Skeleton';
 
 export default function Notifications() {
@@ -21,6 +20,35 @@ export default function Notifications() {
     function handleGoToListing(listing_id) {
         navigate(`/seller/listing/delivery/${listing_id}`);
     }
+
+    function handleDelete(id) {
+        console.log(id);
+        deleteNotification({
+            notificationId: id,
+            callback: function (data, error) {
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+                else {
+                    console.log(`results:`, data);
+                    getNotifications(function (data, error) {
+                        if (error) {
+                            console.log(error);
+                            return;
+                        }
+                        else {
+                            console.log(`results:`, data);
+                            setNotifications(data);
+                        }
+                    });
+                }
+            }
+        });
+    }
+    
+
+
 
     function handleMarkAsRead(id) {
         console.log(id);
@@ -104,6 +132,7 @@ export default function Notifications() {
                             <CardActions>
                                 {notification.listing && <Button onClick={() => handleGoToListing(notification.listing)} size="small" color="secondary" endIcon={<ArrowForwardIcon />}>Go to listing</Button>}
                                 {notification.unread === "true" && <Button onClick={() => handleMarkAsRead(notification.notification_id)} size="small" color="secondary">Mark as Read</Button>}
+                                {notification.unread !== "true" && <Button onClick={() => handleDelete(notification.notification_id)} size="small" color="error">Delete</Button>}
                             </CardActions>
 
                         </Card>

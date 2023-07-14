@@ -7,7 +7,6 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import { useNavigate } from "react-router-dom";
-import Badge from '@mui/material/Badge';
 import { getNotificationStatus } from '../database/listing';
 import { getName } from '../database/settings';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -53,7 +52,7 @@ function Profile() {
             <Typography variant="h3">Transactions</Typography>
             <nav aria-label="main mailbox folders">
                 <List>
-                    <ListItem     secondaryAction={
+                    <ListItem  secondaryAction={
                         <IconButton edge="end" aria-label="comments">
                             <ArrowForwardIcon />
                             </IconButton>} disablePadding>
@@ -67,34 +66,12 @@ function Profile() {
                             </IconButton>}  disablePadding>
 
                         <ListItemButton onClick={() => navigate('/seller/listings')}>
-                        <ListItemText primary="My Listings" />
-                            <Badge anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }} color="secondary" variant="dot" invisible={!hasNotification}>
-                               
-                            </Badge>
-                           
+                        <ListItemText primary="My Listings" />                        
                         </ListItemButton>
 
                     </ListItem>
                 </List>
             </nav>
-            {/* <Typography variant="h3">Account</Typography>
-            <nav aria-label="main mailbox folders">
-                <List>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => navigate('/address')}>
-                            <ListItemText primary="My Address" />
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => navigate('/my-name')}>
-                            <ListItemText primary="My Name" />
-                        </ListItemButton>
-                    </ListItem>
-                </List>
-            </nav> */}
         </Box>
     </>
     )
