@@ -174,9 +174,9 @@ function ListingCollectionBuyer(props) {
                 }}>
 
 
-                    <Typography variant="h3">{listing.transmission_type === 'collection'
-                        ? "You have arranged to collect this item"
-                        : "You have arranged to have this item delivered"}</Typography>
+                    <h1>{listing.transmission_type === 'collection'
+                        ? "Collection"
+                        : "Delivery"}</h1>
 
                     <List>
                         <ListItem>

@@ -30,6 +30,7 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import ImageIcon from '@mui/icons-material/Image';
 import ForumIcon from '@mui/icons-material/Forum';
+import Divider from '@mui/material/Divider';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -268,6 +269,7 @@ function ListingDetail() {
                     : "This item has no description"}
                 </Typography>
               </CardContent>
+              <Divider sx={{ marginTop: "30px", marginBottom: "20px" }} />
               <List>
                 {listing.collection === "true"
                   ?
@@ -314,7 +316,6 @@ function ListingDetail() {
                   </ListItem>
                 }
               </List>
-
 
             </Card>
             <Snackbar open={sent} autoHideDuration={6000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>

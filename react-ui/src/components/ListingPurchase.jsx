@@ -112,9 +112,8 @@ function DeliveryConfirmation({
         p: 2,
         gap: 3,
       }}>
-        <Typography variant="h1" sx={{ fontSize: '24px', textAlign: 'center', pt: 4 }} gutterBottom>
-          Confirm purchase
-        </Typography>
+        <h1>Confirm purchase</h1>
+        
         <ListItem disablePadding>
           <ListItemAvatar>
             {listing?.image ? (
@@ -281,9 +280,7 @@ function ListingPurchase(props) {
           flexDirection: 'column',
           alignContent: 'space-between',
         }}>
-          <Typography variant="h1" sx={{ fontSize: '24px', textAlign: 'center' }} gutterBottom>
-            Shipping
-          </Typography>
+          <h1>Shipping</h1>
           <List >
             <ListItem>
               <Alert sx={{ width: "100%" }} severity='success' variant="outlined">Item is available</Alert>

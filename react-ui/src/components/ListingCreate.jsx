@@ -273,9 +273,7 @@ export default function ListingCreate() {
           alignItems: "center",
         }}
       >
-        <Typography sx={{ fontSize: '24px' }} gutterBottom>
-          Create new listing
-        </Typography>
+        <h1>Create new listing</h1>
         <Box
           component="form"
           sx={{ mt: 3 }}

@@ -151,7 +151,7 @@ function ListingDetailSeller() {
                             }
                         </Carousel>
 
-                        <CardContent sx={{ padding: '15px 0 0' }} >
+                        <CardContent sx={{ padding: '15px 0 0', wordWrap: 'break-word' }} >
                             <Stack direction="row" justifyContent="space-between" alignItems="center" mb="1rem">
                                 <Typography gutterBottom variant="h5" component="div" mb="0">
                                     $M{listing.price}
@@ -168,11 +168,11 @@ function ListingDetailSeller() {
                             </Typography>
                             <Typography gutterBottom component="div" mb="1.5rem">
                                 {listing.description
-                                    ? <pre style={{ fontFamily: 'inherit' }}>{listing.description}</pre>
+                                    ? <p style={{ fontFamily: 'inherit' }}>{listing.description}</p>
                                     : "This item has no description"}
                             </Typography>
                         </CardContent>
-
+                        <Divider style={{ marginTop: "30px", marginBottom: "10px" }}></Divider>
                         <List>
                             {listing.collection === "true"
                                 ?
@@ -183,7 +183,7 @@ function ListingDetailSeller() {
                                         </ListItemIcon>
                                         <ListItemText
                                             primary="Collection"
-                                            secondary="Coordinates saved to listing" />
+                                        />
                                     </ListItemButton>
                                 </ListItem>
                                 : null}
