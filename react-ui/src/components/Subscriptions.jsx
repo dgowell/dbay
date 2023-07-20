@@ -6,7 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import { createSubscription, getSubscriptions, deleteSubscription } from '../database/subscriptions';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Button, Card, IconButton, Stack, TextField } from '@mui/material';
+import { Button, Box, IconButton, Stack, TextField } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Alert from '@mui/material/Alert';
 import { sendSubscriptionRequest } from '../minima';
@@ -136,6 +136,33 @@ export default function Subscriptions() {
         <div>
             <h1>Subscriptions</h1>
             <p>Here you can see all your subscriptions</p>
+            <Box sx={{ marginTop: 3, maxWidth: 345 , marginBottom: 3}}>
+                <form ref={formRef} onSubmit={formik.handleSubmit}>
+                    <Stack spacing={2}>
+                        <TextField
+                            disabled={formik.isSubmitting}
+                            fullWidth
+                            id="seller_address"
+                            name="seller_address"
+                            label="Seller Address"
+                            value={formik.values.seller_address}
+                            onChange={formik.handleChange}
+                            error={formik.touched.seller_address && Boolean(formik.errors.seller_address)}
+                            helperText={formik.touched.seller_address && formik.errors.seller_address}
+                        />
+                        <Button
+                            disabled={formik.isSubmitting}
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            sx={{ width: '50%'}}
+                        >
+                            Subscribe
+                        </Button>
+                    </Stack>
+                </form>
+            </Box>
+            {error && <Alert severity="error">{error.message ? error.message : String(error)}</Alert>}
             {subscriptions && subscriptions.length > 0 &&
                 <List dense sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
                     {subscriptions.map((subscription) => {
@@ -168,33 +195,6 @@ export default function Subscriptions() {
                     })}
                 </List>
             }
-            <Card sx={{ marginTop: 10, maxWidth: 345 }}>
-                <form ref={formRef} onSubmit={formik.handleSubmit}>
-                    <Stack spacing={2}>
-                        <TextField
-                            disabled={formik.isSubmitting}
-                            fullWidth
-                            id="seller_address"
-                            name="seller_address"
-                            label="Seller Address"
-                            value={formik.values.seller_address}
-                            onChange={formik.handleChange}
-                            error={formik.touched.seller_address && Boolean(formik.errors.seller_address)}
-                            helperText={formik.touched.seller_address && formik.errors.seller_address}
-                        />
-                        <Button
-                            disabled={formik.isSubmitting}
-                            fullWidth
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                        >
-                            Subscribe
-                        </Button>
-                    </Stack>
-                </form>
-            </Card>
-            {error && <Alert severity="error">{error.message ? error.message : String(error)}</Alert>}
 
 
 

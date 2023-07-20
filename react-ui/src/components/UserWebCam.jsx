@@ -87,7 +87,8 @@ const UserWebCam = (props) => {
           >
             <RadioButtonCheckedIcon />
           </Fab>
-        <Fab style={{ backgroundColor: picture ? '#6F83FF' : 'rgba(255,255,255,0.1)' }} disabled={!picture} color="priary" onClick={() => { props.close(-1) }}>
+          {/* backgroundColor: picture ? '#6F83FF' : 'rgba(255,255,255,0.1)' */}
+        <Fab style={{ backgroundColor: picture ? '#222222' : 'rgba(255,255,255,0.1)' }} disabled={!picture} color="priary" onClick={() => { props.close(-1) }}>
           <Check color={picture ? 'white' : 'grey'}/>
         </Fab>
       </Stack>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import HomeIcon from '@mui/icons-material/Home';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Paper from "@mui/material/Paper";
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -34,7 +34,7 @@ function BottomNavBar() {
                 <BottomNavigationAction
                     component={Link}
                     to="/"
-                    icon={<HomeOutlinedIcon color="grey" />}
+                    icon={<HomeIcon color="grey" />}
                 />
                 <BottomNavigationAction
                     component={Link}
@@ -44,7 +44,7 @@ function BottomNavBar() {
                 <BottomNavigationAction
                     component={Link}
                     to="/listing/create"
-                    icon={<AddCircleOutlineOutlinedIcon color="grey" fontSize="large" />}
+                    icon={<AddCircleOutlineOutlinedIcon color="grey" />}
                 />
                 <BottomNavigationAction
                     component={Link}

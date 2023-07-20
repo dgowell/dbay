@@ -65,13 +65,16 @@ border-radius: 6px;
 
 .css-bynrdj-MuiButtonBase-root-MuiSwitch-switchBase.Mui-checked{
   color: #526bff;
+  color: #222222;
 }
 .css-bynrdj-MuiButtonBase-root-MuiSwitch-switchBase.Mui-checked+.MuiSwitch-track{
   background-color: #526bff;
+  background-color: #222222;
 }
 .Mui-selected>svg, 
 .Mui-selected>span>svg  {
   color: #526BFF;
+  color: #222222;
 }
 
 .css-vmaine-MuiButtonBase-root-MuiButton-root{
@@ -88,7 +91,7 @@ box-shadow: none!important;
 }
 
 .custom-loading{
-border-radius: 510px!important;
+/* border-radius: 510px!important;*/
 box-shadow: none!important;
 width: 100%;
 }
