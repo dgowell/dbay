@@ -5,7 +5,7 @@ import { getListingIds } from "../database/listing";
 const SUBSCRIPTIONSTABLE = 'subscriptions';
 const logs = process.env.REACT_APP_LOGS;
 
-export function createSubscription({ permanentAddress, storeName, storeDescription = '', storeImage = '', callback }) {
+export function createSubscription({ permanentAddress, storeName = '', storeDescription = '', storeImage = '', callback }) {
     let fullsql = `INSERT INTO subscriptions ("seller_permanent_address", "seller_store_name", "seller_store_description", "seller_store_image") VALUES ('${permanentAddress}', '${storeName}', '${storeDescription}', '${storeImage}')`;
     window.MDS.sql(fullsql, (res) => {
         if (res.error) {
@@ -18,7 +18,7 @@ export function createSubscription({ permanentAddress, storeName, storeDescripti
 
 PropTypes.createSubscription = {
     permanentAddress: PropTypes.string.isRequired,
-    storeNme: PropTypes.string.isRequired,
+    storeNme: PropTypes.string,
     storeDescription: PropTypes.string,
     storeImage: PropTypes.string,
     callback: PropTypes.func.isRequired

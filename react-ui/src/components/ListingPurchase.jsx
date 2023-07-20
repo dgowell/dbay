@@ -100,7 +100,6 @@ function DeliveryConfirmation({
   return (
     <Box sx={{
       width: '100%',
-      height: '100vh',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -109,11 +108,12 @@ function DeliveryConfirmation({
         display: "flex",
         flexDirection: "column",
         justifyContent: 'space-between',
-        p: 2,
+        paddingLeft: 2,
+        paddingRight: 2,
         gap: 3,
       }}>
         <h1>Confirm purchase</h1>
-        
+
         <ListItem disablePadding>
           <ListItemAvatar>
             {listing?.image ? (
@@ -130,10 +130,10 @@ function DeliveryConfirmation({
           />
         </ListItem >
         <Divider />
-        <Typography variant="h6">Delivery address</Typography>
-        <Typography gutterBottom sx={{ textAlign: "left", wordBreak: "break-all" }} component="address">{message.split("\n").map((i, key) => {
+        <Typography variant='h6'>Delivery Address:</Typography>
+        <Typography gutterBottom sx={{ textAlign: "left", wordBreak: "break-all" }} component="address">{message ? message.split("\n").map((i, key) => {
           return <span style={{ display: 'block' }} key={key}>{i}</span>;
-        })}</Typography>
+        }) : <Alert severity="warning">No address provided</Alert>}</Typography>
       </Box>
 
       <Box sx={{
@@ -274,20 +274,20 @@ function ListingPurchase(props) {
       }
       return (
         <Box sx={{
-          pt: 4,
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignContent: 'space-between',
         }}>
-          <h1>Shipping</h1>
+          <Box sx={{ paddingLeft: 2 }}>
+            <h1>Shipping</h1>
+            {listing.collection === "false" && <p>The seller will deliver the item to you</p>}
+          </Box>
           <List >
             <ListItem>
-              <Alert sx={{ width: "100%" }} severity='success' variant="outlined">Item is available</Alert>
+              <Alert sx={{ width: "100%" }} severity='success' variant="outlined">Item is available and you have sufficient funds</Alert>
             </ListItem>
-            <ListItem>
-              <Alert sx={{ width: "100%" }} severity='success' variant="outlined">You have sufficient funds</Alert>
-            </ListItem>
+
           </List>
           <Box sx={{
             display: "flex",
@@ -308,12 +308,7 @@ function ListingPurchase(props) {
                 {listing.delivery === "true" &&
                   <><FormControlLabel sx={{ justifyContent: 'space-between', marginLeft: 0 }} labelPlacement="start" value="delivery" control={<Radio />} label={`Delivery`} />
                     <Typography variant="caption" color="grey" mt='-12px'>M${listing.shipping_cost}</Typography>
-                    {listing.collection === "false" ?
-                      <>
-                        <Typography variant="h6">The seller will deliver the item to you</Typography>
-                        <Typography>Delivery Cost: M${listing.shipping_cost}</Typography>
-                      </>
-                      : null}</>}
+                  </>}
               </RadioGroup>
             </FormControl>
 

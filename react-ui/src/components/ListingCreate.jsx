@@ -270,7 +270,7 @@ export default function ListingCreate() {
           marginTop: 4,
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
+
         }}
       >
         <h1>Create new listing</h1>

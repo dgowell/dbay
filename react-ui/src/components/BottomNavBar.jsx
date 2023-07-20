@@ -44,7 +44,7 @@ function BottomNavBar() {
                 <BottomNavigationAction
                     component={Link}
                     to="/listing/create"
-                    icon={<AddCircleOutlineOutlinedIcon color="grey" />}
+                    icon={<AddCircleOutlineOutlinedIcon color="grey" fontSize="large" />}
                 />
                 <BottomNavigationAction
                     component={Link}

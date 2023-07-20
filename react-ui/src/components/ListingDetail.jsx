@@ -29,8 +29,8 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import ImageIcon from '@mui/icons-material/Image';
-import ForumIcon from '@mui/icons-material/Forum';
 import Divider from '@mui/material/Divider';
+import Button from '@mui/material/Button';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -263,7 +263,7 @@ function ListingDetail() {
                 <Typography gutterBottom variant="h6" component="div">
                   {listing.title}
                 </Typography>
-                <Typography gutterBottom component="div" mb="1.5rem">
+                <Typography gutterBottom component="div" mb="1.5rem" sx={{ whiteSpace: 'pre-wrap' }}>
                   {listing.description
                     ? listing.description
                     : "This item has no description"}
@@ -298,13 +298,14 @@ function ListingDetail() {
                   </ListItemIcon>
                   <ListItemText primary="Seller" secondary={`@${listing.created_by_name}`} />
                   <Tooltip title="Open MaxSolo" placement="top">
-                    <IconButton
+                    <Button
                       onClick={() => handleMaxSoloLink()}
                       aria-label="open maxsolo"
+                      variant="outlined"
                     >
-                      <ForumIcon />
+                      Open MaxSolo
                       {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
-                    </IconButton>
+                    </Button>
                   </Tooltip>
                 </ListItem>
                 {listing.created_by_name !== listing.sent_by_name &&
@@ -328,7 +329,7 @@ function ListingDetail() {
             </Alert>}
             <Stack spacing={2} mt={4}>
               {listing.status === "completed"
-                ? null
+                ? <Alert sx={{ boxShadow: 'none', border: '1px solid #bebebe'}}>Payment confirmed. The seller will deliver your item to the address you provided</Alert>
                 : <LoadingButton
                   className={"custom-loading"}
                   color="secondary"
