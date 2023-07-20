@@ -20,12 +20,8 @@ import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import { Box } from "@mui/material";
 import Button from "@mui/material/Button";
-import { addContact, isContact } from "../minima";
 import ImageIcon from '@mui/icons-material/Image';
 
-//get env variables
-const WILL_MAX_ADDRESS = process.env.REACT_APP_WILL_MAX_ADDRESS;
-const WILL_PK = process.env.REACT_APP_WILL_PK;
 
 export default function Marketplace() {
   const [listings, setListings] = useState();
@@ -71,21 +67,6 @@ export default function Marketplace() {
         console.error(`Couldn't get host: ${e}`);
       });
   }, []);
-
-  /* add will as a contact and print result to console */
-  useEffect(() => {
-    async function check() {
-      //check for specific contact
-      if (await isContact(WILL_PK)) {
-        console.log("Will Dbay is already a contact");
-      } else {
-       var {msg, status} = await addContact(WILL_MAX_ADDRESS);
-       console.log(msg, status);
-      }
-    }
-    check();
-  },[]);
-
 
   function marketplaceFilter(o) {
     return (o.status === 'unchecked' || o.status === 'available');
