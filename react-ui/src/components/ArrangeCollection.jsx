@@ -7,14 +7,10 @@ import { getListingById } from "../database/listing";
 import { addContact, isContact, link } from "../minima";
 import ListingDetailSkeleton from "./ListingDetailSkeleton";
 import Box from "@mui/material/Box";
-import Timeline from '@mui/lab/Timeline';
-import TimelineItem from '@mui/lab/TimelineItem';
-import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import TimelineConnector from '@mui/lab/TimelineConnector';
-import TimelineContent from '@mui/lab/TimelineContent';
-import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
-import TimelineDot from '@mui/lab/TimelineDot';
 import { Button } from "@mui/material";
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
+
 
 export default function InfoPage() {
   const params = useParams();
@@ -72,85 +68,28 @@ export default function InfoPage() {
   }
   if (listing) {
     return (
-      <Box sx={{ textAlign: 'center' }} mt={3}>
-        <Typography sx={{ fontSize: "24px", textAlign: "center" }} variant="h1">Arrange Collection</Typography>
-        <Typography mt={3} mb={3} variant="h3">What are my next steps?</Typography>
-        <Timeline position="alternate">
-          <TimelineItem>
-            <TimelineOppositeContent
-              sx={{ m: 'auto 0' }}
-              align="right"
-              variant="body2"
-              color="text.secondary"
-            >
-              <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Open MaxSolo</Button>
-              {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineConnector sx={{ bgcolor: 'secondary.main' }} />
-              <TimelineDot color="secondary">
-              </TimelineDot>
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent sx={{ py: '12px', px: 2 }}>
-              <Typography variant="h6">
-                Contact Seller
-              </Typography>
-              <Typography variant="h5">
-                @{listing.created_by_name}
-              </Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent
-              sx={{ m: 'auto 0' }}
-              variant="body2"
-              color="text.secondary"
-            >
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineConnector />
-              <TimelineDot color="primary">
-              </TimelineDot>
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent sx={{ py: '12px', px: 2 }}>
-              <Typography variant="h6" component="span">
-                Arrange collection
-              </Typography>
-              <Typography>mutually pick a time and place</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineSeparator>
-              <TimelineConnector />
-              <TimelineDot color="primary" variant="outlined">
-              </TimelineDot>
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent sx={{ py: '12px', px: 2 }}>
-              <Typography variant="h6" component="span">
-                Meet Seller
-              </Typography>
-              <Typography>check item is as you expect</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineSeparator>
-              <TimelineConnector />
-              <TimelineDot>
-              </TimelineDot>
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent sx={{ py: '12px', px: 2 }}>
-              <Typography variant="h6" component="span">
-                Pay
-              </Typography>
-              <Typography>using dbay from your 'My Purchases' section in transactions</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        </Timeline>
+      <Box mt={3}>
+        <h1>Arrange Collection</h1>
+        <p>Open MaxSolo and start a chat with the <b>sellers name</b></p>
 
+        <span>Seller</span>
+        <Stack direction="row"   justifyContent="space-between"
+  alignItems="center" spacing={2}>
+          <Typography variant="h6">@{listing.created_by_name}</Typography>
+        <Button onClick={handleMaxSoloLink} variant="contained" color="secondary">Open MaxSolo</Button>
+              {maxsoloError && <Alert mt={2} sx={{ marginTop: "5px", width: "100%" }} severity="error" variant="outlined">{maxsoloError}</Alert>}
+        </Stack>
+
+        <Divider sx={{ marginTop: "30px", marginBottom: "30px" }} />
+
+        
+        <Typography variant="h6">Next Steps</Typography> 
+        <ol>
+          <li>Contact the seller to arrange a time and place to collect the item</li>
+          <li>Meet with the seller and check your item is as you expect.</li>
+          <li>Pay from 'My Purchases'</li>
+        </ol>
+        
 
         <LoadingButton className={"custom-loading"} color="secondary" onClick={() => navigate("/")} variant="outlined">
           Close
