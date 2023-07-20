@@ -41,7 +41,7 @@ PropTypes.getSubscriptions = {
 };
 
 export function deleteSubscription({ permanent_address, callback }) {
-    let fullsql = `DELETE FROM subscriptions WHERE seller_permanent_address = '${permanent_address}'`;
+    let fullsql = `DELETE FROM subscriptions WHERE "seller_permanent_address"='${permanent_address}'`;
     window.MDS.sql(fullsql, (res) => {
         if (res.error) {
             callback(false, res.error);

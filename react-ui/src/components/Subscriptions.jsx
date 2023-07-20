@@ -6,15 +6,18 @@ import ListItemText from '@mui/material/ListItemText';
 import { createSubscription, getSubscriptions, deleteSubscription } from '../database/subscriptions';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Button, Box, IconButton, Stack, TextField } from '@mui/material';
+import { Box, IconButton, Stack, TextField, Paper, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Alert from '@mui/material/Alert';
 import { sendSubscriptionRequest } from '../minima';
 import { sendMessage } from '../minima';
 import { getMaximaContactAddress } from '../minima';
+import Divider from '@mui/material/Divider';
+import LoadingButton from "@mui/lab/LoadingButton";
 
 export default function Subscriptions() {
     const [subscriptions, setSubscriptions] = React.useState(null);
+    const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState(null);
     const formRef = useRef(null);
 
@@ -37,8 +40,43 @@ export default function Subscriptions() {
         });
     }, []);
 
+    function handleDeleteSubscription(address) {
+        deleteSubscription({
+            permanent_address: address,
+            callback: function (response, error) {
+                if (error) {
+                    console.log(error);
+                    setError(error);
+                } else {
+                    console.log(response);
+                    getSubscriptions(function (response, error) {
+                        //log any errors and then set them
+                        if (error) {
+                            console.log(error);
+
+                            setError(error);
+                        }
+                        //if no errors, then clear the form
+                        else {
+                            if (response.rows.length > 0) {
+                                setSubscriptions(response.rows);
+                                console.log(response.rows);
+                            }
+                             else {
+                                console.log("i'm hererererer");
+                                setSubscriptions(null);
+                             }
+                        }
+                    }
+                    );
+                }
+            }
+        })
+    }
+
 
     async function handleAddSubscription(values, callback) {
+        setLoading(true);
         let maximaContactAddress = await getMaximaContactAddress();
         //send max message to the permanent max address that was given in the form
         const data = { "type": "SELLER_INFO_REQUEST", "data": { "subscriber_address": maximaContactAddress } };
@@ -62,28 +100,30 @@ export default function Subscriptions() {
                                 console.log('Subscription Added');
                                 window.MDS.log('Subscription Added');
                                 callback(response, null);
-                                
-                                setTimeout(function() {
-                                getSubscriptions(function (response, error) {
-                                    //log any errors and then set them
-                                    if (error) {
-                                        console.log(error);
-                        
-                                        setError(error);
-                        
-                                    }
-                                    //if no errors, then clear the form
-                                    else {
-                                        if (response.rows.length > 0) {
-                                            if (response.rows[0].seller_store_name !== null) {
-                                                setSubscriptions(response.rows);
-                                                console.log(response.rows);
-                                            }
-                                            
+
+                                setTimeout(function () {
+                                    getSubscriptions(function (response, error) {
+                                        //log any errors and then set them
+                                        if (error) {
+                                            console.log(error);
+
+                                            setError(error);
+                                            setLoading(false);
+
                                         }
-                                    }
-                                });
-                            }, 3000);
+                                        //if no errors, then clear the form
+                                        else {
+                                            if (response.rows.length > 0) {
+                                                if (response.rows[0].seller_store_name !== null) {
+                                                    setSubscriptions(response.rows);
+                                                    console.log(response.rows);
+                                                    setLoading(false);
+                                                }
+
+                                            }
+                                        }
+                                    });
+                                }, 3000);
                             }
                         }
                     });
@@ -135,8 +175,8 @@ export default function Subscriptions() {
     return (
         <div>
             <h1>Subscriptions</h1>
-            <p>Here you can see all your subscriptions</p>
-            <Box sx={{ marginTop: 3, maxWidth: 345 , marginBottom: 3}}>
+            <Typography sx={{ mt: 2, mb: 1 }} variant="h6" component="div">Add a new subscription</Typography>
+            <Box sx={{ marginTop: 3, maxWidth: 345, marginBottom: 3 }}>
                 <form ref={formRef} onSubmit={formik.handleSubmit}>
                     <Stack spacing={2}>
                         <TextField
@@ -145,55 +185,64 @@ export default function Subscriptions() {
                             id="seller_address"
                             name="seller_address"
                             label="Seller Address"
+                            placeholder='MAX#'
                             value={formik.values.seller_address}
                             onChange={formik.handleChange}
                             error={formik.touched.seller_address && Boolean(formik.errors.seller_address)}
                             helperText={formik.touched.seller_address && formik.errors.seller_address}
                         />
-                        <Button
+                        <LoadingButton
                             disabled={formik.isSubmitting}
+                            loading={loading}
                             type="submit"
                             variant="contained"
                             color="primary"
-                            sx={{ width: '50%'}}
+                            sx={{ width: '50%' }}
                         >
                             Subscribe
-                        </Button>
+                        </LoadingButton>
                     </Stack>
+
                 </form>
             </Box>
+            <Divider></Divider>
             {error && <Alert severity="error">{error.message ? error.message : String(error)}</Alert>}
             {subscriptions && subscriptions.length > 0 &&
-                <List dense sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-                    {subscriptions.map((subscription) => {
-                        const labelId = `checkbox-list-secondary-label-${subscription.seller_store_name}`;
-                        return (
-                            <ListItem
-                                key={subscription}
-                                onClick={() => sendSubscriptionRequest(subscription.seller_permanent_address, function (response, error) {
-                                    if (error) {
-                                        console.log(error);
-                                        setError(error);
-                                    }
-                                    else {
-                                        console.log(response);
-                                    }
-                                }
-                                )}
-                                secondaryAction={
-                                    <IconButton edge="end" aria-label="delete" onClick={() => deleteSubscription(subscription.seller_permanent_address)}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                }
-                                disablePadding
-                            >
-                                <ListItemButton>
-                                    <ListItemText id={labelId} primary={subscription.seller_store_name} />
-                                </ListItemButton>
-                            </ListItem>
-                        );
-                    })}
-                </List>
+                <>
+                    <Typography sx={{ mt: 2, mb: 1 }} variant="h6" component="div">List of Subscriptions</Typography>
+                    <Stack spacing={1} sx={{ marginTop: '15px', width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+                        {subscriptions.map((subscription) => {
+                            const labelId = `checkbox-list-secondary-label-${subscription.seller_store_name}`;
+                            return (
+                                <Paper sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+                                    <ListItem
+                                        key={subscription}
+                                        onClick={() => sendSubscriptionRequest(subscription.seller_permanent_address, function (response, error) {
+                                            if (error) {
+                                                console.log(error);
+                                                setError(error);
+                                            }
+                                            else {
+                                                console.log(response);
+                                            }
+                                        }
+                                        )}
+                                        secondaryAction={
+                                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteSubscription(subscription.seller_permanent_address)}>
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        }
+                                        disablePadding
+                                    >
+                                        <ListItemButton>
+                                            <ListItemText id={labelId} primary={subscription.seller_store_name} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                </Paper>
+                            );
+                        })}
+                    </Stack>
+                </>
             }
 
 
