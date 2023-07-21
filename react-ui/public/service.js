@@ -496,7 +496,7 @@ function processNewBalanceEvent() {
                                     updateListing(listing.listing_id, { 'status': 'paid', 'notification': true });
                                     MDS.log("Listing updated to paid");
 
-                                    var message = `You have received payment from @${listing.buyer_name} for your item: ${listing.title}`;
+                                    var message = `You have received payment from @${listing.buyer_name} for your item: '${listing.title}'.`;
                                     addNotification({
                                         listing_id: listing.listing_id,
                                         message: message,
@@ -566,9 +566,9 @@ function processPaymentReceiptRead(entity) {
                                         'buyer_name': entity.buyer_name,
                                         'buyer_pk': entity.buyer_pk,
                                     });
-                                var message = `You have received payment from @${entity.buyer_name} for your item: ${listing.title}.`;
+                                var message = `You have received payment from @${entity.buyer_name} for your item: '${listing.title}'.`;
                                 if (entity.transmission_type === 'delivery') {
-                                    message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
+                                    message = `Your listing, '${listing.title}' has been purchased by @${entity.buyer_name}.`
                                 }
                                 addNotification({
                                     listing_id: entity.listing_id,
@@ -627,9 +627,9 @@ function processPaymentReceiptWrite(entity) {
                                         'purchase_code': entity.purchase_code,
                                         'transmission_type': entity.transmission_type,
                                     });
-                                var message = `You have received payment from @${entity.buyer_name} for your item: ${listing.title}.`;
+                                var message = `You have received payment from @${entity.buyer_name} for your item: '${listing.title}'.`;
                                 if (entity.transmission_type === 'delivery') {
-                                    message = `Congratulations, ${listing.title} has been purchased by @${entity.buyer_name}.`
+                                    message = `Your listing, '${listing.title}' has been purchased by @${entity.buyer_name}.`
                                 }
                                 addNotification({
                                     listing_id: entity.listing_id,
@@ -669,8 +669,8 @@ function processItemSentClicked(entity) {
     updateListing(id, { "status": "completed", 'notification': true });
     getListingById(id, function (listing) {
         //MDS.log(`Listing found: ${JSON.stringify(listing)}`);
-        notification(`Your purchase ${listing.title} has been sent by @${listing.created_by_name} and is now in transit.`);
-        var message = `Your purchase ${listing.title} has been sent by @${listing.created_by_name} and is now in transit.`
+        notification(`Your purchase '${listing.title}' has been sent by @${listing.created_by_name} and is now in transit.`);
+        var message = `Your purchase '${listing.title}' has been sent by @${listing.created_by_name} and is now in transit.`
         addNotification({
             listing_id: listing.listing_id,
             message: message,
@@ -730,7 +730,7 @@ function processCollectionRequest(entity) {
         'buyer_pk': entity.buyer_pk,
     });
     getListingById(id, function (listing) {
-        var message = `@${buyerName} would like to arrange to collect ${listing.title}.`
+        var message = `@${buyerName} would like to arrange to collect '${listing.title}'.`
         addNotification({
             listing_id: listing.listing_id,
             message: message,
