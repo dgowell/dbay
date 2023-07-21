@@ -215,8 +215,8 @@ function ListingCollectionBuyer(props) {
                         {listing.status !== 'pending_confirmation' &&
                             <ListItem>
                                 <ListItemText primary={listing.transmission_type === 'collection'
-                                    ? "When you are with the seller in person and you are happy with the item, click below to initiate your payment. "
-                                    : "When you have received your item click below to confirm"} />
+                                    && "When you are with the seller in person and you are happy with the item, click below to initiate your payment. "
+                                    }/>
                             </ListItem>
                         }
                     </List>

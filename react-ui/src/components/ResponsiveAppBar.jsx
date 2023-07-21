@@ -13,7 +13,7 @@ const ResponsiveAppBar = () => {
     const navigate = useNavigate();
 
     const handleLogoClick = () => {
-        navigate('/');
+        navigate('/marketplace');
     };
 
     return (

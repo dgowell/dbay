@@ -8,7 +8,7 @@ function PaymentSuccess() {
     const navigate = useNavigate();
 
     function handleClick() {
-        navigate('/');
+        navigate('/marketplace');
     }
 
     return (

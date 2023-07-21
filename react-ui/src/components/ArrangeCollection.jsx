@@ -70,7 +70,7 @@ export default function InfoPage() {
     return (
       <Box mt={3}>
         <h1>Arrange Collection</h1>
-        <p>Open MaxSolo and start a chat with the <b>sellers name</b></p>
+        <p>Open MaxSolo and start a chat with the <b>@{listing.created_by_name}</b></p>
 
         <span>Seller</span>
         <Stack direction="row"   justifyContent="space-between"

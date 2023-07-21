@@ -7,7 +7,7 @@ function PaymentError(props) {
     const navigate = useNavigate();
 
     function handleClick() {
-        navigate('/');
+        navigate('/marketplace');
     }
 
     return (

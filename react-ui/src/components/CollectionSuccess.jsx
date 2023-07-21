@@ -8,7 +8,7 @@ function  CollectionSuccess() {
     const navigate = useNavigate();
 
     function handleClick() {
-        navigate('/');
+        navigate('/marketplace');
     }
 
     return (
