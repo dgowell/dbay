@@ -659,7 +659,7 @@ function processItemSentClicked(entity) {
     getListingById(id, function (listing) {
         //MDS.log(`Listing found: ${JSON.stringify(listing)}`);
         notification(`Your purchase '${listing.title}' has been sent by @${listing.created_by_name} and is now in transit.`);
-        var message = `Your purchase ''${listing.title}' has been sent by @${listing.created_by_name} and is now in transit.`
+        var message = `Your purchase '${listing.title}' has been sent by @${listing.created_by_name} and is now in transit.`
         addNotification({
             listing_id: listing.listing_id,
             message: message,
