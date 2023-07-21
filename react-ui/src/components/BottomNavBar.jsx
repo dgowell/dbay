@@ -33,7 +33,7 @@ function BottomNavBar() {
             >
                 <BottomNavigationAction
                     component={Link}
-                    to="/"
+                    to="/marketplace"
                     icon={<HomeIcon color="grey" />}
                 />
                 <BottomNavigationAction

@@ -1,6 +1,7 @@
 {
   "name": "heroku-cra-node",
   "version": "3.0.0",
+  "proxy": "http://localhost:9003",
   "description": "How to use create-react-app with a custom Node API on Heroku",
   "engines": {
     "node": "18.x"

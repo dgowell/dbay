@@ -27,6 +27,7 @@ import InstructionPage from "./components/InstructionPage";
 //import DmaxClient from "./components/DmaxClient";
 import Subscriptions from "./components/Subscriptions";
 import Notifications from "./components/Notifications";
+import IntroSlides from "./components/IntroSlides";
 
 import "@fontsource/roboto";
 
@@ -92,7 +93,8 @@ function App() {
         <CssBaseline />
         <Box>
           <Routes>
-            <Route exact path="/" element={<Marketplace />} />
+            <Route exact path="/" element={<IntroSlides />} />
+            <Route path="marketplace" element={<Marketplace />} />
             <Route path="listing/create" element={<ListingCreate />} />
             <Route path="listing/:id" element={<ListingDetail />} />
             <Route path="listing/:id/purchase" element={<ListingPurchase />} />
@@ -111,7 +113,6 @@ function App() {
             <Route path="arr-col/:id" element={<ArrangeCollection />} />
             <Route path="instruction/" element={<InstructionPage />} />
             <Route path="subscriptions/" element={<Subscriptions />} />
-            {/*<Route path="dmax/" element={<DmaxClient />} />*/}
             <Route path="notifications/" element={<Notifications />} />
             <Route path="*" element={<NoMatch />} />
           </Routes>

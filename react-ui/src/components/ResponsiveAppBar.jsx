@@ -13,7 +13,7 @@ const ResponsiveAppBar = () => {
     const navigate = useNavigate();
 
     const handleLogoClick = () => {
-        navigate('/dmax');
+        navigate('/');
     };
 
     return (
@@ -23,7 +23,6 @@ const ResponsiveAppBar = () => {
                     <IconButton sx={{color:"white"}} onClick={()=>navigate(-1)}>
                         <ArrowBackIcon color="white" />
                     </IconButton>
-                    {process.env.REACT_APP_MODE ==="testvalue" && <Typography>Test Mode</Typography>}
                     <Button onClick={handleLogoClick}>
                         <IconButton size='small' sx={{color:"white", height: "40px"}}>
                             <Logo />
